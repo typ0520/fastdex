@@ -52,7 +52,7 @@
      
   - **找不到的类是第三方库下的类:
      出现这种情况是因为app启动时在执行Multidex.install(Context context)前使用了第三方库的代码，由于其他几个dex还没有安装所以会找不到类，这时候需要把对应的库代码放在第一个dex中
-         例如中不到的是support v4包里的内容，可以在项目目录下添加fastdex_keep_main_dex.txt，把配置写进去
+         例如找不到的是support v4包里的内容，可以在项目目录下添加fastdex_keep_main_dex.txt，把配置写进去
          
          android.support.v4.**
          
@@ -61,7 +61,7 @@
          
  
 * **为什么添加了依赖后，执行起来找不到类**
-  每次添加第三方库的依赖或者修改了版本号，需要重新执行
+  - 每次添加第三方库的依赖或者修改了版本号，需要重新执行
     ````
      ./gradlew cacheDex
     ````
