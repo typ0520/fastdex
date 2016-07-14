@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="45dip"
+    android:layout_height="match_parent"
+    android:background="@drawable/common_tab_bg"
+    android:clickable="true"
+    android:onClick="back" >
+
+
+    <ImageView android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:src="@drawable/ico_back"
+        android:layout_gravity="center_vertical"
+        android:padding="12dp"
+        />
+
+</LinearLayout>

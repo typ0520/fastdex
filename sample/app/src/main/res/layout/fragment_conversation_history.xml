@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+     android:background="#feffff"
+    android:orientation="vertical" >
+
+    <com.example.fertilizercrm.view.TitleView
+        android:id="@+id/title_view"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:tag="(企信)" />
+
+    <include layout="@layout/search_bar" />
+
+    <include
+        android:id="@+id/rl_error_item"
+        layout="@layout/chat_neterror_item"
+        android:visibility="gone" />
+    
+      <ListView
+         android:cacheColorHint="#00000000"
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:divider="#e5e6e7"
+          android:dividerHeight="1dp"
+        />
+</LinearLayout>

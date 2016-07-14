@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+   <!--  <item android:drawable="@color/btn_logout_pressed" android:state_pressed="true"/>
+    <item android:drawable="@color/btn_logout_normal"/> -->
+
+    
+    <item android:drawable="@drawable/btn_white_pressed_shape" android:state_pressed="true"/>
+    <item android:drawable="@drawable/btn_white_pressed_shape" android:state_enabled="false"/>
+    <item android:drawable="@drawable/btn_white_normal_shape"/>
+   
+
+</selector>
