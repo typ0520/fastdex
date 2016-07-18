@@ -17,7 +17,7 @@
         }
         dependencies {
             classpath 'com.android.tools.build:gradle:2.1.2'
-            classpath 'com.tong.tools.build:fastdex:1.0.0'
+            classpath 'com.tong.tools.build:fastdex:1.0.1'
         }
     }
     ````
