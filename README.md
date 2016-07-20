@@ -9,7 +9,7 @@
      点击左上角Android studio -> Preferences -> Build,Execution,Deployment -> Instant Run -> Enable Instant Run......(把对勾去掉)
      
 - 2、在root project下的build.gradle中添加依赖 
-    classpath 'com.tong.tools.build:fastdex:1.0.0' ,详情如下
+    classpath 'com.tong.tools.build:fastdex:1.0.2' ,详情如下
     ````
     buildscript {
         repositories {
@@ -17,7 +17,7 @@
         }
         dependencies {
             classpath 'com.android.tools.build:gradle:2.1.2'
-            classpath 'com.tong.tools.build:fastdex:1.0.1'
+            classpath 'com.tong.tools.build:fastdex:1.0.2'
         }
     }
     ````
