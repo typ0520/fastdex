@@ -1,0 +1,46 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+project.afterEvaluate {
+    android.libraryVariants.all { variant ->
+        def variantName = variant.name.capitalize()
+        Task generateDexTask = project.tasks.create("generateRuntimeDexFor${variantName}")
+        generateDexTask.group = 'fastdex'
+        generateDexTask.doFirst {
+            project.copy {
+                from project.zipTree(project.file("build/outputs/aar/${project.name}-${variantName}.aar"))
+                into project.file("build/intermediates/fastdex/${variantName}")
+            }
+
+            String dxcmd = "${project.android.getSdkDirectory()}/build-tools/${project.android.getBuildToolsVersion()}/dx"
+            project.file("build/outputs/fastdex/${variantName.toLowerCase()}").mkdirs()
+            dxcmd = "${dxcmd} --dex --output=${project.file("build/outputs/fastdex/${variantName.toLowerCase()}/fastdex-runtime.dex")} ${project.file("build/intermediates/fastdex/${variantName}/classes.jar")}"
+
+            def process = dxcmd.execute()
+            int status = process.waitFor()
+            process.destroy()
+            if (status != 0) {
+                throw new GradleException("generate fastdex runtime dex fail!")
+            }
+        }
+        generateDexTask.dependsOn variant.assemble
+    }
+}
