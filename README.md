@@ -36,7 +36,7 @@
   gradle在执行transformClassesWithDexForDebug任务生成dex文件时会很慢(尤其是开启了multidex)，但是我们在开发中，修改的几乎全是项目代码，第三方库改动比较小。fastdex的原理就是预先把所有第三方库代码生成dex,
   当下次点击run或者assembleDebug时只会把项目目录下的代码生成dex，然后和预先生成的dex合并生成apk，这样即不影响调试，又能在生成dex的过程中省下了大量的时间。
   
-##Thanks
+## Thanks
 [Instant Run](https://developer.android.com/studio/run/index.html#instant-run)
 
 [Tinker](https://github.com/Tencent/tinker)
