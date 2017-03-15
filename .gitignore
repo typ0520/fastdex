@@ -40,9 +40,10 @@ proguard/
 *.log
 
 /*/.idea
+.idea
 
-/buildSdk
-DevSample/build/
-DevSample/buildSrc/build
-Sample/build/
+app/build/
+buildSrc/build/
+
+
 
