@@ -31,7 +31,6 @@
 - 3、在app的项目中的build.gradle添加插件
     ````
     apply plugin: 'com.dx168.fastdex'
-    
     ````
   
 ## 实现原理
