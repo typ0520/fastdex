@@ -29,7 +29,7 @@
     ````
     apply plugin: 'com.dx168.fastdex'
     ````
-  
+
 ## 实现原理
   gradle在执行transformClassesWithDexFor${variant}任务生成dex文件时会很慢(尤其是开启了multidex)，我们在开发中，修改的几乎全是项目代码，第三方库改动比较小。fastdex的原理就是预先把所有代码生成dex,
   当下次执行assemble任务时只会把项目目录下变化的代码生成dex，然后和缓存的dex合并生成apk，这样即不影响调试，又能在生成dex的过程中省下了大量的时间。
@@ -64,12 +64,15 @@
      dex_cache.classes2.dex => classes4.dex
      dex_cache.classesN.dex => classes(N + 2).dex
      
+## 注意事项
+
+- 1、不要把fastdex打出来的包用在生产环境，因为fastdex打出来的包项目所有的代码都在第二个dex后面，会造成5.0以下机器首次运行比较慢(如果是本地调试就无所谓了)；当打包生产环境apk时注释掉加入插件的代码//apply plugin: 'com.dx168.fastdex'
+
+
 ## Thanks
 [Instant Run](https://developer.android.com/studio/run/index.html#instant-run)
 
 [Tinker](https://github.com/Tencent/tinker)
-
-[Aceso](https://github.com/meili/Aceso)
 
 [安卓App热补丁动态修复技术介绍](https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&mid=400118620&idx=1&sn=b4fdd5055731290eef12ad0d17f39d4a)
 
