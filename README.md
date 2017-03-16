@@ -1,5 +1,5 @@
 # fastdex
-加快存在多个dex项目调试时的打包速度
+加快 apk 的编译速度
 
 [![license](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/typ0520/fastdex/master/LICENSE)
 
@@ -8,7 +8,7 @@
 [版本记录](https://raw.githubusercontent.com/typ0520/fastdex/master/CHANGELOG.md)
 
 ## 适用场景
-项目中有多个dex并且使用com.android.support:multidex加载dex。如果你忍受不了调试一次要好几分钟才能跑起来，fastdex可以帮助你加快apk生成过程
+如果你忍受不了apk龟速的编译(尤其是项目中有多个dex，将近两分钟才能编译结束)，fastdex可以帮助你加快apk生成过程
 
 ## 使用方式
 - 1、关闭Instant Run功能
