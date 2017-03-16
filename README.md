@@ -8,7 +8,7 @@
 [版本记录](https://raw.githubusercontent.com/typ0520/fastdex/master/CHANGELOG.md)
 
 ## 适用场景
-如果你忍受不了apk龟速的编译(尤其是项目中有多个dex，将近两分钟才能编译结束)，fastdex可以帮助你加快apk生成过程
+如果你忍受不了apk龟速的编译(尤其是项目中有多个dex)，fastdex可以帮助你加快apk生成过程
 
 ## 使用方式
 - 1、关闭Instant Run功能
