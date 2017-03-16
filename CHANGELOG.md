@@ -14,22 +14,17 @@ Bugfixes:
 
   - 修复注入代码时仅注入默认构造方法的问题
 
-## 0.0.2-beta5 (2017-3-15)
+## 0.0.2-rc1 (2017-3-16)
 
 Bugfixes:
 
   - 修复buildType中有大写字母报错的问题
+  - 修复没有注入app/build/generated/source/apt的bug
+  - 修复获取依赖不完整的问题
 
 Features:
 
   - 适配多个flavor的场景
-
-## 0.0.2-beta6 (2017-3-16)
-
-Bugfixes:
-
-  - 修复没有注入app/build/generated/source/apt的bug
-
 
 
 
