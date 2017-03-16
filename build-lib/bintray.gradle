@@ -1,0 +1,101 @@
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+def groupName = 'com.dx168.fastdex'
+def archivesBaseName = 'build-lib'
+def archivesVersion = '1.0.0'
+
+def mavenDesc = '加快存在多个dex的项目调试时的打包速度'
+def baseUrl = 'https://github.com/typ0520/fastdex'
+def siteUrl = baseUrl
+def gitUrl = "${baseUrl}.git"
+def issueUrl = "${baseUrl}/issues"
+
+def licenseIds = ['Apache-2.0']
+def licenseNames = ['The Apache Software License, Version 2.0']
+def licenseUrls = ['http://www.apache.org/licenses/LICENSE-2.0.txt']
+def inception = '2017'
+
+
+Properties props = new Properties()
+try {
+    props.load(project.rootProject.file('local.properties').newDataInputStream())
+} catch (Throwable e) {
+}
+
+def bintray_user = props.getProperty("BINTRAY_USER","")
+def bintray_key = props.getProperty("BINTRAY_KEY","")
+
+install {
+    repositories {
+        mavenInstaller {
+            pom.project {
+                // Description
+                name archivesBaseName
+                description mavenDesc
+                url siteUrl
+
+                // Archive
+                groupId groupName
+                artifactId archivesBaseName
+                version archivesVersion
+
+                // License
+                inceptionYear inception
+                licenses {
+                    licenseNames.eachWithIndex { ln, li ->
+                        license {
+                            name ln
+                            url licenseUrls[li]
+                        }
+                    }
+                }
+                developers {
+                    developer {
+                        name bintray_user
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'sources'
+}
+
+//
+//task javadocJar(type: Jar, dependsOn: javadoc) {
+//    from javadoc.destinationDir
+//    classifier = 'javadoc'
+//}
+
+artifacts {
+   // archives javadocJar
+    archives sourcesJar
+}
+
+
+bintray {
+    user = bintray_user
+    key = bintray_key
+    configurations = ['archives']
+    pkg {
+        repo = 'maven'
+        name = "${groupName}:${archivesBaseName}"
+        desc = mavenDesc
+        websiteUrl = siteUrl
+        issueTrackerUrl = issueUrl
+        vcsUrl = gitUrl
+        labels = ['android', 'fastdex', 'build-lib']
+        licenses = licenseIds
+        publish = true
+        publicDownloadNumbers = true
+    }
+}
