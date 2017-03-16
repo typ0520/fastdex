@@ -1,14 +1,11 @@
 # fastdex
-加快 apk 的编译速度
+如果你忍受不了apk龟速的编译(尤其是项目中有多个dex)，fastdex可以帮助你加快apk生成过程
 
 [![license](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/typ0520/fastdex/master/LICENSE)
 
 [ ![Download](https://api.bintray.com/packages/typ0520/maven/com.dx168.fastdex%3Agradle-plugin/images/download.svg) ](https://bintray.com/typ0520/maven/com.dx168.fastdex%3Agradle-plugin/_latestVersion)
 
 [版本记录](https://raw.githubusercontent.com/typ0520/fastdex/master/CHANGELOG.md)
-
-## 适用场景
-如果你忍受不了apk龟速的编译(尤其是项目中有多个dex)，fastdex可以帮助你加快apk生成过程
 
 ## 使用方式
 - 1、关闭Instant Run功能
