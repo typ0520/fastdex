@@ -35,7 +35,7 @@
   当下次执行assemble任务时只会把项目目录下变化的代码生成dex，然后和缓存的dex合并生成apk，这样即不影响调试，又能在生成dex的过程中省下了大量的时间。
 
 ## 打包流程
-###### 全量打包时的流程:
+##### 全量打包时的流程:
   - 1、合并所有的class文件生成一个jar包
   - 2、扫描所有的项目代码并且在构造方法里添加对com.dx168.fastdex.runtime.antilazyload.AntilazyLoad类的依赖
      这样做的目的是为了解决class verify的问题，
@@ -52,12 +52,14 @@
   @see com.dx168.fastdex.build.task.FastdexResourceIdTask
 
 
-###### 补丁打包时的流程
+##### 补丁打包时的流程
   - 1、检查缓存的有效性
   - @see com.dx168.fastdex.build.task.FastdexCustomJavacTask 的prepareEnv方法说明
-  - 2、合并所有变化的class并生成jar包
-  - 3、生成补丁dex
-  - 4、把所有的dex按照一定规律放在transformClassesWithMultidexlistFor${variantName}任务的输出目录
+  - 2、扫描所有变化的java文件并编译成class
+  - @see com.dx168.fastdex.build.task.FastdexCustomJavacTask
+  - 3、合并所有变化的class并生成jar包
+  - 4、生成补丁dex
+  - 5、把所有的dex按照一定规律放在transformClassesWithMultidexlistFor${variantName}任务的输出目录
      fastdex-runtime.dex    => classes.dex
      patch.dex              => classes2.dex
      dex_cache.classes.dex  => classes3.dex
@@ -69,6 +71,9 @@
 - 1、不要把fastdex打出来的包用在生产环境，因为fastdex打出来的包项目所有的代码都在第二个dex后面，会造成5.0以
     下机器首次运行比较慢(如果是本地调试就无所谓了)；当打包生产环境apk时注释掉加入插件的代码
     //apply plugin: 'com.dx168.fastdex'
+    
+- 2、如果项目只有一个dex文件fastdex对速度的提升效果不是很明显，建议直接使用instant run
+- 3、fastdex会忽略开启混淆的buildType
 
 
 ## Thanks
