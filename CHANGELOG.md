@@ -26,5 +26,13 @@ Features:
 
   - 适配多个flavor的场景
 
+## 0.0.2-rc5 (2017-3-19)
+
+Bugfixes:
+
+  - fix issue#2 Application强转失败的问题
+  - fix issue#3 windows路径不能盘符加:的问题
+
+
 
 
