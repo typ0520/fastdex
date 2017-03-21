@@ -50,8 +50,9 @@
      classes.dex         => classes2.dex
      classes2.dex        => classes3.dex
      然后运行期在入口Application(com.dx168.fastdex.runtime.FastdexApplication)使用MultiDex把所有的dex加载进来
+  - @see [com.dx168.fastdex.build.transform.FastdexTransform](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/transform/FastdexTransform.groovy)
   - 7、保存资源映射映射表，为了保持id的值一致，详情看
-  @see com.dx168.fastdex.build.task.FastdexResourceIdTask
+  - @see [com.dx168.fastdex.build.task.FastdexResourceIdTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexResourceIdTask.groovy)
 
 
 ##### 补丁打包时的流程
@@ -77,6 +78,13 @@
     
 - 2、fastdex会忽略开启混淆的buildType
 
+##后续的优化计划
+
+- 1、提高稳定性和容错性，这个是最关键的
+- 2、目前补丁打包的时候，是把没有变化的类从app/build/intermediates/transforms/jarMerging/debug/jars/1/1f/combined.jar中移除，如果能hook掉transformClassesWithJarMergingForDebug这个任务，仅把发生变化的class参与combined.jar的生成，能够在IO上省出很多的时间
+- 3、目前给项目源码目录做快照，使用的是文件copy的方式，如果能仅仅只把需要的信息写在文本文件里，能够在IO上省出一些时间
+- 4、目前还没有对libs目录中发生变化做监控，后续需要补上这一块
+- 5、apk的安装速度比较慢(尤其是ART下，安装时对应用的AOT编译，具体请参考张邵文大神的文章[Android N混合编译与对热补丁影响解析](http://mp.weixin.qq.com/s?__biz=MzAwNDY1ODY2OQ==&mid=2649286341&idx=1&sn=054d595af6e824cbe4edd79427fc2706&scene=1&srcid=0811uOHr2RBQDKF0jKEdL4Vc##))，通过socket把代码补丁和资源补丁发送给app，做到免安装
 
 ## Thanks
 [Instant Run](https://developer.android.com/studio/run/index.html#instant-run)
