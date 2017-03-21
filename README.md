@@ -78,7 +78,7 @@
     
 - 2、fastdex会忽略开启混淆的buildType
 
-##后续的优化计划
+## 后续的优化计划
 
 - 1、提高稳定性和容错性，这个是最关键的
 - 2、目前补丁打包的时候，是把没有变化的类从app/build/intermediates/transforms/jarMerging/debug/jars/1/1f/combined.jar中移除，如果能hook掉transformClassesWithJarMergingForDebug这个任务，仅把发生变化的class参与combined.jar的生成，能够在IO上省出很多的时间
