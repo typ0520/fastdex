@@ -41,7 +41,7 @@
   - 1、合并所有的class文件生成一个jar包
   - 2、扫描所有的项目代码并且在构造方法里添加对com.dx168.fastdex.runtime.antilazyload.AntilazyLoad类的依赖
      这样做的目的是为了解决class verify的问题，
-     详情请看https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&mid=400118620&idx=1&sn=b4fdd5055731290eef12ad0d17f39d4a
+     详情请看 [安卓App热补丁动态修复技术介绍](https://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&mid=400118620&idx=1&sn=b4fdd5055731290eef12ad0d17f39d4a)
   - 3、对项目代码做快照，为了以后补丁打包时对比那些java文件发生了变化
   - 4、对当前项目的所以依赖做快照，为了以后补丁打包时对比依赖是否发生了变化，如果变化需要清除缓存
   - 5、调用真正的transform生成dex
@@ -56,9 +56,9 @@
 
 ##### 补丁打包时的流程
   - 1、检查缓存的有效性
-  - @see com.dx168.fastdex.build.task.FastdexCustomJavacTask 的prepareEnv方法说明
+  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexCustomJavacTask.groovy) 的prepareEnv方法说明
   - 2、扫描所有变化的java文件并编译成class
-  - @see com.dx168.fastdex.build.task.FastdexCustomJavacTask
+  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexCustomJavacTask.groovy)
   - 3、合并所有变化的class并生成jar包
   - 4、生成补丁dex
   - 5、把所有的dex按照一定规律放在transformClassesWithMultidexlistFor${variantName}任务的输出目录
@@ -67,6 +67,7 @@
      dex_cache.classes.dex  => classes3.dex
      dex_cache.classes2.dex => classes4.dex
      dex_cache.classesN.dex => classes(N + 2).dex
+
      
 ## 注意事项
 
