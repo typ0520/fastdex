@@ -30,8 +30,15 @@ Features:
 
 Bugfixes:
 
-  - fix issue#2 Application强转失败的问题
+  - fix issue#2 解决在activity中getApplication()强转失败的问题
   - fix issue#3 windows路径不能盘符加:的问题
+
+## 0.0.3-beta2 (2017-3-21)
+
+Bugfixes:
+
+   - 修改通过useCustomCompile关闭自定义编译任务后,造成检查环境不执行的问题
+   - fix issue#4,编译报编码GBK的不可映射字符的问题
 
 
 
