@@ -40,6 +40,18 @@ Bugfixes:
    - 修改通过useCustomCompile关闭自定义编译任务后,造成检查环境不执行的问题
    - fix issue#4,编译报编码GBK的不可映射字符的问题
 
+## 0.0.3-beta2 (2017-3-21)
+
+Bugfixes:
+
+   - fix issue#8,解决与tinkerpatch插件的冲突
+
+Features:
+
+   - 为提高稳定性,默认关闭掉自定义的compile任务
+
+   - 在重要节点添加日志方便以后排错
+
 
 
 
