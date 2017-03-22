@@ -86,21 +86,6 @@
      dex_cache.classes2.dex => classes4.dex
      dex_cache.classesN.dex => classes(N + 2).dex
 
-     
-## 注意事项
-
-- 1、不要把fastdex打出来的包用在生产环境，因为fastdex打出来的包项目所有的代码都在第二个dex后面，会造成5.0以
-    下机器首次运行比较慢(如果是本地调试就无所谓了)；当打包生产环境apk时注释掉加入插件的代码
-    //apply plugin: 'com.dx168.fastdex'
-    
-- 2、fastdex会忽略开启混淆的buildType
-
-- 3、如果使用了retrolambda,需要关掉自定义的编译任务
-     fastdex {
-          useCustomCompile = false
-     }
-     
-
 ## 后续的优化计划
 
 - 1、提高稳定性和容错性，这个是最关键的
