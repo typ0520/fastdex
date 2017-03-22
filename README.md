@@ -51,7 +51,7 @@
      classes2.dex        => classes3.dex
      然后运行期在入口Application(com.dx168.fastdex.runtime.FastdexApplication)使用MultiDex把所有的dex加载进来
   - @see [com.dx168.fastdex.build.transform.FastdexTransform](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/transform/FastdexTransform.groovy)
-  - 7、保存资源映射映射表，为了保持id的值一致，详情看
+  - 7、保存资源映射表，为了保持id的值一致，详情看
   - @see [com.dx168.fastdex.build.task.FastdexResourceIdTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexResourceIdTask.groovy)
 
 
