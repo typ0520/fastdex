@@ -78,6 +78,12 @@
     
 - 2、fastdex会忽略开启混淆的buildType
 
+- 3、如果使用了retrolambda,需要关掉自定义的编译任务
+     fastdex {
+          useCustomCompile = false
+     }
+     
+
 ## 后续的优化计划
 
 - 1、提高稳定性和容错性，这个是最关键的
