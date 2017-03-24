@@ -48,9 +48,16 @@ Bugfixes:
 
 Features:
 
-   - 为提高稳定性,默认关闭掉自定义的compile任务
+   - 为提高稳定性,默认关闭掉自定义的compile任务,如果想使用增加了一个配置项useCustomCompile=true
 
    - 在重要节点添加日志方便以后排错
+
+## 0.0.3-beta4 (2017-3-24)
+
+Bugfixes:
+
+   - fix issue#6,class name (*) does not match path (*)的问题
+   - 解决全量打包后dex重复copy的问题
 
 
 
