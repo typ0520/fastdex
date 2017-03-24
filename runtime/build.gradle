@@ -31,7 +31,16 @@ project.afterEvaluate {
                 into project.file("build/intermediates/fastdex/${variantName}")
             }
 
-            String dxcmd = "${project.android.getSdkDirectory()}/build-tools/${project.android.getBuildToolsVersion()}/dx"
+            String sdkDirectory = project.android.getSdkDirectory()
+            if (sdkDirectory.contains("\\")) {
+                sdkDirectory = sdkDirectory.replace("\\", "/");
+            }
+            String dxcmd = ""
+            File dx = new File(sdkDirectory,"build-tools${File.separator}${project.android.getBuildToolsVersion()}${File.separator}dx")
+            dxcmd = dx.absolutePath
+            if (org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)) {
+                dxcmd =  "${dxcmd}.bat"
+            }
             project.file("build/outputs/fastdex/${variantName.toLowerCase()}").mkdirs()
             dxcmd = "${dxcmd} --dex --output=${project.file("build/outputs/fastdex/${variantName.toLowerCase()}/fastdex-runtime.dex")} ${project.file("build/intermediates/fastdex/${variantName}/classes.jar")}"
 
