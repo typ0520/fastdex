@@ -1,0 +1,6 @@
+//include ':app'
+rootProject.name = 'com.dx168.fastdex'
+
+include ':gradle-plugin'
+include ':build-lib'
+include ':runtime'
