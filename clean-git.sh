@@ -13,7 +13,7 @@ fi
 IFS=$'\n'
 
 #prepare delete directory
-PRE_DEL_DIR_ARR=('app' 'buildSrc' 'DevSample' 'fastdex-build' 'sample/app/src/main/java/com/example')
+PRE_DEL_DIR_ARR=('buildSrc')
 
 #return: 1: yes 0: no
 is_mapping() {
