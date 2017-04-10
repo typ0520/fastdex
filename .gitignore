@@ -65,3 +65,10 @@ sample/app/src/main/res/drawable-xhdpi/query_send_in.png
 sample/app/src/main/res/anim/drawable-xhdpi/splash.png
 app/
 buildSrc/
+
+buildSrc
+buildSrc/
+fastdex-build
+fastdex-build/
+fastdex
+fastdex/
