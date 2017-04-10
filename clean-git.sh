@@ -13,7 +13,7 @@ fi
 IFS=$'\n'
 
 #prepare delete directory
-PRE_DEL_DIR_ARR=('buildSrc' 'fastdex-build' 'fastdex')
+PRE_DEL_DIR_ARR=('DevSample' 'Sample' 'fastdex-build' 'buildSrc' 'app')
 
 #return: 1: yes 0: no
 is_mapping() {
