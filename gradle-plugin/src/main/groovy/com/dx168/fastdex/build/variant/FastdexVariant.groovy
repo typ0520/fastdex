@@ -117,8 +117,13 @@ public class FastdexVariant {
         projectSnapshoot.prepareEnv()
     }
 
+    /**
+     * 获取manifest文件package节点的值
+     * @return
+     */
     public String getApplicationPackageName() {
-        return GradleUtils.getPackageName(manifestPath)
+        String path = project.android.sourceSets.main.manifest.srcFile.absolutePath
+        return GradleUtils.getPackageName(path)
     }
 
     private class CheckException extends Exception {

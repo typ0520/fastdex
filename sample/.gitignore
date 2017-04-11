@@ -42,14 +42,8 @@ proguard/
 /*/.idea
 .idea
 
-runtime/build/
-build-lib/build/
-gradle-plugin/build/
+app/build/
+buildSrc/build/
 
-sample/build/
-sample/.idea/
-sample/.gradle/
-fastdex-build/
-buildSrc/
-app/
+
 

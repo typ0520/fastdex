@@ -1,3 +1,10 @@
+## 0.0.5-beta1  (2017-4-10)
+
+Features:
+
+   - 重写快照对比模块
+   - 自定义编译任务支持加retrolambda插件使用lambda的场景
+
 ## 0.0.4-beta  (2017-3-30)
 
 Features:
