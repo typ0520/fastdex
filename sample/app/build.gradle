@@ -1,0 +1,135 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
+//apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.dx168.fastdex'
+
+fastdex {
+    //default true
+    //开启
+    fastdexEnable = true
+
+    //default false
+    //debug模式输出的调试信息比较多
+    debug = true
+
+    //default false
+    //自定义的compile任务,用来代替compileXXXXJavaWithJavac
+    //0.0.3-beta3之前默认是开启的,0.0.3-beta3后默认关闭了
+    useCustomCompile = true
+
+    //default ["{packageName}.R","{packageName}.BuildConfig"]
+    //每次都参与dex生成的class,{packageName}是占位符，值取自AndroidManifest.xml中package属性值
+    hotClasses = ["{package}.R","{package}.BuildConfig"]
+}
+
+android {
+    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
+    buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/maven/com.squareup.okio/okio/pom.xml'
+        exclude 'META-INF/maven/com.squareup.okio/okio/pom.properties'
+    }
+
+    defaultConfig {
+        minSdkVersion Integer.parseInt(project.ANDROID_BUILD_MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
+
+        applicationId "com.dx168.fastdex.sample"
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+
+    signingConfigs {
+        config {
+            storeFile file('../keystore.jks')
+            keyAlias 'testres'
+            keyPassword 'testres'
+            storePassword 'testres'
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.config
+        }
+
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.config
+        }
+
+        //fastdex 会忽略开启混淆的buildType
+        product{
+            minifyEnabled true
+            shrinkResources false
+            signingConfig signingConfigs.config
+        }
+    }
+
+//    productFlavors {
+////        normal {
+////
+////        }
+//    }
+
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+}
+
+//retrolambda {
+//    javaVersion JavaVersion.VERSION_1_7
+//}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.jakewharton:butterknife:8.0.1'
+    apt 'com.jakewharton:butterknife-compiler:8.0.1'
+    compile 'com.squareup:otto:1.3.5'
+    compile 'com.squareup.okio:okio:1.0.1'
+    compile "io.reactivex:rxandroid:1.2.0"
+    compile "io.reactivex:rxjava:1.1.5"
+    compile 'com.google.code.gson:gson:2.3.1'
+
+//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+//    compile 'org.xutils:xutils:3.3.36'
+//    compile 'de.hdodenhof:circleimageview:2.0.0'
+//    compile 'de.hdodenhof:circleimageview:2.0.0'
+//    compile 'com.squareup.retrofit:retrofit:1.9.0'
+//    compile 'info.hoang8f:android-segmented:1.0.6'
+//    compile 'com.squareup.okio:okio:1.0.1'
+//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+//    compile 'com.zhy:okhttputils:2.4.1'
+//    compile 'joda-time:joda-time:2.6'
+//    compile 'com.squareup.retrofit:retrofit:1.8.0'
+//    compile 'com.squareup.okhttp:okhttp:2.2.0'
+//    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+//    compile "org.greenrobot:eventbus:3.0.0"
+//    compile "org.glassfish:javax.annotation:10.0-b28"
+//    compile "com.commit451:PhotoView:1.2.4"
+//    compile "com.evernote:android-sdk:2.0.0-RC3"
+//    compile 'com.android.volley:volley:1.0.0'
+//    compile 'com.dialonce:dialonce-android:2.3.1'
+//    compile 'com.facebook.fresco:fresco:1.1.0'
+//    compile 'com.google.guava:guava:18.0'
+//    compile 'com.android.support:design:23.4.0'
+//    compile 'com.bigkoo:alertview:1.0.2'
+//    compile 'com.bigkoo:pickerview:2.0.8'
+
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'
+    testCompile 'junit:junit:4.12'
+}

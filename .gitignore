@@ -41,15 +41,14 @@ proguard/
 
 /*/.idea
 .idea
-
+sample/.idea/
 runtime/build/
+
 build-lib/build/
 gradle-plugin/build/
-
 sample/build/
-sample/.idea/
+
 sample/.gradle/
 fastdex-build/
 buildSrc/
-app/
 
