@@ -47,12 +47,16 @@ public class ProjectSnapshoot {
         }
         else {
             //save
-            saveSourceSetSnapshoot(sourceSetSnapshoot)
+            saveCurrentSourceSetSnapshoot()
         }
     }
 
     def saveSourceSetSnapshoot(SourceSetSnapshoot snapshoot) {
         snapshoot.serializeTo(new FileOutputStream(FastdexUtils.getSourceSetSnapshootFile(fastdexVariant.project,fastdexVariant.variantName)))
+    }
+
+    def saveCurrentSourceSetSnapshoot() {
+        saveSourceSetSnapshoot(sourceSetSnapshoot)
     }
 
     def saveDiffResultSet() {
@@ -61,5 +65,10 @@ public class ProjectSnapshoot {
             //全量打包后首次java文件发生变化
             diffResultSet.serializeTo(new FileOutputStream(diffResultSetFile))
         }
+    }
+
+    def deleteLastDiffResultSet() {
+        File diffResultSetFile = FastdexUtils.getDiffResultSetFile(fastdexVariant.project,fastdexVariant.variantName)
+        FileUtils.deleteFile(diffResultSetFile)
     }
 }

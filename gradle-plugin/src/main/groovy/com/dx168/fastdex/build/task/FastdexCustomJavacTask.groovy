@@ -35,20 +35,24 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
     @TaskAction
     void compile() {
+        compileTask.enabled = true
+
         //检查缓存的有效性
         fastdexVariant.prepareEnv()
 
         def project = fastdexVariant.project
         def projectSnapshoot = fastdexVariant.projectSnapshoot
 
-        if (!project.fastdex.useCustomCompile) {
-            project.logger.error("==fastdex useCustomCompile=false,disable customJavacTask")
+        File classesDir = fastdexVariant.androidVariant.getVariantData().getScope().getJavaOutputDir()
+        if (!FileUtils.dirExists(classesDir.absolutePath)) {
             return
         }
 
-        boolean hasValidCache = fastdexVariant.hasDexCache
-        if (!hasValidCache) {
-            compileTask.enabled = true
+        if (!fastdexVariant.configuration.useCustomCompile) {
+            return
+        }
+
+        if (!fastdexVariant.hasDexCache) {
             return
         }
 
@@ -93,6 +97,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         def fork = javaCompileTask.options.fork
         def executable = javaCompileTask.options.forkOptions.executable
 
+        project.logger.error("==fastdex executable ${executable}")
         //处理retrolambda
         if (project.plugins.hasPlugin("me.tatarka.retrolambda")) {
             fork = true
@@ -120,8 +125,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
         )
 
         project.logger.error("==fastdex compile success: ${patchClassesFileDir}")
+
         //覆盖app/build/intermediates/classes内容
-        File classesDir = fastdexVariant.androidVariant.getVariantData().getScope().getJavaOutputDir()
         Files.walkFileTree(patchClassesFileDir.toPath(),new SimpleFileVisitor<Path>(){
             @Override
             FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

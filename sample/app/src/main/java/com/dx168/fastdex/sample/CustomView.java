@@ -18,7 +18,7 @@ public class CustomView extends LinearLayout {
         inflate(context,R.layout.view_custom,this);
         ButterKnife.bind(this);
 
-        tv.setText(R.string.s3);
+        tv.setText(getResources().getString(R.string.s3) + "");
         MainActivity.aa();
     }
 }

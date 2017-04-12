@@ -5,6 +5,8 @@ import com.dx168.fastdex.build.util.ProjectSnapshoot
 import com.dx168.fastdex.build.util.FastdexUtils
 import com.dx168.fastdex.build.util.FileUtils
 import com.dx168.fastdex.build.util.GradleUtils
+import com.dx168.fastdex.build.util.TagManager
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 
 /**
@@ -21,6 +23,7 @@ public class FastdexVariant {
     final ProjectSnapshoot projectSnapshoot
     boolean hasDexCache
     boolean firstPatchBuild
+    final TagManager tagManager
 
     FastdexVariant(Project project, Object androidVariant) {
         this.project = project
@@ -33,6 +36,11 @@ public class FastdexVariant {
         this.buildDir = FastdexUtils.getBuildDir(project,variantName)
 
         projectSnapshoot = new ProjectSnapshoot(this)
+        tagManager = new TagManager(this.project,this.variantName)
+
+        if (configuration.dexMergeThreshold <= 0) {
+            throw new GradleException("dexMergeThreshold Must be greater than 0!!")
+        }
     }
 
     /*
@@ -107,7 +115,7 @@ public class FastdexVariant {
         }
 
         if (hasDexCache) {
-            project.logger.error("==fastdex discover cached for ${variantName.toLowerCase()}")
+            project.logger.error("==fastdex discover dex cache for ${variantName.toLowerCase()}")
         }
         else {
             FastdexUtils.cleanCache(project,variantName)
@@ -124,6 +132,14 @@ public class FastdexVariant {
     public String getApplicationPackageName() {
         String path = project.android.sourceSets.main.manifest.srcFile.absolutePath
         return GradleUtils.getPackageName(path)
+    }
+
+    /**
+     * 补丁打包是否需要执行dex merge
+     * @return
+     */
+    public boolean willExecDexMerge() {
+        return hasDexCache && projectSnapshoot.diffResultSet.changedJavaFileDiffInfos.size() >= configuration.dexMergeThreshold
     }
 
     private class CheckException extends Exception {

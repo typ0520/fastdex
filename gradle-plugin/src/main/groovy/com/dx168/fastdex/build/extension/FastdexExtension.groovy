@@ -20,4 +20,8 @@ public class FastdexExtension {
      * 每次都参与dex生成的class
      */
     String[] hotClasses = ["{package}.R","{package}.BuildConfig"]
+    /**
+     * 当变化的java文件数量超过阈值,触发dex merge
+     */
+    int dexMergeThreshold = 6
 }

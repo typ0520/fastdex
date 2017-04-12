@@ -5,6 +5,7 @@ import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
 import com.dx168.fastdex.build.util.ClassInject
 import com.dx168.fastdex.build.util.FastdexUtils
+import com.dx168.fastdex.build.util.JarOperation
 import com.dx168.fastdex.build.variant.FastdexVariant
 import com.android.build.api.transform.Format
 import com.dx168.fastdex.build.util.FileUtils
@@ -30,7 +31,7 @@ class FastdexJarMergingTransform extends TransformProxy {
                 //所有的class目录
                 Set<File> directoryInputFiles = FastdexUtils.getDirectoryInputFiles(transformInvocation)
                 //生成补丁jar
-                FastdexUtils.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar)
+                JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar)
             }
             else {
                 fastdexVariant.project.logger.error("==fastdex no java files have changed, just ignore")

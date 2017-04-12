@@ -3,22 +3,18 @@ package com.dx168.fastdex.build.util
 import com.android.build.api.transform.DirectoryInput
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
-import com.dx168.fastdex.build.variant.FastdexVariant
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.api.GradleException
 import org.gradle.api.Project
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 /**
  * Created by tong on 17/3/14.
  */
 public class FastdexUtils {
+    /**
+     * 获取sdk路径
+     * @param project
+     * @return
+     */
     public static final String getSdkDirectory(Project project) {
         String sdkDirectory = project.android.getSdkDirectory()
         if (sdkDirectory.contains("\\")) {
@@ -26,6 +22,12 @@ public class FastdexUtils {
         }
         return sdkDirectory
     }
+
+    /**
+     * 获取dx命令路径
+     * @param project
+     * @return
+     */
     public static final String getDxCmdPath(Project project) {
         File dx = new File(FastdexUtils.getSdkDirectory(project),"build-tools${File.separator}${project.android.getBuildToolsVersion()}${File.separator}dx")
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -33,6 +35,41 @@ public class FastdexUtils {
         }
         return dx.getAbsolutePath()
     }
+
+    /**
+     * 获取当前jdk路径
+     * @return
+     */
+    public static final String getCurrentJdk() {
+        String javaHomeProp = System.properties.'java.home'
+        if (javaHomeProp) {
+            int jreIndex = javaHomeProp.lastIndexOf("${File.separator}jre")
+            if (jreIndex != -1) {
+                return javaHomeProp.substring(0, jreIndex)
+            } else {
+                return javaHomeProp
+            }
+        } else {
+            return System.getenv("JAVA_HOME")
+        }
+    }
+
+    /**
+     * 获取java命令路径
+     * @return
+     */
+    public static final String getJavaCmdPath() {
+        StringBuilder cmd = new StringBuilder(getCurrentJdk())
+        if (!cmd.toString().endsWith(File.separator)) {
+            cmd.append(File.separator)
+        }
+        cmd.append("bin${File.separator}java")
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            cmd.append(".exe")
+        }
+        return new File(cmd.toString()).absolutePath
+    }
+
 
     /**
      * 获取fastdex的build目录
@@ -144,6 +181,12 @@ public class FastdexUtils {
         return cachedDependListFile
     }
 
+    /**
+     * 获取缓存的java文件对比结果文件
+     * @param project
+     * @param variantName
+     * @return
+     */
     public static File getDiffResultSetFile(Project project,String variantName) {
         File diffResultFile = new File(getBuildDir(project,variantName),Constant.LAST_DIFF_RESULT_SET_FILENAME)
         return diffResultFile
@@ -177,94 +220,6 @@ public class FastdexUtils {
         }
 
         return dirClasspaths
-    }
-
-    /**
-     * 生成补丁jar,仅把变化部分参与jar的生成
-     * @param project
-     * @param directoryInputFiles
-     * @param outputJar
-     * @param changedClassPatterns
-     * @throws IOException
-     */
-    public static void generatePatchJar(FastdexVariant fastdexVariant, Set<File> directoryInputFiles, File patchJar) throws IOException {
-        long start = System.currentTimeMillis()
-        def project = fastdexVariant.project
-        project.logger.error("==fastdex generate patch jar start")
-
-        if (directoryInputFiles == null || directoryInputFiles.isEmpty()) {
-            throw new IllegalArgumentException("DirectoryInputFiles can not be null!!")
-        }
-
-        Set<String> changedClasses = fastdexVariant.projectSnapshoot.diffResultSet.addOrModifiedClasses
-        if (fastdexVariant.configuration.hotClasses != null) {
-            String packageName = fastdexVariant.getApplicationPackageName()
-            for (String str : fastdexVariant.configuration.hotClasses) {
-                if (str != null) {
-                    changedClasses.add(str.replaceAll("\\{package\\}",packageName))
-                }
-            }
-        }
-
-        if (project.fastdex.debug) {
-            project.logger.error("==fastdex debug changedClasses: ${changedClasses}")
-        }
-
-        if (changedClasses == null || changedClasses.isEmpty()) {
-            throw new IllegalArgumentException("No java files changed!!")
-        }
-
-        FileUtils.deleteFile(patchJar)
-
-        ZipOutputStream outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
-        try {
-            for (File classpathFile : directoryInputFiles) {
-                Path classpath = classpathFile.toPath()
-                Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
-                    @Override
-                    FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        if (!file.toFile().getName().endsWith(Constant.CLASS_SUFFIX)) {
-                            return FileVisitResult.CONTINUE;
-                        }
-                        Path relativePath = classpath.relativize(file)
-                        String className = relativePath.toString().substring(0,relativePath.toString().length() - Constant.CLASS_SUFFIX.length());
-                        className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
-
-                        for (String cn : changedClasses) {
-                            if (cn.equals(className) || className.startsWith("${cn}\$")) {
-                                String entryName = relativePath.toString()
-                                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                                    entryName = entryName.replace("\\", "/");
-                                }
-
-                                ZipEntry e = new ZipEntry(entryName)
-                                outputJarStream.putNextEntry(e)
-
-                                if (project.fastdex.debug) {
-                                    project.logger.error("==fastdex add entry: ${e}")
-                                }
-                                byte[] bytes = FileUtils.readContents(file.toFile())
-                                outputJarStream.write(bytes,0,bytes.length)
-                                outputJarStream.closeEntry()
-                                break;
-                            }
-                        }
-                        return FileVisitResult.CONTINUE
-                    }
-                })
-            }
-
-        } finally {
-            if (outputJarStream != null) {
-                outputJarStream.close();
-            }
-        }
-
-        if (!FileUtils.isLegalFile(patchJar)) {
-            throw new GradleException("==fastdex generate patch jar fail: ${patchJar}")
-        }
-        long end = System.currentTimeMillis();
-        project.logger.error("==fastdex generate patch jar complete: ${patchJar} use: ${end - start}ms")
     }
 
     /**
