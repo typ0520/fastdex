@@ -1,7 +1,6 @@
 package com.dx168.fastdex.build.util
 
 import com.dx168.fastdex.build.variant.FastdexVariant
-import org.gradle.api.Project
 import org.objectweb.asm.*
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
@@ -51,13 +50,13 @@ public class ClassInject implements Opcodes {
                     }
 
                     boolean needInject = true
-//                    if (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class")) {
-//                        String packageName = fastdexVariant.getApplicationPackageName()
-//                        String packageNamePath = packageName.split("\\.").join(File.separator)
-//                        if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
-//                            needInject = false
-//                        }
-//                    }
+                    if (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class")) {
+                        String packageName = fastdexVariant.getApplicationPackageName()
+                        String packageNamePath = packageName.split("\\.").join(File.separator)
+                        if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
+                            needInject = false
+                        }
+                    }
                     if (needInject) {
                         project.logger.error("==fastdex inject: ${classFile.getAbsolutePath()}")
                         byte[] classBytes = FileUtils.readContents(classFile)
