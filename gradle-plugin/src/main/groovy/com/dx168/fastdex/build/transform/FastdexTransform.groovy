@@ -111,6 +111,11 @@ class FastdexTransform extends TransformProxy {
                     //save snapshoot and diffinfo
                     fastdexVariant.projectSnapshoot.saveCurrentSourceSetSnapshoot()
                     fastdexVariant.projectSnapshoot.deleteLastDiffResultSet()
+                    //移除idx.xml public.xml
+                    File idsXmlFile = FastdexUtils.getIdxXmlFile(project,fastdexVariant.variantName)
+                    File publicXmlFile = FastdexUtils.getPublicXmlFile(project,fastdexVariant.variantName)
+                    FileUtils.deleteFile(idsXmlFile)
+                    FileUtils.deleteFile(publicXmlFile)
                 }
                 else {
                     //复制补丁打包的dex到输出路径
@@ -203,8 +208,7 @@ class FastdexTransform extends TransformProxy {
      */
     void copyRTxt() {
         File sourceFile = new File(fastdexVariant.androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
-        File destFile = new File(FastdexUtils.getBuildDir(project,variantName),Constant.R_TXT)
-        FileUtils.copyFileUsingStream(sourceFile,destFile)
+        FileUtils.copyFileUsingStream(sourceFile,FastdexUtils.getResourceMappingFile(fastdexVariant.project,fastdexVariant.variantName))
     }
 
     /**

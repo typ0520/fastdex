@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
 
 
         String s2 = getString(R.string.s2);
-        Toast.makeText(this,"" + " | " + s1 + " | " + s2 + " | " + s3,Toast.LENGTH_LONG).show();
+        Toast.makeText(this,"1" + " | " + s1 + " | " + s2 + " | " + s3,Toast.LENGTH_LONG).show();
 
         new Runnable(){
             @Override

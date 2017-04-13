@@ -98,9 +98,9 @@ public class FastdexVariant {
                     throw new CheckException("miss sourceSet snapshoot file: ${sourceSetSnapshootFile}")
                 }
 
-                File cachedResourceMappingFile = FastdexUtils.getCachedResourceMappingFile(project,variantName)
-                if (!FileUtils.isLegalFile(cachedResourceMappingFile)) {
-                    throw new CheckException("miss resource mapping file: ${cachedResourceMappingFile}")
+                File resourceMappingFile = FastdexUtils.getResourceMappingFile(project,variantName)
+                if (!FileUtils.isLegalFile(resourceMappingFile)) {
+                    throw new CheckException("miss resource mapping file: ${resourceMappingFile}")
                 }
 
                 File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)

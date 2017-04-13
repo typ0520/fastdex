@@ -27,7 +27,7 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     public BaseDirectorySnapshoot(File directory) throws IOException {
-        this(directory,null);
+        this(directory,(ScanFilter)null);
     }
 
     public BaseDirectorySnapshoot(File directory, ScanFilter scanFilter) throws IOException {
@@ -38,7 +38,25 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
             throw new IllegalArgumentException("Invalid directory: " + directory);
         }
         this.path = directory.getAbsolutePath();
+
         walkFileTree(directory,scanFilter);
+    }
+
+    public BaseDirectorySnapshoot(File directory, String ...childPath) throws IOException {
+        if (directory == null) {
+            throw new IllegalArgumentException("Directory can not be null!!");
+        }
+        if (!directory.exists() || !directory.isDirectory()) {
+            throw new IllegalArgumentException("Invalid directory: " + directory);
+        }
+        if (childPath == null || childPath.length == 0) {
+            throw new IllegalArgumentException("ChildPath can not be epmty!!");
+        }
+        this.path = directory.getAbsolutePath();
+
+        for (String path : childPath) {
+            visitFile(new File(path).toPath(),null,null);
+        }
     }
 
     @Override

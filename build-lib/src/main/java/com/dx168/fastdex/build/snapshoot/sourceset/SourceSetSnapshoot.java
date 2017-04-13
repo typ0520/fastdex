@@ -64,6 +64,11 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         }
     }
 
+    public void addJavaDirectorySnapshoot(JavaDirectorySnapshoot javaDirectorySnapshoot) {
+        nodes.add(StringNode.create(javaDirectorySnapshoot.path));
+        directorySnapshootSet.add(javaDirectorySnapshoot);
+    }
+
     @Override
     protected SourceSetDiffResultSet createEmptyResultSet() {
         return new SourceSetDiffResultSet();

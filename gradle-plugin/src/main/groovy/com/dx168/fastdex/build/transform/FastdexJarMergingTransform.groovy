@@ -40,7 +40,7 @@ class FastdexJarMergingTransform extends TransformProxy {
         else {
             //inject dir input
             Set<File> directoryInputFiles = FastdexUtils.getDirectoryInputFiles(transformInvocation)
-            ClassInject.injectDirectoryInputFiles(fastdexVariant.project,directoryInputFiles)
+            ClassInject.injectDirectoryInputFiles(fastdexVariant,directoryInputFiles)
             base.transform(transformInvocation)
         }
     }

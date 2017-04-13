@@ -24,9 +24,6 @@ import com.dx168.fastdex.build.util.FastdexUtils
  * Created by tong on 17/3/11.
  */
 public class FastdexResourceIdTask extends DefaultTask {
-    static final String RESOURCE_PUBLIC_XML = "public.xml"
-    static final String RESOURCE_IDX_XML = "idx.xml"
-
     FastdexVariant fastdexVariant
     String resDir
 
@@ -36,9 +33,7 @@ public class FastdexResourceIdTask extends DefaultTask {
 
     @TaskAction
     def applyResourceId() {
-        File buildDir = FastdexUtils.getBuildDir(project,fastdexVariant.variantName)
-
-        String resourceMappingFile = new File(buildDir,Constant.R_TXT)
+        String resourceMappingFile = FastdexUtils.getResourceMappingFile(project,fastdexVariant.variantName)
 
         // Parse the public.xml and ids.xml
         if (!FileUtils.isLegalFile(new File(resourceMappingFile))) {
@@ -46,8 +41,8 @@ public class FastdexResourceIdTask extends DefaultTask {
             return
         }
 
-        File idsXmlFile = new File(buildDir,RESOURCE_IDX_XML)
-        File publicXmlFile = new File(buildDir,RESOURCE_PUBLIC_XML)
+        File idsXmlFile = FastdexUtils.getIdxXmlFile(project,fastdexVariant.variantName)
+        File publicXmlFile = FastdexUtils.getPublicXmlFile(project,fastdexVariant.variantName)
         if (FileUtils.isLegalFile(idsXmlFile) && FileUtils.isLegalFile(publicXmlFile)) {
             project.logger.error("==fastdex public xml file and ids xml file already exist, just ignore")
             return
@@ -70,12 +65,12 @@ public class FastdexResourceIdTask extends DefaultTask {
 
         if (publicFile.exists()) {
             FileUtils.copyFileUsingStream(publicFile, publicXmlFile)
-            project.logger.error("==fastdex gen resource public.xml in ${RESOURCE_PUBLIC_XML}")
+            project.logger.error("==fastdex gen resource public.xml in ${Constant.RESOURCE_PUBLIC_XML}")
         }
         File idxFile = new File(idsXml)
         if (idxFile.exists()) {
             FileUtils.copyFileUsingStream(idxFile, idsXmlFile)
-            project.logger.error("==fastdex gen resource idx.xml in ${RESOURCE_IDX_XML}")
+            project.logger.error("==fastdex gen resource idx.xml in ${Constant.RESOURCE_IDX_XML}")
         }
     }
 }

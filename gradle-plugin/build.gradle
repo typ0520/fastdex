@@ -13,9 +13,9 @@ repositories {
     jcenter()
 }
 
-tasks['install'].doLast {
-    //删除掉libs目录,开发环境就不会报类重复了
-    project.file("build${File.separator}libs").deleteDir()
-}
+//tasks['install'].doLast {
+//    //删除掉libs目录,开发环境就不会报类重复了
+//    project.file("build${File.separator}libs").deleteDir()
+//}
 
 apply from: rootProject.file('bintray.gradle')

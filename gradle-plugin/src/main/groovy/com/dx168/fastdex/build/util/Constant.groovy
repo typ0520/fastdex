@@ -15,6 +15,8 @@ public interface Constant {
     String CLASS_SUFFIX = ".class"
     String DEX_SUFFIX = ".dex"
     String R_TXT = "R.txt"
+    String RESOURCE_PUBLIC_XML = "public.xml"
+    String RESOURCE_IDX_XML = "idx.xml"
     String CLASSES = "classes"
     String CLASSES_DEX = "${CLASSES}${DEX_SUFFIX}"
     String TAG_ALREADY_EXEC_DEX_MERGE = "tag_already_exec_dex_merge"

@@ -1,5 +1,6 @@
 package com.dx168.fastdex.build.util
 
+import com.dx168.fastdex.build.variant.FastdexVariant
 import org.gradle.api.Project
 import org.objectweb.asm.*
 import java.nio.file.FileVisitResult
@@ -34,7 +35,8 @@ public class ClassInject implements Opcodes {
      * 往所有项目代码里注入解决pre-verify问题的code
      * @param directoryInputFiles
      */
-    public static final void injectDirectoryInputFiles(Project project,Set<File> directoryInputFiles) {
+    public static final void injectDirectoryInputFiles(FastdexVariant fastdexVariant, Set<File> directoryInputFiles) {
+        def project = fastdexVariant.project
         long start = System.currentTimeMillis()
         for (File classpathFile : directoryInputFiles) {
             Path classpath = classpathFile.toPath()
@@ -42,13 +44,26 @@ public class ClassInject implements Opcodes {
             Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
                 @Override
                 FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (!file.toFile().getName().endsWith(Constant.CLASS_SUFFIX)) {
+                    File classFile = file.toFile()
+                    String fileName = classFile.getName()
+                    if (!fileName.endsWith(Constant.CLASS_SUFFIX)) {
                         return FileVisitResult.CONTINUE;
                     }
-                    project.logger.error("==fastdex inject: ${file.toFile().getAbsolutePath()}")
-                    byte[] classBytes = FileUtils.readContents(file.toFile())
-                    classBytes = ClassInject.inject(classBytes)
-                    FileUtils.write2file(classBytes,file.toFile())
+
+                    boolean needInject = true
+//                    if (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class")) {
+//                        String packageName = fastdexVariant.getApplicationPackageName()
+//                        String packageNamePath = packageName.split("\\.").join(File.separator)
+//                        if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
+//                            needInject = false
+//                        }
+//                    }
+                    if (needInject) {
+                        project.logger.error("==fastdex inject: ${classFile.getAbsolutePath()}")
+                        byte[] classBytes = FileUtils.readContents(classFile)
+                        classBytes = ClassInject.inject(classBytes)
+                        FileUtils.write2file(classBytes,classFile)
+                    }
                     return FileVisitResult.CONTINUE
                 }
             })

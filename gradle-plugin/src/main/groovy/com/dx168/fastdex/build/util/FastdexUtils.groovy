@@ -92,6 +92,16 @@ public class FastdexUtils {
     }
 
     /**
+     * 获取fastdex指定variantName的work目录
+     * @param project
+     * @return
+     */
+    public static final File getWorkDir(Project project,String variantName) {
+        File file = new File(getBuildDir(project,variantName),"work")
+        return file;
+    }
+
+    /**
      * 获取指定variantName的dex缓存目录
      * @param project
      * @return
@@ -165,9 +175,35 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getCachedResourceMappingFile(Project project,String variantName) {
-        File resourceMappingFile = new File(getBuildDir(project,variantName),Constant.R_TXT)
+    public static File getResourceMappingFile(Project project, String variantName) {
+        File resourceMappingFile = new File(getBuildResourceDir(project,variantName),Constant.R_TXT)
         return resourceMappingFile
+    }
+
+    /**
+     * 获取缓存的idx.xml文件
+     * @param project
+     * @param variantName
+     * @return
+     */
+    public static File getIdxXmlFile(Project project, String variantName) {
+        File idxXmlFile = new File(getBuildResourceDir(project,variantName),Constant.RESOURCE_IDX_XML)
+        return idxXmlFile
+    }
+
+    /**
+     * 获取缓存的public.xml文件
+     * @param project
+     * @param variantName
+     * @return
+     */
+    public static File getPublicXmlFile(Project project, String variantName) {
+        File publicXmlFile = new File(getBuildResourceDir(project,variantName),Constant.RESOURCE_PUBLIC_XML)
+        return publicXmlFile
+    }
+
+    private static File getBuildResourceDir(Project project, String variantName) {
+        return new File(getBuildDir(project,variantName),"r")
     }
 
     /**

@@ -13,17 +13,16 @@ fastdex {
     debug = true
 
     //default false
-    //自定义的compile任务,用来代替compileXXXXJavaWithJavac
-    //0.0.3-beta3之前默认是开启的,0.0.3-beta3后默认关闭了
+    //自定义的compile任务,用来代替compileXXXXJavaWithJavac(实验性功能,建议暂时别打开)
     useCustomCompile = false
 
-    //default ["{packageName}.R","{packageName}.BuildConfig"]
-    //每次都参与dex生成的class,{packageName}是占位符，值取自AndroidManifest.xml中package属性值
-    hotClasses = ["{package}.R","{package}.BuildConfig"]
+    //default []
+    //每次都参与dex生成的class
+    hotClasses = []
 
-    //default 6
+    //default 4
     //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
-    dexMergeThreshold = 2
+    dexMergeThreshold = 4
 }
 
 android {
@@ -46,7 +45,7 @@ android {
 
         applicationId "com.dx168.fastdex.sample"
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         multiDexEnabled true
     }
 
@@ -108,30 +107,30 @@ dependencies {
     compile "io.reactivex:rxjava:1.1.5"
     compile 'com.google.code.gson:gson:2.3.1'
 
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
-    compile 'org.xutils:xutils:3.3.36'
-    compile 'de.hdodenhof:circleimageview:2.0.0'
-    compile 'de.hdodenhof:circleimageview:2.0.0'
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'info.hoang8f:android-segmented:1.0.6'
-    compile 'com.squareup.okio:okio:1.0.1'
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
-    compile 'com.zhy:okhttputils:2.4.1'
-    compile 'joda-time:joda-time:2.6'
-    compile 'com.squareup.retrofit:retrofit:1.8.0'
-    compile 'com.squareup.okhttp:okhttp:2.2.0'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
-    compile "org.greenrobot:eventbus:3.0.0"
-    compile "org.glassfish:javax.annotation:10.0-b28"
-    compile "com.commit451:PhotoView:1.2.4"
-    compile "com.evernote:android-sdk:2.0.0-RC3"
-    compile 'com.android.volley:volley:1.0.0'
-    compile 'com.dialonce:dialonce-android:2.3.1'
-    compile 'com.facebook.fresco:fresco:1.1.0'
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.android.support:design:23.4.0'
-    compile 'com.bigkoo:alertview:1.0.2'
-    compile 'com.bigkoo:pickerview:2.0.8'
+//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+//    compile 'org.xutils:xutils:3.3.36'
+//    compile 'de.hdodenhof:circleimageview:2.0.0'
+//    compile 'de.hdodenhof:circleimageview:2.0.0'
+//    compile 'com.squareup.retrofit:retrofit:1.9.0'
+//    compile 'info.hoang8f:android-segmented:1.0.6'
+//    compile 'com.squareup.okio:okio:1.0.1'
+//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+//    compile 'com.zhy:okhttputils:2.4.1'
+//    compile 'joda-time:joda-time:2.6'
+//    compile 'com.squareup.retrofit:retrofit:1.8.0'
+//    compile 'com.squareup.okhttp:okhttp:2.2.0'
+//    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+//    compile "org.greenrobot:eventbus:3.0.0"
+//    compile "org.glassfish:javax.annotation:10.0-b28"
+//    compile "com.commit451:PhotoView:1.2.4"
+//    compile "com.evernote:android-sdk:2.0.0-RC3"
+//    compile 'com.android.volley:volley:1.0.0'
+//    compile 'com.dialonce:dialonce-android:2.3.1'
+//    compile 'com.facebook.fresco:fresco:1.1.0'
+//    compile 'com.google.guava:guava:18.0'
+//    compile 'com.android.support:design:23.4.0'
+//    compile 'com.bigkoo:alertview:1.0.2'
+//    compile 'com.bigkoo:pickerview:2.0.8'
 
     debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2'
     releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'

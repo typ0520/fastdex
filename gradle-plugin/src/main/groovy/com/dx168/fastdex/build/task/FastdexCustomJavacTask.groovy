@@ -74,8 +74,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
         }
         Set<PathInfo> addOrModifiedPathInfos = sourceSetDiffResultSet.addOrModifiedPathInfos
 
-        File patchJavaFileDir = new File(FastdexUtils.getBuildDir(project,fastdexVariant.variantName),"custom-combind")
-        File patchClassesFileDir = new File(FastdexUtils.getBuildDir(project,fastdexVariant.variantName),"custom-combind-classes")
+        File patchJavaFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind")
+        File patchClassesFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind-classes")
         FileUtils.deleteDir(patchJavaFileDir)
         FileUtils.ensumeDir(patchClassesFileDir)
 
@@ -85,7 +85,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         }
 
         //处理动态生成的java文件
-        dealGeneratedSource(addOrModifiedPathInfos,patchJavaFileDir)
+        handleApt(addOrModifiedPathInfos,patchJavaFileDir)
 
         //compile java
         File androidJar = new File("${FastdexUtils.getSdkDirectory(project)}${File.separator}platforms${File.separator}${project.android.getCompileSdkVersion()}${File.separator}android.jar")
@@ -143,22 +143,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         fastdexVariant.projectSnapshoot.saveDiffResultSet()
     }
 
-    def dealGeneratedSource(Set<PathInfo> addOrModifiedPathInfos,File patchJavaFileDir) {
-        String packageName = fastdexVariant.getApplicationPackageName()
-        //copy R.java
-        String buildTypeName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
-        String packageNamePath = packageName.split("\\.").join(File.separator)
-        String rJavaRelativePath = "${packageNamePath}${File.separator}R.java"
-
-        //TODO 路径获取方式暂时先拼接
-        File rJavaFile = new File(new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${buildTypeName}${File.separator}"),rJavaRelativePath)
-        FileUtils.copyFileUsingStream(rJavaFile,new File(patchJavaFileDir,rJavaRelativePath))
-
-        //copy BuildConfig.java
-        String buildConfigJavaRelativePath = "${packageNamePath}${File.separator}BuildConfig.java"
-        File buildConfigJavaFile = new File(new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${buildTypeName}${File.separator}"),buildConfigJavaRelativePath)
-        FileUtils.copyFileUsingStream(buildConfigJavaFile,new File(patchJavaFileDir,buildConfigJavaRelativePath))
-
+    def handleApt(Set<PathInfo> addOrModifiedPathInfos, File patchJavaFileDir) {
         //TODO 扫描apt目录
     }
 
