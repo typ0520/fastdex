@@ -34,12 +34,14 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         if (directory == null) {
             throw new IllegalArgumentException("Directory can not be null!!");
         }
-        if (!directory.exists() || !directory.isDirectory()) {
-            throw new IllegalArgumentException("Invalid directory: " + directory);
-        }
+//        if (!directory.exists() || !directory.isDirectory()) {
+//            throw new IllegalArgumentException("Invalid directory: " + directory);
+//        }
         this.path = directory.getAbsolutePath();
 
-        walkFileTree(directory,scanFilter);
+        if (directory.exists() && directory.isDirectory()) {
+            walkFileTree(directory,scanFilter);
+        }
     }
 
     public BaseDirectorySnapshoot(File directory, String ...childPath) throws IOException {

@@ -1,6 +1,5 @@
 package com.dx168.fastdex.build.util
 
-import com.dx168.fastdex.build.snapshoot.file.ScanFilter
 import com.dx168.fastdex.build.snapshoot.sourceset.JavaDirectorySnapshoot
 import com.dx168.fastdex.build.snapshoot.sourceset.SourceSetDiffResultSet
 import com.dx168.fastdex.build.snapshoot.sourceset.SourceSetSnapshoot
