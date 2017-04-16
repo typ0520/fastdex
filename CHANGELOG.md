@@ -1,3 +1,19 @@
+## 0.1.0 (2017-4-16)
+
+Bugfixes:
+
+   - [fix-issue#30](https://github.com/typ0520/fastdex/issues/30)
+
+Features:
+
+   - 增加对直接依赖工程(包括间接依赖)的代码增量编译支持
+
+## 0.0.9 (2017-4-14)
+
+Bugfixes:
+
+   - 修复customJavacTask没有正确依赖generateSources任务的问题
+
 ## 0.0.7 (2017-4-13)
 
 Features:

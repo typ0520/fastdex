@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 
 /**
  * 目录快照
@@ -48,16 +49,36 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         if (directory == null) {
             throw new IllegalArgumentException("Directory can not be null!!");
         }
-        if (!directory.exists() || !directory.isDirectory()) {
-            throw new IllegalArgumentException("Invalid directory: " + directory);
-        }
-        if (childPath == null || childPath.length == 0) {
-            throw new IllegalArgumentException("ChildPath can not be epmty!!");
-        }
+//        if (!directory.exists() || !directory.isDirectory()) {
+//            throw new IllegalArgumentException("Invalid directory: " + directory);
+//        }
         this.path = directory.getAbsolutePath();
 
-        for (String path : childPath) {
-            visitFile(new File(path).toPath(),null,null);
+        if (childPath != null) {
+            for (String path : childPath) {
+                if (path != null) {
+                    visitFile(new File(path).toPath(),null,null);
+                }
+            }
+        }
+    }
+
+    public BaseDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
+        if (directory == null) {
+            throw new IllegalArgumentException("Directory can not be null!!");
+        }
+//        if (!directory.exists() || !directory.isDirectory()) {
+//            throw new IllegalArgumentException("Invalid directory: " + directory);
+//        }
+
+        this.path = directory.getAbsolutePath();
+
+        if (childPath != null) {
+            for (File f : childPath) {
+                if (f != null) {
+                    visitFile(f.toPath(),null,null);
+                }
+            }
         }
     }
 

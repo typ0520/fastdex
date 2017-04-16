@@ -45,5 +45,13 @@ proguard/
 app/build/
 buildSrc/build/
 
+build/
 
+
+common/build/
+common-group/common2/build/
+common-group/common3/build/
+javalib/build/
+javalib-group/javalib2/build/
+javalib-group/javalib3/build/
 

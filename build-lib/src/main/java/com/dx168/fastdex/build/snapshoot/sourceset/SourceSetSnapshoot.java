@@ -59,8 +59,12 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
             directorySnapshootSet = new HashSet<>();
         }
 
-        for (File sourceSet : sourceSetFiles) {
-            directorySnapshootSet.add(new JavaDirectorySnapshoot(sourceSet));
+        if (sourceSetFiles != null) {
+            for (File sourceSet : sourceSetFiles) {
+                if (sourceSet != null) {
+                    directorySnapshootSet.add(new JavaDirectorySnapshoot(sourceSet));
+                }
+            }
         }
     }
 

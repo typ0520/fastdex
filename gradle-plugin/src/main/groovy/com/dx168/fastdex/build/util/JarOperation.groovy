@@ -1,5 +1,9 @@
 package com.dx168.fastdex.build.util
 
+import com.android.build.api.transform.DirectoryInput
+import com.android.build.api.transform.JarInput
+import com.android.build.api.transform.TransformInput
+import com.android.build.api.transform.TransformInvocation
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.GradleException
@@ -17,6 +21,54 @@ import java.util.zip.ZipOutputStream
  * Created by tong on 17/11/4.
  */
 public class JarOperation implements Opcodes {
+    public static void generatePatchJar(FastdexVariant fastdexVariant, TransformInvocation transformInvocation, File patchJar) throws IOException {
+        Set<LibDependency> libraryDependencies = fastdexVariant.libraryDependencies
+        List<File> projectJarFiles = new ArrayList<>()
+        //获取所有依赖工程的输出jar (compile project(':xxx'))
+        for (LibDependency dependency : libraryDependencies) {
+            projectJarFiles.add(dependency.jarFile)
+        }
+
+        //所有的class目录
+        Set<File> directoryInputFiles = new HashSet<>();
+        //所有输入的jar
+        Set<File> jarInputFiles = new HashSet<>();
+        for (TransformInput input : transformInvocation.getInputs()) {
+            Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs()
+            if (directoryInputs != null) {
+                for (DirectoryInput directoryInput : directoryInputs) {
+                    directoryInputFiles.add(directoryInput.getFile())
+                }
+            }
+
+            if (!projectJarFiles.isEmpty()) {
+                Collection<JarInput> jarInputs = input.getJarInputs()
+                if (jarInputs != null) {
+                    for (JarInput jarInput : jarInputs) {
+                        if (projectJarFiles.contains(jarInput.getFile())) {
+                            jarInputFiles.add(jarInput.getFile())
+                        }
+                    }
+                }
+            }
+        }
+
+        def project = fastdexVariant.project
+        File tempDir = new File(fastdexVariant.buildDir,"temp")
+        FileUtils.deleteDir(tempDir)
+        FileUtils.ensumeDir(tempDir)
+
+        for (File file : jarInputFiles) {
+            File classesDir = new File(tempDir,"${file.name}-${System.currentTimeMillis()}")
+            project.copy {
+                from project.zipTree(inputJar)
+                into classesDir
+            }
+            directoryInputFiles.add(classesDir)
+        }
+        JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar);
+    }
+
     /**
      * 生成补丁jar,仅把变化部分参与jar的生成
      * @param project
@@ -56,8 +108,9 @@ public class JarOperation implements Opcodes {
 
         boolean willExeDexMerge = fastdexVariant.willExecDexMerge()
 
-        ZipOutputStream outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
+        ZipOutputStream outputJarStream = null
         try {
+            outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
             for (File classpathFile : directoryInputFiles) {
                 Path classpath = classpathFile.toPath()
                 Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){

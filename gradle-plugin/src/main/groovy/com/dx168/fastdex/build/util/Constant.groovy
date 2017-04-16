@@ -14,7 +14,7 @@ public interface Constant {
     String JAVA_SUFFIX = ".java"
     String CLASS_SUFFIX = ".class"
     String DEX_SUFFIX = ".dex"
-    String R_TXT = "R.txt"
+    String R_TXT = "r.txt"
     String RESOURCE_PUBLIC_XML = "public.xml"
     String RESOURCE_IDX_XML = "idx.xml"
     String CLASSES = "classes"

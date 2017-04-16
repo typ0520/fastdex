@@ -24,12 +24,18 @@
         android:layout_centerInParent="true"
         android:text="Fastdex sample"/>
 
+    <com.dx168.fastdex.sample.common.CommonView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/textview"
+        android:layout_marginTop="20dp"/>
+
     <com.dx168.fastdex.sample.CustomView
         android:layout_width="120dp"
         android:layout_height="50dp"
         android:textColor="#ffffff"
         android:layout_centerInParent="true"
-        android:text="Fastdex sample"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"/>
 

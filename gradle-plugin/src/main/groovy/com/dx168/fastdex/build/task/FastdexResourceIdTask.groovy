@@ -5,10 +5,10 @@ import com.dx168.fastdex.build.util.FileUtils
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import com.tencent.tinker.build.aapt.AaptResourceCollector
-import com.tencent.tinker.build.aapt.AaptUtil
-import com.tencent.tinker.build.aapt.PatchUtil
-import com.tencent.tinker.build.aapt.RDotTxtEntry
+import com.dx168.fastdex.build.aapt.AaptResourceCollector
+import com.dx168.fastdex.build.aapt.AaptUtil
+import com.dx168.fastdex.build.aapt.PatchUtil
+import com.dx168.fastdex.build.aapt.RDotTxtEntry
 import com.dx168.fastdex.build.util.FastdexUtils
 
 /**

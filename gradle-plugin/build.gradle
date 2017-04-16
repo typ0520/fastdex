@@ -6,7 +6,6 @@ dependencies {
     compile localGroovy()
     compile project(':build-lib')
     compile 'com.android.tools.build:gradle:2.1.2'
-    compile 'com.tencent.tinker:tinker-patch-lib:1.7.2'
 }
 
 repositories {

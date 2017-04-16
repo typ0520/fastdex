@@ -1,6 +1,7 @@
 package com.dx168.fastdex.build.variant
 
 import com.dx168.fastdex.build.extension.FastdexExtension
+import com.dx168.fastdex.build.util.LibDependency
 import com.dx168.fastdex.build.util.ProjectSnapshoot
 import com.dx168.fastdex.build.util.FastdexUtils
 import com.dx168.fastdex.build.util.FileUtils
@@ -21,9 +22,11 @@ public class FastdexVariant {
     final File rootBuildDir
     final File buildDir
     final ProjectSnapshoot projectSnapshoot
+    final TagManager tagManager
+    final Set<LibDependency> libraryDependencies
     boolean hasDexCache
     boolean firstPatchBuild
-    final TagManager tagManager
+    boolean initialized
 
     FastdexVariant(Project project, Object androidVariant) {
         this.project = project
@@ -37,6 +40,7 @@ public class FastdexVariant {
 
         projectSnapshoot = new ProjectSnapshoot(this)
         tagManager = new TagManager(this.project,this.variantName)
+        libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
 
         if (configuration.dexMergeThreshold <= 0) {
             throw new GradleException("dexMergeThreshold Must be greater than 0!!")
@@ -52,6 +56,10 @@ public class FastdexVariant {
     * 5、检查全量的代码jar包是否存在(app/build/fastdex/${variantName}/injected-combined.jar)
     */
     void prepareEnv() {
+        if (initialized) {
+            return
+        }
+        initialized = true
         hasDexCache = FastdexUtils.hasDexCache(project,variantName)
         if (hasDexCache) {
             File diffResultSetFile = FastdexUtils.getDiffResultSetFile(project,variantName)

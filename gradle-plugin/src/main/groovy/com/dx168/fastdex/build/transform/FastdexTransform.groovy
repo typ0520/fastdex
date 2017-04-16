@@ -141,8 +141,7 @@ class FastdexTransform extends TransformProxy {
             }
             else {
                 //如果没有开启multidex需要在此处做注入
-                Set<File> directoryInputFiles = FastdexUtils.getDirectoryInputFiles(transformInvocation)
-                ClassInject.injectDirectoryInputFiles(project,directoryInputFiles)
+                ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
                 File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
                 GradleUtils.executeMerge(project,transformInvocation,injectedJar)
             }

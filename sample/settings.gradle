@@ -1,1 +1,7 @@
 include ':app'
+include ':common'
+include ':common-group:common2'
+include ':common-group:common3'
+include ':javalib'
+include ':javalib-group:javalib2'
+include ':javalib-group:javalib3'

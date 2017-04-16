@@ -1,5 +1,9 @@
 package com.dx168.fastdex.build.util
 
+import com.android.build.api.transform.DirectoryInput
+import com.android.build.api.transform.JarInput
+import com.android.build.api.transform.TransformInput
+import com.android.build.api.transform.TransformInvocation
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.objectweb.asm.*
 import java.nio.file.FileVisitResult
@@ -31,44 +35,167 @@ import java.nio.file.attribute.BasicFileAttributes
  */
 public class ClassInject implements Opcodes {
     /**
+     * 注入class目录和jar文件
+     * @param fastdexVariant
+     * @param transformInvocation
+     */
+    public static final void injectTransformInvocation(FastdexVariant fastdexVariant, TransformInvocation transformInvocation) {
+        //所有的class目录
+        HashSet<File> directoryInputFiles = new HashSet<>();
+        //所有输入的jar
+        HashSet<File> jarInputFiles = new HashSet<>();
+        for (TransformInput input : transformInvocation.getInputs()) {
+            Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs()
+            if (directoryInputs != null) {
+                for (DirectoryInput directoryInput : directoryInputs) {
+                    directoryInputFiles.add(directoryInput.getFile())
+                }
+            }
+
+            Collection<JarInput> jarInputs = input.getJarInputs()
+            if (jarInputs != null) {
+                for (JarInput jarInput : jarInputs) {
+                    jarInputFiles.add(jarInput.getFile())
+                }
+            }
+        }
+        injectDirectoryInputFiles(fastdexVariant,directoryInputFiles)
+        injectJarInputFiles(fastdexVariant,jarInputFiles)
+    }
+
+    /**
      * 往所有项目代码里注入解决pre-verify问题的code
      * @param directoryInputFiles
      */
-    public static final void injectDirectoryInputFiles(FastdexVariant fastdexVariant, Set<File> directoryInputFiles) {
+    public static final void injectDirectoryInputFiles(FastdexVariant fastdexVariant, HashSet<File> directoryInputFiles) {
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
         for (File classpathFile : directoryInputFiles) {
-            Path classpath = classpathFile.toPath()
-            project.logger.error("====fastdex inject dir: ${classpath.toFile().getAbsolutePath()}====")
-            Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
-                @Override
-                FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    File classFile = file.toFile()
-                    String fileName = classFile.getName()
-                    if (!fileName.endsWith(Constant.CLASS_SUFFIX)) {
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    boolean needInject = true
-                    if (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class")) {
-                        String packageName = fastdexVariant.getApplicationPackageName()
-                        String packageNamePath = packageName.split("\\.").join(File.separator)
-                        if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
-                            needInject = false
-                        }
-                    }
-                    if (needInject) {
-                        project.logger.error("==fastdex inject: ${classFile.getAbsolutePath()}")
-                        byte[] classBytes = FileUtils.readContents(classFile)
-                        classBytes = ClassInject.inject(classBytes)
-                        FileUtils.write2file(classBytes,classFile)
-                    }
-                    return FileVisitResult.CONTINUE
-                }
-            })
+            project.logger.error("====fastdex ==inject dir: ${classpathFile.getAbsolutePath()}====")
+            ClassInject.injectDirectory(fastdexVariant,classpathFile,true)
         }
         long end = System.currentTimeMillis()
         project.logger.error("==fastdex inject complete dir-size: ${directoryInputFiles.size()} , use: ${end - start}ms")
+    }
+
+    /**
+     * 注入所有的依赖的library输出jar
+     *
+     * @param fastdexVariant
+     * @param directoryInputFiles
+     */
+    public static final void injectJarInputFiles(FastdexVariant fastdexVariant, HashSet<File> jarInputFiles) {
+        def project = fastdexVariant.project
+        long start = System.currentTimeMillis()
+
+        Set<LibDependency> libraryDependencies = fastdexVariant.libraryDependencies
+        List<File> projectJarFiles = new ArrayList<>()
+        //获取所有依赖工程的输出jar (compile project(':xxx'))
+        for (LibDependency dependency : libraryDependencies) {
+            projectJarFiles.add(dependency.jarFile)
+        }
+        if (fastdexVariant.configuration.debug) {
+            project.logger.error("==fastdex projectJarFiles : ${projectJarFiles}")
+        }
+        for (File file : jarInputFiles) {
+            if (!projectJarFiles.contains(file)) {
+                continue
+            }
+            project.logger.error("==fastdex ==inject jar: ${file}")
+            ClassInject.injectJar(fastdexVariant,file,file)
+        }
+        long end = System.currentTimeMillis()
+        project.logger.error("==fastdex inject complete jar-size: ${projectJarFiles.size()} , use: ${end - start}ms")
+    }
+
+    /**
+     * 注入jar包
+     * @param fastdexVariant
+     * @param inputJar
+     * @param outputJar
+     * @return
+     */
+    public static injectJar(FastdexVariant fastdexVariant, File inputJar,File outputJar) {
+        File tempDir = new File(fastdexVariant.buildDir,"temp")
+        FileUtils.deleteDir(tempDir)
+        FileUtils.ensumeDir(tempDir)
+
+        def project = fastdexVariant.project
+        project.copy {
+            from project.zipTree(inputJar)
+            into tempDir
+        }
+        ClassInject.injectDirectory(fastdexVariant,tempDir,false)
+        project.ant.zip(baseDir: tempDir, destFile: outputJar)
+//        ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream()
+//
+//        ZipOutputStream outputJarStream = null
+//        ZipFile zipFile = new ZipFile(file.absolutePath);
+//        Enumeration enumeration = zipFile.entries();
+//        try {
+//            outputJarStream = new ZipOutputStream(new FileOutputStream(new File("/Users/tong/Desktop/${file.name}")));
+//            while (enumeration.hasMoreElements()) {
+//                ZipEntry entry = (ZipEntry) enumeration.nextElement();
+//                if (entry.isDirectory()) {
+//                    continue;
+//                }
+//
+//                ZipEntry e = new ZipEntry(entry.name)
+//                outputJarStream.putNextEntry(e)
+//                //byte[] bytes = FileUtils.readStream(zipFile.getInputStream(entry))
+//                byte[] bytes = FileUtils.readContents(new File("/Users/tong/Desktop/a.txt"))
+//                outputJarStream.write(bytes,0,bytes.length);
+//                outputJarStream.flush()
+//                outputJarStream.closeEntry()
+//            }
+//            //FileUtils.write2file(zipOutputStream.toByteArray(),file);
+//        } finally {
+//            if (outputJarStream != null) {
+//                outputJarStream.close();
+//            }
+//
+//            if (zipFile != null) {
+//                zipFile.close();
+//            }
+//        }
+    }
+
+    /**
+     * 注入指定目录下的所有class
+     * @param classpath
+     */
+    public static void injectDirectory(FastdexVariant fastdexVariant,File classesDir,boolean applicationProjectSrc) {
+        if (!FileUtils.dirExists(classesDir.absolutePath)) {
+            return
+        }
+        Path classpath = classesDir.toPath()
+
+        Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
+            @Override
+            FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                File classFile = file.toFile()
+                String fileName = classFile.getName()
+                if (!fileName.endsWith(Constant.CLASS_SUFFIX)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                boolean needInject = true
+                if (applicationProjectSrc && (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class"))) {
+                    String packageName = fastdexVariant.getApplicationPackageName()
+                    String packageNamePath = packageName.split("\\.").join(File.separator)
+                    if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
+                        needInject = false
+                    }
+                }
+                if (needInject) {
+                    fastdexVariant.project.logger.error("==fastdex inject: ${classFile.getAbsolutePath()}")
+                    byte[] classBytes = FileUtils.readContents(classFile)
+                    classBytes = ClassInject.inject(classBytes)
+                    FileUtils.write2file(classBytes,classFile)
+                }
+                return FileVisitResult.CONTINUE
+            }
+        })
     }
 
     /**

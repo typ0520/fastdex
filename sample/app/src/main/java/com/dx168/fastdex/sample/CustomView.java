@@ -3,6 +3,7 @@ package com.dx168.fastdex.sample;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -10,7 +11,7 @@ import butterknife.ButterKnife;
 /**
  * Created by tong on 17/3/12.
  */
-public class CustomView extends LinearLayout {
+public class CustomView extends RelativeLayout {
     @BindView(R.id.tv)  TextView tv;
 
     public CustomView(Context context, AttributeSet attrs) {
@@ -18,7 +19,7 @@ public class CustomView extends LinearLayout {
         inflate(context,R.layout.view_custom,this);
         ButterKnife.bind(this);
 
-        tv.setText(getResources().getString(R.string.s3) + "");
+        tv.setText(getResources().getString(R.string.s3) + " -1");
         MainActivity.aa();
     }
 }

@@ -78,6 +78,7 @@ artifacts {
     archives sourcesJar
 }
 
+tasks['javadoc'].enabled = false
 
 bintray {
     user = bintray_user

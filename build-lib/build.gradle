@@ -10,6 +10,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.code.gson:gson:2.3.1'
     compile group: 'org.apache.ant', name: 'ant', version: '1.8.2'
+    compile group: 'com.google.guava', name: 'guava', version: '11.0.2'
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.code.gson:gson:2.3.1'

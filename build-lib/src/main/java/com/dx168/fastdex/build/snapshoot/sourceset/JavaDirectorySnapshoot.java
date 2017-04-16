@@ -7,6 +7,7 @@ import com.dx168.fastdex.build.snapshoot.file.FileSuffixFilter;
 import com.dx168.fastdex.build.snapshoot.file.ScanFilter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Created by tong on 17/3/30.
@@ -29,7 +30,11 @@ public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffI
         super(directory, scanFilter);
     }
 
-    public JavaDirectorySnapshoot(File directory, String... childPath) throws IOException {
+    public JavaDirectorySnapshoot(File directory, String ...childPath) throws IOException {
+        super(directory, childPath);
+    }
+
+    public JavaDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
         super(directory, childPath);
     }
 

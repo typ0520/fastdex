@@ -98,19 +98,11 @@ class FastdexPlugin implements Plugin<Project> {
                     project.logger.error("====================fastdex====================")
                 }
                 else {
-                    Task compileTask = project.tasks.getByName("compile${variantName}JavaWithJavac")
+
                     Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
                     customJavacTask.fastdexVariant = fastdexVariant
-                    customJavacTask.compileTask = compileTask
-                    compileTask.dependsOn customJavacTask
-
-                    Task generateSourcesTask = getGenerateSourcesTask(project,variantName)
-                    if (generateSourcesTask != null) {
-                        compileTask.mustRunAfter generateSourcesTask
-                    }
-                    else {
-                        compileTask.mustRunAfter variantOutput.processResources
-                    }
+                    customJavacTask.mustRunAfter getGenerateSourcesTask(project,variantName)
+                    variant.javaCompile.dependsOn customJavacTask
 
                     Task multidexlistTask = getTransformClassesWithMultidexlistTask(project,variantName)
                     if (multidexlistTask != null) {
@@ -157,7 +149,9 @@ class FastdexPlugin implements Plugin<Project> {
                                     Transform transform = ((TransformTask) task).getTransform()
                                     //如果开启了multiDexEnabled true,存在transformClassesWithJarMergingFor${variantName}任务
                                     if ((((transform instanceof JarMergingTransform)) && !(transform instanceof FastdexJarMergingTransform))) {
-                                        project.logger.error("==fastdex find jarmerging transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
+                                        if (fastdexVariant.configuration.debug) {
+                                            project.logger.error("==fastdex find jarmerging transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
+                                        }
 
                                         FastdexJarMergingTransform jarMergingTransform = new FastdexJarMergingTransform(transform,fastdexVariant)
                                         Field field = getFieldByName(task.getClass(),'transform')
@@ -166,8 +160,9 @@ class FastdexPlugin implements Plugin<Project> {
                                     }
 
                                     if ((((transform instanceof DexTransform)) && !(transform instanceof FastdexTransform))) {
-                                        project.logger.error("==fastdex find dex transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
-
+                                        if (fastdexVariant.configuration.debug) {
+                                            project.logger.error("==fastdex find dex transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
+                                        }
                                         //代理DexTransform,实现自定义的转换
                                         FastdexTransform fastdexTransform = new FastdexTransform(transform,fastdexVariant)
                                         Field field = getFieldByName(task.getClass(),'transform')
@@ -195,11 +190,7 @@ class FastdexPlugin implements Plugin<Project> {
 
     Task getGenerateSourcesTask(Project project, String variantName) {
         String generateSourcesTaskName = "generate${variantName}Sources"
-        try {
-            return  project.tasks.getByName(generateSourcesTaskName)
-        } catch (Throwable e) {
-            return null
-        }
+        project.tasks.getByName(generateSourcesTaskName)
     }
 
     Task getTransformClassesWithMultidexlistTask(Project project, String variantName) {

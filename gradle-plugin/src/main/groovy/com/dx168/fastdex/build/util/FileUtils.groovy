@@ -213,6 +213,27 @@ public class FileUtils {
         return output.toByteArray();
     }
 
+    public static byte[] readStream(final InputStream is) throws IOException {
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+        final int bufferSize = BUFFER_SIZE;
+        try {
+            final BufferedInputStream bIn = new BufferedInputStream(is);
+            int length;
+            byte[] buffer = new byte[bufferSize];
+            byte[] bufferCopy;
+            while ((length = bIn.read(buffer, 0, bufferSize)) != -1) {
+                bufferCopy = new byte[length];
+                System.arraycopy(buffer, 0, bufferCopy, 0, length);
+                output.write(bufferCopy);
+            }
+            bIn.close();
+        } finally {
+            output.close();
+            is.close();
+        }
+        return output.toByteArray();
+    }
+
     public static final void copyDir(File sourceDir, File destDir, final String suffix) throws IOException {
         final Path sourcePath = sourceDir.toPath();
         final Path destPath = destDir.toPath();
