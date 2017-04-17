@@ -72,7 +72,7 @@ public class DexOperation implements Opcodes {
                     inputFiles,
                     patchDex.parentFile,
                     false,
-                    base.mainDexListFile,
+                    null,//fix-issue#27  fix-issue#22
                     base.dexOptions,
                     outputHandler)
         }
