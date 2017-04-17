@@ -25,4 +25,5 @@ public interface Constant {
     String DEPENDENCIES_MAPPING_FILENAME = "dependencies-mapping.txt"
     String SOURCESET_SNAPSHOOT_FILENAME = "sourceSets.json"
     String LAST_DIFF_RESULT_SET_FILENAME = "lastDiffResultSet.json"
+    String ERROR_REPORT_FILENAME = "last-build-error-report.txt"
 }

@@ -9,7 +9,7 @@ import com.dx168.fastdex.build.task.FastdexCreateMaindexlistFileTask
 import com.dx168.fastdex.build.task.FastdexManifestTask
 import com.dx168.fastdex.build.task.FastdexResourceIdTask
 import com.dx168.fastdex.build.transform.FastdexJarMergingTransform
-import com.dx168.fastdex.build.util.BuildTimeListener
+import com.dx168.fastdex.build.util.FastdexBuildListener
 import com.dx168.fastdex.build.util.Constant
 import com.dx168.fastdex.build.util.GradleUtils
 import com.dx168.fastdex.build.variant.FastdexVariant
@@ -32,12 +32,11 @@ import com.dx168.fastdex.build.task.FastdexCustomJavacTask
 class FastdexPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
-        project.gradle.addListener(new BuildTimeListener())
         project.extensions.create('fastdex', FastdexExtension)
 
+        FastdexBuildListener.addByProject(project)
         project.afterEvaluate {
             def configuration = project.fastdex
-
             if (!configuration.fastdexEnable) {
                 project.logger.error("====fastdex tasks are disabled.====")
                 return
@@ -82,7 +81,6 @@ class FastdexPlugin implements Plugin<Project> {
                 } catch (UnknownTaskException e) {
                     // Not in instant run mode, continue.
                 }
-
                 FastdexVariant fastdexVariant = new FastdexVariant(project,variant)
 
                 //创建清理指定variantName缓存的任务(用户触发)
