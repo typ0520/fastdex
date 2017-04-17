@@ -206,8 +206,11 @@ class FastdexTransform extends TransformProxy {
      * 保存资源映射文件
      */
     void copyRTxt() {
-        File sourceFile = new File(fastdexVariant.androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
-        FileUtils.copyFileUsingStream(sourceFile,FastdexUtils.getResourceMappingFile(fastdexVariant.project,fastdexVariant.variantName))
+        File rtxtFile = new File(fastdexVariant.androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
+        if (!FileUtils.isLegalFile(rtxtFile)) {
+            rtxtFile = new File(project.buildDir,"${File.separator}intermediates${File.separator}symbols${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}R.txt")
+        }
+        FileUtils.copyFileUsingStream(rtxtFile,FastdexUtils.getResourceMappingFile(fastdexVariant.project,fastdexVariant.variantName))
     }
 
     /**

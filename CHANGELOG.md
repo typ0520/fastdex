@@ -1,3 +1,13 @@
+## 0.1.1 (2017-4-17)
+
+Bugfixes:
+
+   - [fix-issue#32](https://github.com/typ0520/fastdex/issues/32)
+
+Features:
+
+   - 打包出错时生成错误日志方便大家提issue
+
 ## 0.1.0 (2017-4-16)
 
 Bugfixes:

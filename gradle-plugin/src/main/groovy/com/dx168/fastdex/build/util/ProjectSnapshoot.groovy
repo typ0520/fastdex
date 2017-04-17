@@ -58,10 +58,9 @@ public class ProjectSnapshoot {
             }
         }
 
-        String buildTypeName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
-        File rDir = new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${buildTypeName}${File.separator}")
+        File rDir = new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
         //r
-        JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,getAllRjavaPath(fastdexVariant.project,androidLibDependencies,buildTypeName))
+        JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,getAllRjavaPath(fastdexVariant.project,androidLibDependencies))
         snapshoot.addJavaDirectorySnapshoot(rSnapshoot)
 
         //buildconfig
@@ -76,9 +75,15 @@ public class ProjectSnapshoot {
             String packageNamePath = packageName.split("\\.").join(File.separator)
             //buildconfig
             String buildConfigJavaRelativePath = "${packageNamePath}${File.separator}BuildConfig.java"
+            File buildConfigDir = null
+            if (i == 0) {
+                buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
+            }
+            else {
+                buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}release${File.separator}")
+            }
 
-            def buildTypeDirName = (i == 0 ? buildTypeName : "release")
-            File buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${buildTypeDirName}${File.separator}")
+
             File buildConfigJavaFile = new File(buildConfigDir,buildConfigJavaRelativePath)
             if (fastdexVariant.configuration.debug) {
                 fastdexVariant.project.logger.error("==fastdex buildConfigJavaFile: ${buildConfigJavaFile}")
@@ -98,8 +103,8 @@ public class ProjectSnapshoot {
         }
     }
 
-    def getAllRjavaPath(Project appProject,List<LibDependency> androidLibDependencies,String buildTypeName) {
-        File rDir = new File(appProject.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${buildTypeName}${File.separator}")
+    def getAllRjavaPath(Project appProject,List<LibDependency> androidLibDependencies) {
+        File rDir = new File(appProject.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
         List<File> fileList = new ArrayList<>()
         for (LibDependency libDependency : androidLibDependencies) {
             String packageName = GradleUtils.getPackageName(libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile.absolutePath)
