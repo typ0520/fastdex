@@ -33,30 +33,32 @@ public class GradleUtils {
      * @return
      */
     public static Set<String> getCurrentDependList(Project project,Object applicationVariant) {
-        Set<String> result = new HashSet<>()
-//        project.configurations.compile.each { File file ->
-//            //project.logger.error("==fastdex compile: ${file.absolutePath}")
-//            result.add(file.getAbsolutePath())
-//        }
-//
-//        project.configurations."${str}Compile".each { File file ->
-//            //project.logger.error("==fastdex ${str}Compile: ${file.absolutePath}")
-//            result.add(file.getAbsolutePath())
-//        }
+        String buildTypeName = applicationVariant.getBuildType().buildType.getName()
 
-        project.configurations.all.findAll { !it.allDependencies.empty }.each { c ->
-            String buildTypeName = applicationVariant.getBuildType().buildType.getName()
-            if (c.name.toString().equals("compile")
-                    || c.name.toString().equals("apt")
-                    || c.name.toString().equals("_${buildTypeName}Compile".toString())) {
-                c.allDependencies.each { dep ->
-                    String depStr =  "$dep.group:$dep.name:$dep.version"
-                    if (!"null:unspecified:null".equals(depStr)) {
-                        result.add(depStr)
-                    }
-                }
-            }
+        Set<String> result = new HashSet<>()
+
+        project.configurations.compile.each { File file ->
+            //project.logger.error("==fastdex compile: ${file.absolutePath}")
+            result.add(file.getAbsolutePath())
         }
+
+        project.configurations."${buildTypeName}Compile".each { File file ->
+            //project.logger.error("==fastdex ${buildTypeName}Compile: ${file.absolutePath}")
+            result.add(file.getAbsolutePath())
+        }
+
+//        project.configurations.all.findAll { !it.allDependencies.empty }.each { c ->
+//            if (c.name.toString().equals("compile")
+//                    || c.name.toString().equals("apt")
+//                    || c.name.toString().equals("_${buildTypeName}Compile".toString())) {
+//                c.allDependencies.each { dep ->
+//                    String depStr =  "$dep.group:$dep.name:$dep.version"
+//                    if (!"null:unspecified:null".equals(depStr)) {
+//                        result.add(depStr)
+//                    }
+//                }
+//            }
+//        }
         return result
     }
 
