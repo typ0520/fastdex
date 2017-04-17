@@ -22,7 +22,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         dependencies {
             ......
 
-            classpath 'com.dx168.fastdex:gradle-plugin:0.1.1'
+            classpath 'com.dx168.fastdex:gradle-plugin:0.1.2'
         }
     }
     ````

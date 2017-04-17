@@ -93,6 +93,35 @@ public class LibDependency {
     }
 
     /**
+     * 扫描依赖(2.0.0 <= android-build-version <= 2.2.0)
+     * @param library
+     * @param libraryDependencies
+     */
+    private static final void scanDependency_2_0_0(Object library,Set<com.android.builder.model.Library> libraryDependencies) {
+        if (library == null) {
+            return
+        }
+
+        if (library.getProject() == null){
+            return
+        }
+        if (libraryDependencies.contains(library)) {
+            return
+        }
+
+        libraryDependencies.add(library)
+
+        if (library instanceof com.android.builder.model.AndroidLibrary) {
+            List<com.android.builder.model.Library> libraryList = library.getLibraryDependencies()
+            if (libraryList != null) {
+                for (com.android.builder.model.Library item : libraryList) {
+                    scanDependency_2_0_0(item,libraryDependencies)
+                }
+            }
+        }
+    }
+
+    /**
      * 解析项目的工程依赖  compile project('xxx')
      * @param project
      * @return
@@ -121,7 +150,7 @@ public class LibDependency {
                 }
             }
         }
-        else {
+        else if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.2.0") >= 0) {
             Set<Library> librarySet = new HashSet<>()
             for (Object jarLibrary : variantDeps.getCompileDependencies().getJarDependencies()) {
                 scanDependency(jarLibrary,librarySet)
@@ -134,6 +163,34 @@ public class LibDependency {
                 boolean isAndroidLibrary = (library instanceof AndroidLibrary);
                 File jarFile = null
                 def dependencyProject = getProjectByPath(project.rootProject.allprojects,library.getProject());
+                if (isAndroidLibrary) {
+                    com.android.builder.dependency.LibraryDependency androidLibrary = library;
+                    jarFile = androidLibrary.getJarFile()
+                }
+                else {
+                    jarFile = library.getJarFile();
+                }
+                LibDependency libraryDependency = new LibDependency(jarFile,dependencyProject,isAndroidLibrary)
+                libraryDependencySet.add(libraryDependency)
+            }
+        }
+        else {
+            Set librarySet = new HashSet<>()
+            for (Object jarLibrary : variantDeps.getJarDependencies()) {
+                if (jarLibrary.getProjectPath() != null) {
+                    librarySet.add(jarLibrary)
+                }
+                //scanDependency_2_0_0(jarLibrary,librarySet)
+            }
+            for (Object androidLibrary : variantDeps.getAndroidDependencies()) {
+                scanDependency_2_0_0(androidLibrary,librarySet)
+            }
+
+            for (Object library : librarySet) {
+                boolean isAndroidLibrary = (library instanceof AndroidLibrary);
+                File jarFile = null
+                def projectPath = (library instanceof com.android.builder.dependency.JarDependency) ? library.getProjectPath() : library.getProject()
+                def dependencyProject = getProjectByPath(project.rootProject.allprojects,projectPath);
                 if (isAndroidLibrary) {
                     com.android.builder.dependency.LibraryDependency androidLibrary = library;
                     jarFile = androidLibrary.getJarFile()

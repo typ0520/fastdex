@@ -69,6 +69,35 @@ public class ProjectSnapshoot {
         for (LibDependency libDependency : androidLibDependencies) {
             projectList.add(libDependency.dependencyProject)
         }
+
+        String buildTypeName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
+        String dirName = fastdexVariant.androidVariant.dirName
+        //buildTypeName         "debug"
+        //dirName               "debug"
+        //libraryVariantdirName Constant.DEFAULT_LIBRARY_VARIANT_DIR_NAME
+        def libraryVariantdirName = Constant.DEFAULT_LIBRARY_VARIANT_DIR_NAME
+        /**
+         * fix-issue32 https://github.com/typ0520/fastdex/issues/32
+         * 正常的buildConfig目录
+         * /Users/zhengmj/Desktop/TjrTaojinRoad/common/build/generated/source/buildConfig/release
+         *
+         * issue32对应的buildConfig目录
+         * /Users/zhengmj/Desktop/TjrTaojinRoad/common/build/generated/source/buildConfig/taojinroad/release
+         */
+        if (!dirName.equals(buildTypeName)) {
+            //buildTypeName         "debug"
+            //dirName               "xxxx/debug"
+            //libraryVariantdirName Constant.DEFAULT_LIBRARY_VARIANT_DIR_NAME
+            libraryVariantdirName = dirName.substring(0,dirName.length() - buildTypeName.length())
+            libraryVariantdirName = "${libraryVariantdirName}${Constant.DEFAULT_LIBRARY_VARIANT_DIR_NAME}"
+
+            if (libraryVariantdirName.startsWith(File.separator)) {
+                libraryVariantdirName = libraryVariantdirName.substring(1)
+            }
+            if (libraryVariantdirName.endsWith(File.separator)) {
+                libraryVariantdirName = libraryVariantdirName.substring(0,libraryVariantdirName.length() - 1)
+            }
+        }
         for (int i = 0;i < projectList.size();i++) {
             Project project = projectList.get(i)
             String packageName = GradleUtils.getPackageName(project.android.sourceSets.main.manifest.srcFile.absolutePath)
@@ -80,10 +109,8 @@ public class ProjectSnapshoot {
                 buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
             }
             else {
-                buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}release${File.separator}")
+                buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${libraryVariantdirName}${File.separator}")
             }
-
-
             File buildConfigJavaFile = new File(buildConfigDir,buildConfigJavaRelativePath)
             if (fastdexVariant.configuration.debug) {
                 fastdexVariant.project.logger.error("==fastdex buildConfigJavaFile: ${buildConfigJavaFile}")
