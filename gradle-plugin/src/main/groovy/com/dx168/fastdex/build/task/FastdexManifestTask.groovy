@@ -5,8 +5,6 @@ import groovy.xml.Namespace
 import groovy.xml.QName
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import com.dx168.fastdex.build.util.FileUtils
-import com.dx168.fastdex.build.util.FastdexUtils
 
 /**
  * 替换项目的Application为com.dx168.fastdex.runtime.FastdexApplication
@@ -57,12 +55,12 @@ public class FastdexManifestTask extends DefaultTask {
             printer.preserveWhitespace = true
             printer.print(xml)
         }
-        File manifestFile = new File(fastdexVariant.manifestPath)
-        if (manifestFile.exists()) {
-            File buildDir = FastdexUtils.getBuildDir(project,fastdexVariant.variantName)
-            FileUtils.copyFileUsingStream(manifestFile, new File(buildDir,MANIFEST_XML))
-            project.logger.error("fastdex gen AndroidManifest.xml in ${MANIFEST_XML}")
-        }
+//        File manifestFile = new File(fastdexVariant.manifestPath)
+//        if (manifestFile.exists()) {
+//            File buildDir = FastdexUtils.getBuildDir(project,fastdexVariant.variantName)
+//            FileUtils.copyFileUsingStream(manifestFile, new File(buildDir,MANIFEST_XML))
+//            project.logger.error("fastdex gen AndroidManifest.xml in ${MANIFEST_XML}")
+//        }
     }
 }
 

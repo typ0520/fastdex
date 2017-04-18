@@ -213,7 +213,12 @@ public class FastdexUtils {
      * @return
      */
     public static File getCachedDependListFile(Project project,String variantName) {
-        File cachedDependListFile = new File(getBuildDir(project,variantName),Constant.DEPENDENCIES_MAPPING_FILENAME)
+        File cachedDependListFile = new File(getBuildDir(project,variantName),Constant.DEPENDENCIES_FILENAME)
+        return cachedDependListFile
+    }
+
+    public static File getMetaInfoFile(Project project,String variantName) {
+        File cachedDependListFile = new File(getBuildDir(project,variantName),Constant.META_INFO_FILENAME)
         return cachedDependListFile
     }
 

@@ -23,6 +23,7 @@ import org.gradle.api.execution.TaskExecutionGraphListener
 import java.lang.reflect.Field
 import com.dx168.fastdex.build.transform.FastdexTransform
 import com.dx168.fastdex.build.extension.FastdexExtension
+import com.dx168.fastdex.build.task.FastdexPrepareTask
 import com.dx168.fastdex.build.task.FastdexCustomJavacTask
 
 /**
@@ -83,24 +84,32 @@ class FastdexPlugin implements Plugin<Project> {
                 }
                 FastdexVariant fastdexVariant = new FastdexVariant(project,variant)
 
-                //创建清理指定variantName缓存的任务(用户触发)
-                FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
-                cleanTask.fastdexVariant = fastdexVariant
-
                 boolean proguardEnable = variant.getBuildType().buildType.minifyEnabled
                 //TODO 暂时忽略开启混淆的buildType(目前的快照对比方案 无法映射java文件的类名和混淆后的class的类名)
                 if (proguardEnable) {
                     String buildTypeName = variant.getBuildType().buildType.getName()
-                    project.logger.error("====================fastdex====================")
-                    project.logger.error("==fastdex android.buildTypes.${buildTypeName}.minifyEnabled=true, just ignore")
-                    project.logger.error("====================fastdex====================")
+                    project.logger.error("--------------------fastdex--------------------")
+                    project.logger.error("fastdex android.buildTypes.${buildTypeName}.minifyEnabled=true, just ignore")
+                    project.logger.error("--------------------fastdex--------------------")
                 }
                 else {
+                    //创建清理指定variantName缓存的任务(用户触发)
+                    FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
+                    cleanTask.fastdexVariant = fastdexVariant
 
-                    Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
-                    customJavacTask.fastdexVariant = fastdexVariant
-                    customJavacTask.mustRunAfter getGenerateSourcesTask(project,variantName)
-                    variant.javaCompile.dependsOn customJavacTask
+                    Task prepareTask = project.tasks.create("fastdexPrepareFor${variantName}", FastdexPrepareTask)
+                    prepareTask.fastdexVariant = fastdexVariant
+                    prepareTask.mustRunAfter getGenerateSourcesTask(project,variantName)
+
+                    if (configuration.useCustomCompile) {
+                        Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
+                        customJavacTask.fastdexVariant = fastdexVariant
+                        customJavacTask.dependsOn prepareTask
+                        variant.javaCompile.dependsOn customJavacTask
+                    }
+                    else {
+                        variant.javaCompile.dependsOn prepareTask
+                    }
 
                     Task multidexlistTask = getTransformClassesWithMultidexlistTask(project,variantName)
                     if (multidexlistTask != null) {

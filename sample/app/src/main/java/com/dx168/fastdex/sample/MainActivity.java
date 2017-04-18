@@ -11,7 +11,6 @@ import com.dx168.fastdex.sample.common3.Common3Utils;
 import com.dx168.fastdex.sample.javalib.JavaLib;
 import com.dx168.fastdex.sample.javalib2.JavaLib2;
 import com.dx168.fastdex.sample.javalib3.JavaLib3;
-
 import java.lang.reflect.Field;
 
 /**
@@ -75,7 +74,7 @@ public class MainActivity extends Activity {
         sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
-        sb.append("haha123");
+        sb.append("haha234");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();

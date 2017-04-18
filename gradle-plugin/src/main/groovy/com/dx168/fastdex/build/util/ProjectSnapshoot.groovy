@@ -3,6 +3,8 @@ package com.dx168.fastdex.build.util
 import com.dx168.fastdex.build.snapshoot.sourceset.JavaDirectorySnapshoot
 import com.dx168.fastdex.build.snapshoot.sourceset.SourceSetDiffResultSet
 import com.dx168.fastdex.build.snapshoot.sourceset.SourceSetSnapshoot
+import com.dx168.fastdex.build.snapshoot.string.StringNode
+import com.dx168.fastdex.build.snapshoot.string.StringSnapshoot
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.gradle.api.Project
 
@@ -12,11 +14,45 @@ import org.gradle.api.Project
 public class ProjectSnapshoot {
     FastdexVariant fastdexVariant
     SourceSetSnapshoot sourceSetSnapshoot
+    SourceSetSnapshoot oldSourceSetSnapshoot
     SourceSetDiffResultSet diffResultSet
     SourceSetDiffResultSet oldDiffResultSet
+    StringSnapshoot dependenciesSnapshoot
+    StringSnapshoot oldDependenciesSnapshoot
 
     ProjectSnapshoot(FastdexVariant fastdexVariant) {
         this.fastdexVariant = fastdexVariant
+    }
+
+    def loadSnapshoot() {
+        if (!fastdexVariant.hasDexCache) {
+            return
+        }
+        //load old sourceSet
+        File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(fastdexVariant.project,fastdexVariant.variantName)
+        oldSourceSetSnapshoot = SourceSetSnapshoot.load(sourceSetSnapshootFile,SourceSetSnapshoot.class)
+
+        File dependenciesListFile = FastdexUtils.getCachedDependListFile(fastdexVariant.project,fastdexVariant.variantName)
+        oldDependenciesSnapshoot = StringSnapshoot.load(dependenciesListFile,StringSnapshoot.class)
+
+        String oldProjectPath = fastdexVariant.metaInfo.projectPath
+        String curProjectPath = fastdexVariant.project.projectDir.absolutePath
+        boolean isProjectDirChanged = fastdexVariant.metaInfo.isProjectDirChanged(fastdexVariant.project)
+        if (isProjectDirChanged) {
+            //已存在构建缓存的情况下,如果移动了项目目录要把缓存中的老的路径全部替换掉
+            oldSourceSetSnapshoot.ensumeProjectDir(curProjectPath)
+            //save
+            saveSourceSetSnapshoot(oldSourceSetSnapshoot)
+
+            for (StringNode node : oldDependenciesSnapshoot.nodes) {
+                node.string = node.string.replaceAll(oldProjectPath,curProjectPath)
+            }
+            saveDependenciesSnapshoot(oldDependenciesSnapshoot)
+
+            fastdexVariant.metaInfo.projectPath = curProjectPath
+            fastdexVariant.metaInfo.save(fastdexVariant)
+            project.logger.error("==fastdex restore cache, project path changed old: ${oldProjectPath} now: ${curProjectPath}")
+        }
     }
 
     def prepareEnv() {
@@ -26,30 +62,18 @@ public class ProjectSnapshoot {
         handleLibraryDependencies(sourceSetSnapshoot)
 
         if (fastdexVariant.hasDexCache) {
-            //load old sourceSet
-            File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(project,fastdexVariant.variantName)
-            SourceSetSnapshoot oldSourceSetSnapshoot = SourceSetSnapshoot.load(sourceSetSnapshootFile,SourceSetSnapshoot.class)
-
-            String oldProjectDir = oldSourceSetSnapshoot.path
-            boolean isProjectDirChanged = oldSourceSetSnapshoot.ensumeProjectDir(project.projectDir)
-            if (isProjectDirChanged) {
-                project.logger.error("==fastdex project-dir changed old: ${oldProjectDir} now: ${project.projectDir}")
-                //save
-                saveSourceSetSnapshoot(oldSourceSetSnapshoot)
-            }
-
             diffResultSet = sourceSetSnapshoot.diff(oldSourceSetSnapshoot)
             if (!fastdexVariant.firstPatchBuild) {
                 File diffResultSetFile = FastdexUtils.getDiffResultSetFile(project,fastdexVariant.variantName)
                 oldDiffResultSet = SourceSetDiffResultSet.load(diffResultSetFile,SourceSetDiffResultSet.class)
             }
         }
-        else {
-            //save
-            saveCurrentSourceSetSnapshoot()
-        }
     }
 
+    /**
+     * 把自动生成的代码添加到源码快照中(R.java、buildConfig.java)
+     * @param snapshoot
+     */
     def handleGeneratedSource(SourceSetSnapshoot snapshoot) {
         List<LibDependency> androidLibDependencies = new ArrayList<>()
         for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
@@ -120,6 +144,10 @@ public class ProjectSnapshoot {
         }
     }
 
+    /**
+     * 往源码快照里添加依赖的工程源码路径
+     * @param snapshoot
+     */
     def handleLibraryDependencies(SourceSetSnapshoot snapshoot) {
         for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
             Set<File> srcDirSet = getProjectSrcDirSet(libDependency.dependencyProject)
@@ -130,6 +158,12 @@ public class ProjectSnapshoot {
         }
     }
 
+    /**
+     * 获取application工程自身和依赖的aar工程的所有R文件相对路径
+     * @param appProject
+     * @param androidLibDependencies
+     * @return
+     */
     def getAllRjavaPath(Project appProject,List<LibDependency> androidLibDependencies) {
         File rDir = new File(appProject.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
         List<File> fileList = new ArrayList<>()
@@ -148,6 +182,11 @@ public class ProjectSnapshoot {
         return fileList
     }
 
+    /**
+     * 获取工程对应的所有源码目录
+     * @param project
+     * @return
+     */
     def getProjectSrcDirSet(Project project) {
         def srcDirs = null
         if (project.plugins.hasPlugin("com.android.application") || project.plugins.hasPlugin("com.android.library")) {
@@ -173,14 +212,27 @@ public class ProjectSnapshoot {
         return srcDirSet
     }
 
+    /**
+     * 保存源码快照信息
+     * @param snapshoot
+     * @return
+     */
     def saveSourceSetSnapshoot(SourceSetSnapshoot snapshoot) {
         snapshoot.serializeTo(new FileOutputStream(FastdexUtils.getSourceSetSnapshootFile(fastdexVariant.project,fastdexVariant.variantName)))
     }
 
+    /**
+     * 保存当前的源码快照信息
+     * @return
+     */
     def saveCurrentSourceSetSnapshoot() {
         saveSourceSetSnapshoot(sourceSetSnapshoot)
     }
 
+    /**
+     * 保存源码对比结果
+     * @return
+     */
     def saveDiffResultSet() {
         if (diffResultSet != null && !diffResultSet.changedJavaFileDiffInfos.empty) {
             File diffResultSetFile = FastdexUtils.getDiffResultSetFile(fastdexVariant.project,fastdexVariant.variantName)
@@ -189,8 +241,64 @@ public class ProjectSnapshoot {
         }
     }
 
+    /**
+     * 删除源码对比结果
+     * @return
+     */
     def deleteLastDiffResultSet() {
         File diffResultSetFile = FastdexUtils.getDiffResultSetFile(fastdexVariant.project,fastdexVariant.variantName)
         FileUtils.deleteFile(diffResultSetFile)
+    }
+
+    /**
+     * 依赖列表是否发生变化
+     * @return
+     */
+    def isDependenciesChanged() {
+        if (dependenciesSnapshoot == null) {
+            dependenciesSnapshoot = new StringSnapshoot(GradleUtils.getCurrentDependList(fastdexVariant.project,fastdexVariant.androidVariant))
+        }
+
+        if (oldDependenciesSnapshoot == null) {
+            File dependenciesListFile = FastdexUtils.getCachedDependListFile(fastdexVariant.project,fastdexVariant.variantName)
+            oldDependenciesSnapshoot = StringSnapshoot.load(dependenciesListFile,StringSnapshoot.class)
+        }
+        return !dependenciesSnapshoot.diff(oldDependenciesSnapshoot).getAllChangedDiffInfos().isEmpty()
+    }
+
+    /**
+     * 保存全量打包时的依赖列表
+     */
+    def saveDependenciesSnapshoot() {
+        if (dependenciesSnapshoot == null) {
+            dependenciesSnapshoot = new StringSnapshoot(GradleUtils.getCurrentDependList(fastdexVariant.project,fastdexVariant.androidVariant))
+        }
+        saveDependenciesSnapshoot(dependenciesSnapshoot)
+    }
+
+    /**
+     * 保存依赖列表
+     * @param snapshoot
+     * @return
+     */
+    def saveDependenciesSnapshoot(StringSnapshoot snapshoot) {
+        File dependenciesListFile = FastdexUtils.getCachedDependListFile(fastdexVariant.project,fastdexVariant.variantName)
+        snapshoot.serializeTo(new FileOutputStream(dependenciesListFile))
+    }
+
+    def onDexGenerateSuccess(boolean nornalBuild,boolean dexMerge) {
+        if (nornalBuild) {
+            //save sourceSet
+            saveCurrentSourceSetSnapshoot()
+            //save dependencies
+            saveDependenciesSnapshoot()
+        }
+        else {
+            if (dexMerge) {
+                //save snapshoot and diffinfo
+                saveCurrentSourceSetSnapshoot()
+                deleteLastDiffResultSet()
+            }
+        }
     }
 }

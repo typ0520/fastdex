@@ -2,6 +2,7 @@ package com.dx168.fastdex.build.variant
 
 import com.dx168.fastdex.build.extension.FastdexExtension
 import com.dx168.fastdex.build.util.LibDependency
+import com.dx168.fastdex.build.util.MetaInfo
 import com.dx168.fastdex.build.util.ProjectSnapshoot
 import com.dx168.fastdex.build.util.FastdexUtils
 import com.dx168.fastdex.build.util.FileUtils
@@ -27,6 +28,7 @@ public class FastdexVariant {
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
+    MetaInfo metaInfo
 
     FastdexVariant(Project project, Object androidVariant) {
         this.project = project
@@ -66,39 +68,23 @@ public class FastdexVariant {
             if (!FileUtils.isLegalFile(diffResultSetFile)) {
                 firstPatchBuild = true
             }
-        }
 
-        if (hasDexCache) {
             try {
+                metaInfo = MetaInfo.load(project,variantName)
+                if (metaInfo == null) {
+                    File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
+
+                    if (FileUtils.isLegalFile(metaInfoFile)) {
+                        throw new CheckException("parse json content fail: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
+                    }
+                    else {
+                        throw new CheckException("miss meta info file: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
+                    }
+                }
+
                 File cachedDependListFile = FastdexUtils.getCachedDependListFile(project,variantName)
                 if (!FileUtils.isLegalFile(cachedDependListFile)) {
                     throw new CheckException("miss depend list file: ${cachedDependListFile}")
-                }
-                //old
-                Set<String> cachedDependencies = FastdexUtils.getCachedDependList(project,variantName)
-                //current
-                Set<String> currentDependencies = GradleUtils.getCurrentDependList(project,androidVariant)
-                currentDependencies.removeAll(cachedDependencies)
-
-                //check dependencies
-                //remove
-                //old    current
-                //1.aar  1.aar
-                //2.aar
-
-                //add
-                //old    current
-                //1.aar  1.aar
-                //       2.aar
-
-                //change
-                //old    current
-                //1.aar  1.aar
-                //2.aar  xx.aar
-
-                //handler add and change
-                if (!currentDependencies.isEmpty()) {
-                    throw new CheckException("${variantName.toLowerCase()} dependencies changed")
                 }
 
                 File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(project,variantName)
@@ -111,9 +97,22 @@ public class FastdexVariant {
                     throw new CheckException("miss resource mapping file: ${resourceMappingFile}")
                 }
 
-                File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
-                if (!FileUtils.isLegalFile(injectedJarFile)) {
-                    throw new CheckException("miss injected jar file: ${injectedJarFile}")
+                if (configuration.useCustomCompile) {
+                    File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
+                    if (!FileUtils.isLegalFile(injectedJarFile)) {
+                        throw new CheckException("miss injected jar file: ${injectedJarFile}")
+                    }
+                }
+
+                try {
+                    projectSnapshoot.loadSnapshoot()
+                } catch (Throwable e) {
+                    e.printStackTrace()
+                    throw new CheckException(e)
+                }
+
+                if (projectSnapshoot.isDependenciesChanged()) {
+                    throw new CheckException("dependencies changed")
                 }
             } catch (CheckException e) {
                 hasDexCache = false
@@ -126,6 +125,9 @@ public class FastdexVariant {
             project.logger.error("==fastdex discover dex cache for ${variantName.toLowerCase()}")
         }
         else {
+            metaInfo = new MetaInfo()
+            metaInfo.projectPath = project.projectDir
+
             FastdexUtils.cleanCache(project,variantName)
             FileUtils.ensumeDir(buildDir)
         }
@@ -143,6 +145,40 @@ public class FastdexVariant {
     }
 
     /**
+     * 当dex生成以后
+     * @param nornalBuild
+     */
+    public void onDexGenerateSuccess(boolean nornalBuild,boolean dexMerge) {
+        if (nornalBuild) {
+            metaInfo.save(this)
+            copyRTxt()
+        }
+        else {
+            if (dexMerge) {
+                //移除idx.xml public.xml
+                File idsXmlFile = FastdexUtils.getIdxXmlFile(project,variantName)
+                File publicXmlFile = FastdexUtils.getPublicXmlFile(project,variantName)
+                FileUtils.deleteFile(idsXmlFile)
+                FileUtils.deleteFile(publicXmlFile)
+
+                copyRTxt()
+            }
+        }
+        projectSnapshoot.onDexGenerateSuccess(nornalBuild,dexMerge)
+    }
+
+    /**
+     * 保存资源映射文件
+     */
+    def copyRTxt() {
+        File rtxtFile = new File(androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
+        if (!FileUtils.isLegalFile(rtxtFile)) {
+            rtxtFile = new File(project.buildDir,"${File.separator}intermediates${File.separator}symbols${File.separator}${androidVariant.dirName}${File.separator}R.txt")
+        }
+        FileUtils.copyFileUsingStream(rtxtFile,FastdexUtils.getResourceMappingFile(project,variantName))
+    }
+
+    /**
      * 补丁打包是否需要执行dex merge
      * @return
      */
@@ -152,6 +188,10 @@ public class FastdexVariant {
 
     private class CheckException extends Exception {
         CheckException(String var1) {
+            super(var1)
+        }
+
+        CheckException(Throwable var1) {
             super(var1)
         }
     }

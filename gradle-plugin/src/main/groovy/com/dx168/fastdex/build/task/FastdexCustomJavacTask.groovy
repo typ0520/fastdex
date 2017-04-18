@@ -6,7 +6,6 @@ import com.dx168.fastdex.build.util.FastdexUtils
 import com.dx168.fastdex.build.util.FileUtils
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.gradle.api.DefaultTask
-import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.FileVisitResult
@@ -36,9 +35,6 @@ public class FastdexCustomJavacTask extends DefaultTask {
     void compile() {
         def compileTask = fastdexVariant.androidVariant.javaCompile
         compileTask.enabled = true
-
-        //检查缓存的有效性
-        fastdexVariant.prepareEnv()
 
         def project = fastdexVariant.project
         def projectSnapshoot = fastdexVariant.projectSnapshoot

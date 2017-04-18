@@ -108,18 +108,13 @@ class FastdexTransform extends TransformProxy {
                         fastdexVariant.tagManager.saveTag(Constant.TAG_ALREADY_EXEC_DEX_MERGE)
                     }
 
-                    //save snapshoot and diffinfo
-                    fastdexVariant.projectSnapshoot.saveCurrentSourceSetSnapshoot()
-                    fastdexVariant.projectSnapshoot.deleteLastDiffResultSet()
-                    //移除idx.xml public.xml
-                    File idsXmlFile = FastdexUtils.getIdxXmlFile(project,fastdexVariant.variantName)
-                    File publicXmlFile = FastdexUtils.getPublicXmlFile(project,fastdexVariant.variantName)
-                    FileUtils.deleteFile(idsXmlFile)
-                    FileUtils.deleteFile(publicXmlFile)
+                    fastdexVariant.onDexGenerateSuccess(false,true)
                 }
                 else {
                     //复制补丁打包的dex到输出路径
                     hookPatchBuildDex(dexOutputDir,patchDex)
+
+                    fastdexVariant.onDexGenerateSuccess(false,false)
                 }
             }
             else {
@@ -131,31 +126,35 @@ class FastdexTransform extends TransformProxy {
             boolean isMultiDexEnabled = config.isMultiDexEnabled()
 
             project.logger.error("==fastdex normal transform start")
-            //保存依赖列表
-            keepDependenciesList()
             if (isMultiDexEnabled) {
                 //如果开启了multidex,FastdexJarMergingTransform完成了inject的操作，不需要在做处理
                 File combinedJar = getCombinedJarFile(transformInvocation)
-                File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
-                FileUtils.copyFileUsingStream(combinedJar,injectedJar)
+                if (fastdexVariant.configuration.useCustomCompile) {
+                    File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
+                    FileUtils.copyFileUsingStream(combinedJar,injectedJar)
+                }
             }
             else {
                 //如果没有开启multidex需要在此处做注入
                 ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
-                File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
-                GradleUtils.executeMerge(project,transformInvocation,injectedJar)
+                if (fastdexVariant.configuration.useCustomCompile) {
+                    File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
+                    GradleUtils.executeMerge(project,transformInvocation,injectedJar)
+                }
             }
             //调用默认转换方法
             base.transform(transformInvocation)
             //获取dex输出路径
             File dexOutputDir = GradleUtils.getDexOutputDir(project,base,transformInvocation)
             //缓存dex
-            cacheNormalBuildDex(dexOutputDir)
+            int dexCount = cacheNormalBuildDex(dexOutputDir)
             //复制全量打包的dex到输出路径
             hookNormalBuildDex(dexOutputDir)
-            //save R.txt
-            copyRTxt()
 
+            fastdexVariant.metaInfo.dexCount = dexCount
+            fastdexVariant.metaInfo.buildMillis = System.currentTimeMillis()
+
+            fastdexVariant.onDexGenerateSuccess(true,false)
             project.logger.error("==fastdex normal transform end")
         }
     }
@@ -203,45 +202,22 @@ class FastdexTransform extends TransformProxy {
     }
 
     /**
-     * 保存资源映射文件
-     */
-    void copyRTxt() {
-        File rtxtFile = new File(fastdexVariant.androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
-        if (!FileUtils.isLegalFile(rtxtFile)) {
-            rtxtFile = new File(project.buildDir,"${File.separator}intermediates${File.separator}symbols${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}R.txt")
-        }
-        FileUtils.copyFileUsingStream(rtxtFile,FastdexUtils.getResourceMappingFile(fastdexVariant.project,fastdexVariant.variantName))
-    }
-
-    /**
-     * 保存全量打包时的依赖列表
-     */
-    void keepDependenciesList() {
-        Set<String> dependenciesList = GradleUtils.getCurrentDependList(project,fastdexVariant.androidVariant)
-        StringBuilder sb = new StringBuilder()
-        dependenciesList.each {
-            sb.append(it)
-            sb.append("\n")
-        }
-
-        File dependenciesListFile = new File(FastdexUtils.getBuildDir(project,variantName),Constant.DEPENDENCIES_MAPPING_FILENAME);
-        FileUtils.write2file(sb.toString().getBytes(),dependenciesListFile)
-    }
-
-    /**
      * 缓存全量打包时生成的dex
      * @param dexOutputDir dex输出路径
      */
-    void cacheNormalBuildDex(File dexOutputDir) {
+    int cacheNormalBuildDex(File dexOutputDir) {
         project.logger.error("==fastdex dex output directory: " + dexOutputDir)
 
+        int dexCount = 0
         File cacheDexDir = FastdexUtils.getDexCacheDir(project,variantName)
         File[] files = dexOutputDir.listFiles()
         files.each { file ->
             if (file.getName().endsWith(Constant.DEX_SUFFIX)) {
                 FileUtils.copyFileUsingStream(file,new File(cacheDexDir,file.getName()))
+                dexCount = dexCount + 1
             }
         }
+        return dexCount
     }
 
     /**
