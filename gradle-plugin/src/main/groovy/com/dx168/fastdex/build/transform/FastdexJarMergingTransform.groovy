@@ -28,10 +28,8 @@ class FastdexJarMergingTransform extends TransformProxy {
             if (fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
                 //补丁jar
                 File patchJar = getCombinedJarFile(transformInvocation)
-                //所有的class目录
-                Set<File> directoryInputFiles = FastdexUtils.getDirectoryInputFiles(transformInvocation)
                 //生成补丁jar
-                JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar)
+                JarOperation.generatePatchJar(fastdexVariant,transformInvocation,patchJar)
             }
             else {
                 fastdexVariant.project.logger.error("==fastdex no java files have changed, just ignore")

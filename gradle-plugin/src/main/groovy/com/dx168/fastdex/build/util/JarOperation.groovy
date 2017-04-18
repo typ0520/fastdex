@@ -61,11 +61,15 @@ public class JarOperation implements Opcodes {
         for (File file : jarInputFiles) {
             File classesDir = new File(tempDir,"${file.name}-${System.currentTimeMillis()}")
             project.copy {
-                from project.zipTree(inputJar)
+                from project.zipTree(file)
                 into classesDir
             }
             directoryInputFiles.add(classesDir)
         }
+//        //TODO
+//        if (fastdexVariant.configuration.debug) {
+//            fastdexVariant.projectSnapshoot.saveDiffResultSet()
+//        }
         JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar);
     }
 

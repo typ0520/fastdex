@@ -193,10 +193,8 @@ class FastdexTransform extends TransformProxy {
         else {
             //补丁jar
             File patchJar = new File(FastdexUtils.getBuildDir(project,variantName),"patch-combined.jar")
-            //所有的class目录
-            Set<File> directoryInputFiles = FastdexUtils.getDirectoryInputFiles(transformInvocation)
             //生成补丁jar
-            JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar)
+            JarOperation.generatePatchJar(fastdexVariant,transformInvocation,patchJar)
             return patchJar
         }
     }

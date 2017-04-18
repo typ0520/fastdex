@@ -8,7 +8,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.0'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-        classpath 'com.dx168.fastdex:gradle-plugin:0.1.2-debug'
+        classpath 'com.dx168.fastdex:gradle-plugin:0.1.3'
         classpath "me.tatarka:gradle-retrolambda:3.6.0"
 
     }
