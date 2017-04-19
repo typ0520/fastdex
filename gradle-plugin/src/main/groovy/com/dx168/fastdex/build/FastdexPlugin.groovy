@@ -42,7 +42,6 @@ class FastdexPlugin implements Plugin<Project> {
                 project.logger.error("====fastdex tasks are disabled.====")
                 return
             }
-
             if (!project.plugins.hasPlugin('com.android.application')) {
                 throw new GradleException('generateTinkerApk: Android Application plugin required')
             }

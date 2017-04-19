@@ -13,33 +13,3 @@ repositories {
 }
 
 apply from: rootProject.file('bintray.gradle')
-
-
-def generated = new File("${project.buildDir}/generated/groovy")
-sourceSets {
-    main {
-        groovy {
-            srcDir generated
-        }
-    }
-}
-
-task generateVersionConstantsGroovy {
-    inputs.property("version", version)
-    ext.versionFile = new File(generated, "com/github/typ0520/fastdex/build/Version.groovy")
-    outputs.file(versionFile)
-}
-
-generateVersionConstantsGroovy << {
-    versionFile.parentFile.mkdirs()
-    versionFile.text = """
-package com.github.typ0520.fastdex.build;
-
-public final class Version {
-    private Version() {}
-    public static final String FASTDEX_GRADLE_PLUGIN_VERSION = "$version";
-}
-"""
-}
-
-tasks.compileGroovy.dependsOn generateVersionConstantsGroovy

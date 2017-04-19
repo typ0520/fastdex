@@ -29,3 +29,33 @@ sourceSets {
 }
 
 apply from: rootProject.file('bintray.gradle')
+
+
+def generated = new File("${project.buildDir}/generated/java")
+sourceSets {
+    main {
+        java {
+            srcDir generated
+        }
+    }
+}
+
+task generateVersionConstantsJava {
+    inputs.property("version", version)
+    ext.versionFile = new File(generated, "com/github/typ0520/fastdex/Version.java")
+    outputs.file(versionFile)
+}
+
+generateVersionConstantsJava << {
+    versionFile.parentFile.mkdirs()
+    versionFile.text = """
+package com.github.typ0520.fastdex;
+
+public final class Version {
+    private Version() {}
+    public static final String FASTDEX_BUILD_VERSION = "$version";
+}
+"""
+}
+
+tasks.compileJava.dependsOn generateVersionConstantsJava

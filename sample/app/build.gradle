@@ -152,3 +152,18 @@ project.afterEvaluate {
 task mytest<< {
 
 }
+
+println("===pid: ${getPid()}")
+
+public static int getPid() {
+    String name = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+    if (name != null) {
+        String[] arr = name.split("@");
+        try {
+            return Integer.valueOf(arr[0]);
+        } catch (Throwable e) {
+
+        }
+    }
+    return -1;
+}

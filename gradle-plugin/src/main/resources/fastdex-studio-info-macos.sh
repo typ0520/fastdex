@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 #输入gradle进程id
 
@@ -23,7 +23,7 @@ if [ "${gradle_pid}" == "" ];then
     exit -1
 fi
 ps_gradle_result=$(ps -ef | grep "${gradle_pid}" | head -1)
-debug_log $ps_gradle_result
+debug_log "ps_gradle_result: ${ps_gradle_result}"
 
 echo $ps_gradle_result | grep "$0 ${gradle_pid}" > /dev/null
 if [ $? == 0 ] || [ "${ps_gradle_result}" == "" ];then
@@ -34,7 +34,7 @@ fi
 gradle_ppid=$(echo $ps_gradle_result | awk '{print $3}')
 
 ps_studio_result=$(ps -ef | grep 'MacOS/studio' | head -1)
-debug_log $ps_studio_result
+debug_log "ps_studio_result: ${ps_studio_result}"
 echo $ps_studio_result | grep 'Contents/MacOS/studio' > /dev/null
 
 from_studio=true
@@ -81,9 +81,9 @@ if [ -f "${instant_run_config}" ];then
 fi
 
 echo "from_studio=${from_studio}"
-echo "gradle_pid=${gradle_pid}"
-echo "gradle_ppid=${gradle_ppid}"
-echo "studio_pid=${studio_pid}"
+#echo "gradle_pid=${gradle_pid}"
+#echo "gradle_ppid=${gradle_ppid}"
+#echo "studio_pid=${studio_pid}"
 echo "studio_home=${studio_home}"
 echo "studio_version=${studio_version}"
 echo "info_plist=${info_plist}"
@@ -101,5 +101,7 @@ if [ "$2" != "" ];then
     echo "instant_run_disabled=${instant_run_disabled}" >> $2
     echo "instant_run_config=${instant_run_config}"     >> $2
 fi
+
+exit 0
 
 
