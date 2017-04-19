@@ -19,7 +19,7 @@ public class CustomView extends RelativeLayout {
         inflate(context,R.layout.view_custom,this);
         ButterKnife.bind(this);
 
-        tv.setText(getResources().getString(R.string.s3) + " -1");
+        tv.setText(getResources().getString(R.string.s3) + " -22");
         MainActivity.aa();
     }
 }

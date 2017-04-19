@@ -5,6 +5,7 @@ import com.dx168.fastdex.build.snapshoot.file.FileNode;
 import com.dx168.fastdex.build.snapshoot.api.DiffInfo;
 import com.dx168.fastdex.build.snapshoot.file.FileSuffixFilter;
 import com.dx168.fastdex.build.snapshoot.file.ScanFilter;
+import com.google.gson.annotations.Expose;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -14,6 +15,8 @@ import java.util.Collection;
  */
 public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffInfo,FileNode> {
     private static final FileSuffixFilter JAVA_SUFFIX_FILTER = new FileSuffixFilter(".java");
+    @Expose
+    public String projectPath;
 
     public JavaDirectorySnapshoot() {
     }
@@ -40,7 +43,9 @@ public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffI
 
     @Override
     protected JavaDirectoryDiffResultSet createEmptyResultSet() {
-        return new JavaDirectoryDiffResultSet();
+        JavaDirectoryDiffResultSet javaDirectoryDiffResultSet = new JavaDirectoryDiffResultSet();
+        javaDirectoryDiffResultSet.projectPath = projectPath;
+        return javaDirectoryDiffResultSet;
     }
 
     @Override

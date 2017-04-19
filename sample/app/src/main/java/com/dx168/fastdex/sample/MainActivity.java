@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
-        sb.append("haha234");
+        sb.append("haha");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();

@@ -4,6 +4,7 @@ import com.android.build.api.transform.DirectoryInput
 import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
+import com.dx168.fastdex.build.snapshoot.api.DiffResultSet
 import com.dx168.fastdex.build.variant.FastdexVariant
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.GradleException
@@ -23,10 +24,12 @@ import java.util.zip.ZipOutputStream
 public class JarOperation implements Opcodes {
     public static void generatePatchJar(FastdexVariant fastdexVariant, TransformInvocation transformInvocation, File patchJar) throws IOException {
         Set<LibDependency> libraryDependencies = fastdexVariant.libraryDependencies
+        Map<String,String> jarAndProjectPathMap = new HashMap<>()
         List<File> projectJarFiles = new ArrayList<>()
         //获取所有依赖工程的输出jar (compile project(':xxx'))
         for (LibDependency dependency : libraryDependencies) {
             projectJarFiles.add(dependency.jarFile)
+            jarAndProjectPathMap.put(dependency.jarFile.absolutePath,dependency.dependencyProject.projectDir.absolutePath)
         }
 
         //所有的class目录
@@ -58,19 +61,25 @@ public class JarOperation implements Opcodes {
         FileUtils.deleteDir(tempDir)
         FileUtils.ensumeDir(tempDir)
 
+        Set<File> moudleDirectoryInputFiles = new HashSet<>()
+        DiffResultSet diffResultSet = fastdexVariant.projectSnapshoot.diffResultSet
         for (File file : jarInputFiles) {
-            File classesDir = new File(tempDir,"${file.name}-${System.currentTimeMillis()}")
-            project.copy {
-                from project.zipTree(file)
-                into classesDir
+            String projectPath = jarAndProjectPathMap.get(file.absolutePath)
+            List<String> patterns = diffResultSet.addOrModifiedClassesMap.get(projectPath)
+            if (patterns != null && !patterns.isEmpty()) {
+                File classesDir = new File(tempDir,"${file.name}-${System.currentTimeMillis()}")
+                project.copy {
+                    from project.zipTree(file)
+                    for (String pattern : patterns) {
+                        include pattern
+                    }
+                    into classesDir
+                }
+                moudleDirectoryInputFiles.add(classesDir)
+                directoryInputFiles.add(classesDir)
             }
-            directoryInputFiles.add(classesDir)
         }
-//        //TODO
-//        if (fastdexVariant.configuration.debug) {
-//            fastdexVariant.projectSnapshoot.saveDiffResultSet()
-//        }
-        JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,patchJar);
+        JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,moudleDirectoryInputFiles,patchJar);
     }
 
     /**
@@ -81,7 +90,7 @@ public class JarOperation implements Opcodes {
      * @param changedClassPatterns
      * @throws IOException
      */
-    public static void generatePatchJar(FastdexVariant fastdexVariant, Set<File> directoryInputFiles, File patchJar) throws IOException {
+    public static void generatePatchJar(FastdexVariant fastdexVariant, Set<File> directoryInputFiles,Set<File> moudleDirectoryInputFiles, File patchJar) throws IOException {
         long start = System.currentTimeMillis()
         def project = fastdexVariant.project
         project.logger.error("==fastdex generate patch jar start")
@@ -117,6 +126,9 @@ public class JarOperation implements Opcodes {
             outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
             for (File classpathFile : directoryInputFiles) {
                 Path classpath = classpathFile.toPath()
+
+                boolean skip = (moudleDirectoryInputFiles != null && moudleDirectoryInputFiles.contains(classpathFile))
+
                 Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
                     @Override
                     FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -124,31 +136,49 @@ public class JarOperation implements Opcodes {
                             return FileVisitResult.CONTINUE;
                         }
                         Path relativePath = classpath.relativize(file)
-                        String className = relativePath.toString().substring(0,relativePath.toString().length() - Constant.CLASS_SUFFIX.length());
-                        className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
+                        String entryName = relativePath.toString()
+                        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                            entryName = entryName.replace("\\", "/");
+                        }
 
-                        for (String cn : changedClasses) {
-                            if (cn.equals(className) || className.startsWith("${cn}\$")) {
-                                String entryName = relativePath.toString()
-                                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                                    entryName = entryName.replace("\\", "/");
-                                }
+                        if (skip) {
+                            ZipEntry e = new ZipEntry(entryName)
+                            outputJarStream.putNextEntry(e)
 
-                                ZipEntry e = new ZipEntry(entryName)
-                                outputJarStream.putNextEntry(e)
+                            if (project.fastdex.debug) {
+                                project.logger.error("==fastdex add entry: ${e}")
+                            }
+                            byte[] bytes = FileUtils.readContents(file.toFile())
+                            //如果需要触发dex merge,必须注入代码
+                            if (willExeDexMerge) {
+                                bytes = ClassInject.inject(bytes)
+                                project.logger.error("==fastdex inject: ${entryName}")
+                            }
+                            outputJarStream.write(bytes,0,bytes.length)
+                            outputJarStream.closeEntry()
+                        }
+                        else {
+                            String className = relativePath.toString().substring(0,relativePath.toString().length() - Constant.CLASS_SUFFIX.length());
+                            className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
+                            for (String cn : changedClasses) {
+                                if (cn.equals(className) || className.startsWith("${cn}\$")) {
 
-                                if (project.fastdex.debug) {
-                                    project.logger.error("==fastdex add entry: ${e}")
+                                    ZipEntry e = new ZipEntry(entryName)
+                                    outputJarStream.putNextEntry(e)
+
+                                    if (project.fastdex.debug) {
+                                        project.logger.error("==fastdex add entry: ${e}")
+                                    }
+                                    byte[] bytes = FileUtils.readContents(file.toFile())
+                                    //如果需要触发dex merge,必须注入代码
+                                    if (willExeDexMerge) {
+                                        bytes = ClassInject.inject(bytes)
+                                        project.logger.error("==fastdex inject: ${entryName}")
+                                    }
+                                    outputJarStream.write(bytes,0,bytes.length)
+                                    outputJarStream.closeEntry()
+                                    break;
                                 }
-                                byte[] bytes = FileUtils.readContents(file.toFile())
-                                //如果需要触发dex merge,必须注入代码
-                                if (willExeDexMerge) {
-                                    bytes = ClassInject.inject(bytes)
-                                    project.logger.error("==fastdex inject: ${entryName}")
-                                }
-                                outputJarStream.write(bytes,0,bytes.length)
-                                outputJarStream.closeEntry()
-                                break;
                             }
                         }
                         return FileVisitResult.CONTINUE

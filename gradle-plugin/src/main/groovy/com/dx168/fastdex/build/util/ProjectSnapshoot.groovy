@@ -28,31 +28,58 @@ public class ProjectSnapshoot {
         if (!fastdexVariant.hasDexCache) {
             return
         }
+        def project = fastdexVariant.project
         //load old sourceSet
-        File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(fastdexVariant.project,fastdexVariant.variantName)
+        File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(project,fastdexVariant.variantName)
         oldSourceSetSnapshoot = SourceSetSnapshoot.load(sourceSetSnapshootFile,SourceSetSnapshoot.class)
 
-        File dependenciesListFile = FastdexUtils.getCachedDependListFile(fastdexVariant.project,fastdexVariant.variantName)
+        File dependenciesListFile = FastdexUtils.getCachedDependListFile(project,fastdexVariant.variantName)
         oldDependenciesSnapshoot = StringSnapshoot.load(dependenciesListFile,StringSnapshoot.class)
 
         String oldProjectPath = fastdexVariant.metaInfo.projectPath
-        String curProjectPath = fastdexVariant.project.projectDir.absolutePath
-        boolean isProjectDirChanged = fastdexVariant.metaInfo.isProjectDirChanged(fastdexVariant.project)
-        if (isProjectDirChanged) {
+        String curProjectPath = project.projectDir.absolutePath
+
+        String oldRootProjectPath = fastdexVariant.metaInfo.rootProjectPath
+        String curRootProjectPath = project.rootProject.projectDir.absolutePath
+        boolean isRootProjectDirChanged = fastdexVariant.metaInfo.isRootProjectDirChanged(project)
+        if (isRootProjectDirChanged) {
             //已存在构建缓存的情况下,如果移动了项目目录要把缓存中的老的路径全部替换掉
-            oldSourceSetSnapshoot.ensumeProjectDir(curProjectPath)
+            applyNewProjectDir(oldSourceSetSnapshoot,oldRootProjectPath,curRootProjectPath,curProjectPath)
+            if (oldSourceSetSnapshoot.lastDiffResult != null) {
+                oldSourceSetSnapshoot.lastDiffResult = null
+            }
             //save
             saveSourceSetSnapshoot(oldSourceSetSnapshoot)
 
             for (StringNode node : oldDependenciesSnapshoot.nodes) {
-                node.string = node.string.replaceAll(oldProjectPath,curProjectPath)
+                node.string = replacePath(node.string,oldRootProjectPath,curRootProjectPath)
             }
             saveDependenciesSnapshoot(oldDependenciesSnapshoot)
 
             fastdexVariant.metaInfo.projectPath = curProjectPath
+            fastdexVariant.metaInfo.rootProjectPath = curRootProjectPath
             fastdexVariant.metaInfo.save(fastdexVariant)
             project.logger.error("==fastdex restore cache, project path changed old: ${oldProjectPath} now: ${curProjectPath}")
         }
+    }
+
+    def applyNewProjectDir(SourceSetSnapshoot sourceSnapshoot,String oldRootProjectPath,String curRootProjectPath,String curProjectPath) {
+        sourceSnapshoot.path = curProjectPath
+        for (StringNode node : sourceSnapshoot.nodes) {
+            node.setString(replacePath(node.getString(),oldRootProjectPath,curRootProjectPath))
+        }
+        for (JavaDirectorySnapshoot snapshoot : sourceSnapshoot.directorySnapshootSet) {
+            snapshoot.path = replacePath(snapshoot.path,oldRootProjectPath,curRootProjectPath)
+            snapshoot.projectPath = replacePath(snapshoot.projectPath,oldRootProjectPath,curRootProjectPath)
+        }
+    }
+
+    def replacePath(String path,String s,String s1) {
+        if (path.startsWith(s)) {
+            path = path.substring(s.length());
+            path = s1 + path;
+        }
+        return path;
     }
 
     def prepareEnv() {
@@ -85,6 +112,7 @@ public class ProjectSnapshoot {
         File rDir = new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
         //r
         JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,getAllRjavaPath(fastdexVariant.project,androidLibDependencies))
+        rSnapshoot.projectPath = fastdexVariant.project.projectDir.absolutePath
         snapshoot.addJavaDirectorySnapshoot(rSnapshoot)
 
         //buildconfig
@@ -140,6 +168,7 @@ public class ProjectSnapshoot {
                 fastdexVariant.project.logger.error("==fastdex buildConfigJavaFile: ${buildConfigJavaFile}")
             }
             JavaDirectorySnapshoot buildConfigSnapshoot = new JavaDirectorySnapshoot(buildConfigDir,buildConfigJavaFile.absolutePath)
+            buildConfigSnapshoot.projectPath = project.projectDir.absolutePath
             snapshoot.addJavaDirectorySnapshoot(buildConfigSnapshoot)
         }
     }
@@ -153,7 +182,9 @@ public class ProjectSnapshoot {
             Set<File> srcDirSet = getProjectSrcDirSet(libDependency.dependencyProject)
 
             for (File file : srcDirSet) {
-                snapshoot.addJavaDirectorySnapshoot(new JavaDirectorySnapshoot(file))
+                JavaDirectorySnapshoot javaDirectorySnapshoot = new JavaDirectorySnapshoot(file)
+                javaDirectorySnapshoot.projectPath = libDependency.dependencyProject.projectDir.absolutePath
+                snapshoot.addJavaDirectorySnapshoot(javaDirectorySnapshoot)
             }
         }
     }
@@ -283,7 +314,10 @@ public class ProjectSnapshoot {
      */
     def saveDependenciesSnapshoot(StringSnapshoot snapshoot) {
         File dependenciesListFile = FastdexUtils.getCachedDependListFile(fastdexVariant.project,fastdexVariant.variantName)
-        snapshoot.serializeTo(new FileOutputStream(dependenciesListFile))
+
+        StringSnapshoot stringSnapshoot = new StringSnapshoot()
+        stringSnapshoot.nodes = snapshoot.nodes
+        stringSnapshoot.serializeTo(new FileOutputStream(dependenciesListFile))
     }
 
     def onDexGenerateSuccess(boolean nornalBuild,boolean dexMerge) {

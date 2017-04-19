@@ -126,7 +126,8 @@ public class FastdexVariant {
         }
         else {
             metaInfo = new MetaInfo()
-            metaInfo.projectPath = project.projectDir
+            metaInfo.projectPath = project.projectDir.absolutePath
+            metaInfo.rootProjectPath = project.rootProject.projectDir.absolutePath
 
             FastdexUtils.cleanCache(project,variantName)
             FileUtils.ensumeDir(buildDir)

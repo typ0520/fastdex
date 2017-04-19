@@ -8,7 +8,11 @@ import com.google.gson.annotations.Expose;
 import org.apache.tools.ant.taskdefs.condition.Os;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -22,6 +26,9 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
 
     @Expose
     public Set<PathInfo> addOrModifiedPathInfos = new HashSet<>();
+
+    @Expose
+    public Map<String,List<String>> addOrModifiedClassesMap = new HashMap<>();
 
     public SourceSetDiffResultSet() {
 
@@ -39,28 +46,44 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
         return !addOrModifiedClasses.isEmpty();
     }
 
-    public void addJavaFileDiffInfo(JavaFileDiffInfo diffInfo) {
-        if (diffInfo.status != Status.NOCHANGED) {
-            this.changedJavaFileDiffInfos.add(diffInfo);
-        }
-    }
+//    public void addJavaFileDiffInfo(JavaFileDiffInfo diffInfo) {
+//        if (diffInfo.status != Status.NOCHANGED) {
+//            this.changedJavaFileDiffInfos.add(diffInfo);
+//        }
+//    }
 
     public void mergeJavaDirectoryResultSet(String path,JavaDirectoryDiffResultSet javaDirectoryResultSet) {
-        Set<JavaFileDiffInfo> changedDiffInfos = javaDirectoryResultSet.changedDiffInfos;
-        for (JavaFileDiffInfo javaFileDiffInfo : changedDiffInfos) {
+        List<String> addOrModifiedClassRelativePathList = addOrModifiedClassesMap.get(javaDirectoryResultSet.projectPath);
+        if (addOrModifiedClassRelativePathList == null) {
+            addOrModifiedClassRelativePathList = new ArrayList<>();
+            addOrModifiedClassesMap.put(javaDirectoryResultSet.projectPath,addOrModifiedClassRelativePathList);
+        }
+
+        for (JavaFileDiffInfo javaFileDiffInfo : javaDirectoryResultSet.changedDiffInfos) {
             switch (javaFileDiffInfo.status) {
                 case ADDED:
                 case MODIFIED:
                     addOrModifiedPathInfos.add(new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey));
                     String classRelativePath = javaFileDiffInfo.uniqueKey.substring(0, javaFileDiffInfo.uniqueKey.length() - ".java".length());
+
+//                    String entryName = classRelativePath;
+//                    if (entryName.contains("\\")) {
+//                        entryName = entryName.replace("\\", "/");
+//                    }
+//                    entryName = entryName + ".class";
+//                    addOrModifiedClassRelativePathList.add(entryName);
+                    addOrModifiedClassRelativePathList.add(classRelativePath + ".class");
+                    addOrModifiedClassRelativePathList.add(classRelativePath + "$*.class");
+
                     classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.");
                     addOrModifiedClasses.add(classRelativePath);
+
 //                    addOrModifiedClasses.add(classRelativePath + ".class");
 //                    addOrModifiedClasses.add(classRelativePath + "\\$\\S{0,}.class");
                     break;
             }
         }
-        this.changedJavaFileDiffInfos.addAll(changedDiffInfos);
+        this.changedJavaFileDiffInfos.addAll(javaDirectoryResultSet.changedDiffInfos);
     }
 
     @Override

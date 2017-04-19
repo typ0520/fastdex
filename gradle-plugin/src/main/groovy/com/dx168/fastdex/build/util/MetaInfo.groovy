@@ -13,6 +13,8 @@ public class MetaInfo {
      * 全量编译时的工程路径
      */
     public String projectPath
+
+    public String rootProjectPath
     /**
      * 全量编译完成后输出的dex个数
      */
@@ -21,15 +23,15 @@ public class MetaInfo {
     /**
      * 全量编译完成的时间
      */
-    public int buildMillis
+    public long buildMillis
 
     /**
-     * 缓存对应的工程路径是否与
+     * 是否移动了工程目录
      * @param project
      * @return
      */
-    public boolean isProjectDirChanged(Project project) {
-        return !project.projectDir.absolutePath.equals(projectPath)
+    public boolean isRootProjectDirChanged(Project project) {
+        return !project.rootProject.projectDir.absolutePath.equals(rootProjectPath)
     }
 
     public void save(FastdexVariant fastdexVariant) {

@@ -62,7 +62,9 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         if (sourceSetFiles != null) {
             for (File sourceSet : sourceSetFiles) {
                 if (sourceSet != null) {
-                    directorySnapshootSet.add(new JavaDirectorySnapshoot(sourceSet));
+                    JavaDirectorySnapshoot javaDirectorySnapshoot = new JavaDirectorySnapshoot(sourceSet);
+                    javaDirectorySnapshoot.projectPath = projectDir.getAbsolutePath();
+                    directorySnapshootSet.add(javaDirectorySnapshoot);
                 }
             }
         }
@@ -85,16 +87,24 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         SourceSetSnapshoot oldSnapshoot = (SourceSetSnapshoot)otherSnapshoot;
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.DELETEED)) {
             JavaDirectorySnapshoot javaDirectorySnapshoot = oldSnapshoot.getJavaDirectorySnapshootByPath(diffInfo.uniqueKey);
+
+            JavaDirectoryDiffResultSet javaDirectoryDiffResultSet = javaDirectorySnapshoot.createEmptyResultSet();
             for (FileNode node : javaDirectorySnapshoot.nodes) {
-                sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.DELETEED,null,node));
+                javaDirectoryDiffResultSet.add(new JavaFileDiffInfo(Status.DELETEED,null,node));
+                //sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.DELETEED,null,node));
             }
+            sourceSetResultSet.mergeJavaDirectoryResultSet(path,javaDirectoryDiffResultSet);
         }
 
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.ADDED)) {
             JavaDirectorySnapshoot javaDirectorySnapshoot = getJavaDirectorySnapshootByPath(diffInfo.uniqueKey);
+
+            JavaDirectoryDiffResultSet javaDirectoryDiffResultSet = javaDirectorySnapshoot.createEmptyResultSet();
             for (FileNode node : javaDirectorySnapshoot.nodes) {
-                sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.ADDED,node,null));
+                javaDirectoryDiffResultSet.add(new JavaFileDiffInfo(Status.ADDED,node,null));
+                //sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.ADDED,node,null));
             }
+            sourceSetResultSet.mergeJavaDirectoryResultSet(path,javaDirectoryDiffResultSet);
         }
 
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.NOCHANGED)) {
@@ -117,40 +127,17 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         return null;
     }
 
-    /**
-     * 工程路径是否发生变化
-     * @param currentProjectDir
-     * @return
-     */
-    public boolean isProjectDirChanged(File currentProjectDir) {
-        return !currentProjectDir.getAbsolutePath().equals(path);
-    }
-
-    /**
-     * 检查工程路径是否能对应上，如果对应不上使用参数指定的路径
-     * @param currentProjectDir
-     * @return 如果发生变化返回true，反之返回false
-     */
-    public boolean ensumeProjectDir(File currentProjectDir) {
-        if (!isProjectDirChanged(currentProjectDir)) {
-            return false;
-        }
-
-        applyNewProjectDir(currentProjectDir);
-        return true;
-    }
-
-    private void applyNewProjectDir(File currentProjectDir) {
-        String oldProjectDir = path;
-        this.path = currentProjectDir.getAbsolutePath();
-
-        for (StringNode node : nodes) {
-            node.setString(node.getString().replaceAll(oldProjectDir,this.path));
-        }
-        for (JavaDirectorySnapshoot snapshoot : directorySnapshootSet) {
-            snapshoot.path = snapshoot.path.replaceAll(oldProjectDir,this.path);
-        }
-    }
+//    public void applyNewProjectDir(String oldRootProjectPath,String curRootProjectPath,String curProjectPath) {
+//        this.path = curProjectPath;
+//
+//        for (StringNode node : nodes) {
+//            node.setString(node.getString().replaceAll(oldRootProjectPath,curRootProjectPath));
+//        }
+//        for (JavaDirectorySnapshoot snapshoot : directorySnapshootSet) {
+//            snapshoot.path = snapshoot.path.replaceAll(oldRootProjectPath,curRootProjectPath);
+//            snapshoot.projectPath = snapshoot.projectPath.replaceAll(oldRootProjectPath,curRootProjectPath);
+//        }
+//    }
 
     @Override
     public String toString() {

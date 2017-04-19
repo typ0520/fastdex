@@ -10,5 +10,11 @@ public class CommonUtils {
 
     public CommonUtils() {
         Common3Utils common3Utils = new Common3Utils();
+
+        new C3XXXX();
+    }
+
+    public static class C3XXXX {
+
     }
 }
