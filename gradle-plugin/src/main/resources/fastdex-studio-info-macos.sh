@@ -9,7 +9,7 @@
 #android studio 是否开启了instant run
 #android studio版本号
 
-debug=1
+debug=0
 
 function debug_log {
     if [ $debug != 0 ];then

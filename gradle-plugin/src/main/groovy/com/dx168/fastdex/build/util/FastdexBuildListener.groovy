@@ -119,7 +119,10 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                         }
 
                         if (!"true".equals(map.get("instant_run_disabled"))) {
-                            report.append("Fastdex does not support instant run mode, please disable instant run in 'File->Settings...'.\n")
+                            report.append("Fastdex does not support instant run mode, please disable instant run in 'File->Settings...'.\n\n")
+                        }
+                        else {
+                            report.append("\n")
                         }
                     }
                 } catch (Throwable e) {
@@ -173,6 +176,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     byte[] bytes = FileUtils.readStream(process.getInputStream());
                     String response = new String(bytes);
                     BufferedReader reader = new BufferedReader(new StringReader(response));
+                    System.out.println();
                     String line = null;
                     while ((line = reader.readLine()) != null) {
                         System.out.println(line);

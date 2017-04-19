@@ -9,8 +9,6 @@ import com.dx168.fastdex.sample.common.CommonUtils;
 import com.dx168.fastdex.sample.common2.Common2Utils;
 import com.dx168.fastdex.sample.common3.Common3Utils;
 import com.dx168.fastdex.sample.javalib.JavaLib;
-import com.dx168.fastdex.sample.javalib2.JavaLib2;
-import com.dx168.fastdex.sample.javalib3.JavaLib3;
 import java.lang.reflect.Field;
 
 /**
@@ -42,12 +40,8 @@ public class MainActivity extends Activity {
         //Toast.makeText(this,"haha " + " | " + s1 +  " | " + s3,Toast.LENGTH_LONG).show();
 
         JavaLib javaLib = new JavaLib();
-        JavaLib2 javaLib2 = new JavaLib2();
-        JavaLib3 javaLib3 = new JavaLib3();
 
         System.out.println("==app: " + javaLib.str);
-        System.out.println("==app: " + javaLib2.str);
-        System.out.println("==app: " + javaLib3.str);
 
         String s2 = getString(R.string.s2);
         int common3str = 0;
@@ -61,10 +55,6 @@ public class MainActivity extends Activity {
 
         StringBuilder sb = new StringBuilder();
         sb.append(JavaLib.str);
-        sb.append("\n");
-        sb.append(JavaLib2.str);
-        sb.append("\n");
-        sb.append(JavaLib3.str);
         sb.append("\n");
         sb.append(CommonUtils.str);
         sb.append("\n");

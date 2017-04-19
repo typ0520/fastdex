@@ -290,9 +290,8 @@ public class FastdexApplication extends Application {
         super.onCreate();
 
         if (this.realApplication != null) {
-            this.realApplication.onCreate();
-
             monkeyPatchApplication(this,this,realApplication);
+            this.realApplication.onCreate();
         }
     }
 }

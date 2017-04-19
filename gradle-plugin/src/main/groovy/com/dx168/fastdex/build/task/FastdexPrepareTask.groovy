@@ -18,8 +18,5 @@ public class FastdexPrepareTask extends DefaultTask {
     @TaskAction
     void prepareContext() {
         fastdexVariant.prepareEnv()
-
-
-        throw new RuntimeException("Use exception ~~~~~~~~~~")
     }
 }
