@@ -127,11 +127,19 @@ class FastdexTransform extends TransformProxy {
 
             project.logger.error("==fastdex normal transform start")
             if (isMultiDexEnabled) {
-                //如果开启了multidex,FastdexJarMergingTransform完成了inject的操作，不需要在做处理
-                File combinedJar = getCombinedJarFile(transformInvocation)
-                if (fastdexVariant.configuration.useCustomCompile) {
+                if (fastdexVariant.executedJarMerge) {
+                    //如果开启了multidex,FastdexJarMergingTransform完成了inject的操作，不需要在做处理
+                    File combinedJar = getCombinedJarFile(transformInvocation)
+
+                    if (fastdexVariant.configuration.useCustomCompile) {
+                        File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
+                        FileUtils.copyFileUsingStream(combinedJar,injectedJar)
+                    }
+                } else {
+                    ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
                     File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
-                    FileUtils.copyFileUsingStream(combinedJar,injectedJar)
+                    GradleUtils.executeMerge(project,transformInvocation,injectedJar)
+                    transformInvocation = GradleUtils.createNewTransformInvocation(base,transformInvocation,injectedJar)
                 }
             }
             else {
@@ -184,7 +192,7 @@ class FastdexTransform extends TransformProxy {
     File generatePatchJar(TransformInvocation transformInvocation) {
         def config = fastdexVariant.androidVariant.getVariantData().getVariantConfiguration()
         boolean isMultiDexEnabled = config.isMultiDexEnabled()
-        if (isMultiDexEnabled) {
+        if (isMultiDexEnabled && fastdexVariant.executedJarMerge) {
             //如果开启了multidex,FastdexJarMergingTransform完成了jar merge的操作
             File patchJar = getCombinedJarFile(transformInvocation)
             project.logger.error("==fastdex multiDex enabled use patch.jar: ${patchJar}")

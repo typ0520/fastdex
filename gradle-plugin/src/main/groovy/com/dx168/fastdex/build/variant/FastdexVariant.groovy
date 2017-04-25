@@ -28,6 +28,7 @@ public class FastdexVariant {
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
+    boolean executedJarMerge
     MetaInfo metaInfo
 
     FastdexVariant(Project project, Object androidVariant) {

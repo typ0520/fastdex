@@ -139,7 +139,7 @@ public class GradleUtils {
      * @param transformInvocation
      * @param outputJar             输出路径
      */
-    public static File executeMerge(Project project,TransformInvocation transformInvocation, File outputJar) {
+    public static void executeMerge(Project project,TransformInvocation transformInvocation, File outputJar) {
         List<JarInput> jarInputs = Lists.newArrayList();
         List<DirectoryInput> dirInputs = Lists.newArrayList();
 
@@ -151,31 +151,20 @@ public class GradleUtils {
             dirInputs.addAll(input.getDirectoryInputs());
         }
 
-        if (dirInputs.isEmpty() && jarInputs.size() == 1) {
-            //Only one jar that does not need to merge
-            //FileUtils.copyFileUsingStream(jarInputs.get(0).getFile(),outputJar)
-            return jarInputs.get(0).getFile()
+        JarMerger jarMerger = getClassJarMerger(outputJar)
+        jarInputs.each { jar ->
+            project.logger.error("==fastdex merge jar " + jar.getFile())
+            jarMerger.addJar(jar.getFile())
         }
-        else {
-            JarMerger jarMerger = getClassJarMerger(outputJar)
-
-            jarInputs.each { jar ->
-                project.logger.error("==fastdex add jar " + jar.getFile())
-                jarMerger.addJar(jar.getFile())
-            }
-            dirInputs.each { dir ->
-                project.logger.error("==fastdex add dir " + dir)
-                jarMerger.addFolder(dir.getFile())
-            }
-
-            jarMerger.close()
+        dirInputs.each { dir ->
+            project.logger.error("==fastdex merge dir " + dir)
+            jarMerger.addFolder(dir.getFile())
         }
-
+        jarMerger.close()
         if (!FileUtils.isLegalFile(outputJar)) {
             throw new GradleException("merge jar fail: \n jarInputs: ${jarInputs}\n dirInputs: ${dirInputs}\n mergedJar: ${outputJar}")
         }
-
-        return outputJar
+        project.logger.error("==fastdex merge jar success: ${outputJar}")
     }
 
     private static JarMerger getClassJarMerger(File jarFile) {

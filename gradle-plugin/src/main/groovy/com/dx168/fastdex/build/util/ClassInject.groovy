@@ -39,7 +39,7 @@ public class ClassInject implements Opcodes {
      * @param fastdexVariant
      * @param transformInvocation
      */
-    public static final void injectTransformInvocation(FastdexVariant fastdexVariant, TransformInvocation transformInvocation) {
+    public static void injectTransformInvocation(FastdexVariant fastdexVariant, TransformInvocation transformInvocation) {
         //所有的class目录
         HashSet<File> directoryInputFiles = new HashSet<>();
         //所有输入的jar
@@ -67,7 +67,7 @@ public class ClassInject implements Opcodes {
      * 往所有项目代码里注入解决pre-verify问题的code
      * @param directoryInputFiles
      */
-    public static final void injectDirectoryInputFiles(FastdexVariant fastdexVariant, HashSet<File> directoryInputFiles) {
+    public static void injectDirectoryInputFiles(FastdexVariant fastdexVariant, HashSet<File> directoryInputFiles) {
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
         for (File classpathFile : directoryInputFiles) {
@@ -84,7 +84,7 @@ public class ClassInject implements Opcodes {
      * @param fastdexVariant
      * @param directoryInputFiles
      */
-    public static final void injectJarInputFiles(FastdexVariant fastdexVariant, HashSet<File> jarInputFiles) {
+    public static void injectJarInputFiles(FastdexVariant fastdexVariant, HashSet<File> jarInputFiles) {
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
 
@@ -244,9 +244,6 @@ public class ClassInject implements Opcodes {
         @Override
         public void visitInsn(int opcode) {
             if (opcode == Opcodes.RETURN) {
-//                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-//                mv.visitFieldInsn(GETSTATIC, "com/dx168/fastdex/runtime/antilazyload/AntilazyLoad", "str", "Ljava/lang/String;");
-//                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
                 super.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
                 super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
                 Label l0 = new Label();

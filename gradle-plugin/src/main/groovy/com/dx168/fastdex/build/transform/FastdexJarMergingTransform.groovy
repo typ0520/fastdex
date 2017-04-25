@@ -40,6 +40,8 @@ class FastdexJarMergingTransform extends TransformProxy {
             ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
             base.transform(transformInvocation)
         }
+
+        fastdexVariant.executedJarMerge = true
     }
 
     /**

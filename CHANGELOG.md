@@ -1,3 +1,9 @@
+## 0.1.5 (2017-4-25)
+
+Bugfixes:
+
+   - 修复开启multidex但丢失jarMerging任务时的容错处理([issue#24](https://github.com/typ0520/fastdex/issues/24) [issue#29](https://github.com/typ0520/fastdex/issues/29) [issue#35](https://github.com/typ0520/fastdex/issues/35) [issue#36](https://github.com/typ0520/fastdex/issues/36))
+
 ## 0.1.4 (2017-4-19)
 
 Bugfixes:

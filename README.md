@@ -14,6 +14,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
      点击左上角Android studio -> Preferences -> Build,Execution,Deployment -> Instant Run -> Enable Instant Run......(把对勾去掉)
      
 - 2、在root project下的build.gradle中添加依赖 
+
     ````
     buildscript {
         repositories {
@@ -22,7 +23,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         dependencies {
             ......
 
-            classpath 'com.dx168.fastdex:gradle-plugin:0.1.4'
+            classpath 'com.dx168.fastdex:gradle-plugin:0.1.5'
         }
     }
     ````
