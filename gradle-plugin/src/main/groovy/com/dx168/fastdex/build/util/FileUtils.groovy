@@ -166,6 +166,7 @@ public class FileUtils {
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
+            dest.setLastModified(source.lastModified())
         } finally {
             if (is != null) {
                 is.close();

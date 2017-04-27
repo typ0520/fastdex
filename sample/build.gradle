@@ -6,11 +6,12 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:2.2.0'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-        classpath 'com.dx168.fastdex:gradle-plugin:0.1.4'
+        classpath 'com.dx168.fastdex:gradle-plugin:0.1.5'
         classpath "me.tatarka:gradle-retrolambda:3.6.0"
 
+        classpath 'com.antfortune.freeline:gradle:0.8.7'
     }
 }
 

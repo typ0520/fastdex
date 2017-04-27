@@ -96,9 +96,30 @@ class FastdexPlugin implements Plugin<Project> {
                     FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
                     cleanTask.fastdexVariant = fastdexVariant
 
+                    //fix issue#8
+                    def tinkerPatchManifestTask = getTinkerPatchManifestTask(project, variantName)
+                    if (tinkerPatchManifestTask != null) {
+                        manifestTask.mustRunAfter tinkerPatchManifestTask
+                    }
+
+                    variantOutput.processManifest.dependsOn getMergeDebugResources(project,variantName)
+                    //替换项目的Application为com.dx168.fastdex.runtime.FastdexApplication
+                    FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
+                    manifestTask.fastdexVariant = fastdexVariant
+                    manifestTask.mustRunAfter variantOutput.processManifest
+                    variantOutput.processResources.dependsOn manifestTask
+
+                    //保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
+                    FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
+                    applyResourceTask.fastdexVariant = fastdexVariant
+                    applyResourceTask.resDir = variantOutput.processResources.resDir
+                    //let applyResourceTask run after manifestTask
+                    applyResourceTask.mustRunAfter manifestTask
+                    variantOutput.processResources.dependsOn applyResourceTask
+
                     Task prepareTask = project.tasks.create("fastdexPrepareFor${variantName}", FastdexPrepareTask)
                     prepareTask.fastdexVariant = fastdexVariant
-                    prepareTask.mustRunAfter getGenerateSourcesTask(project,variantName)
+                    prepareTask.mustRunAfter variantOutput.processResources
 
                     if (configuration.useCustomCompile) {
                         Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
@@ -124,26 +145,10 @@ class FastdexPlugin implements Plugin<Project> {
                         multidexlistTask.enabled = false
                     }
 
-                    //替换项目的Application为com.dx168.fastdex.runtime.FastdexApplication
-                    FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
-                    manifestTask.fastdexVariant = fastdexVariant
-                    manifestTask.mustRunAfter variantOutput.processManifest
-                    variantOutput.processResources.dependsOn manifestTask
-
-                    //fix issue#8
-                    def tinkerPatchManifestTask = getTinkerPatchManifestTask(project, variantName)
-                    if (tinkerPatchManifestTask != null) {
-                        manifestTask.mustRunAfter tinkerPatchManifestTask
+                    def collectMultiDexComponentsTask = getCollectMultiDexComponentsTask(project, variantName)
+                    if (collectMultiDexComponentsTask != null) {
+                        collectMultiDexComponentsTask.enabled = false
                     }
-
-                    //保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
-                    FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
-                    applyResourceTask.fastdexVariant = fastdexVariant
-                    applyResourceTask.resDir = variantOutput.processResources.resDir
-                    //let applyResourceTask run after manifestTask
-                    applyResourceTask.mustRunAfter manifestTask
-                    variantOutput.processResources.dependsOn applyResourceTask
-
                     project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
                         @Override
                         public void graphPopulated(TaskExecutionGraph taskGraph) {
@@ -194,9 +199,9 @@ class FastdexPlugin implements Plugin<Project> {
         }
     }
 
-    Task getGenerateSourcesTask(Project project, String variantName) {
-        String generateSourcesTaskName = "generate${variantName}Sources"
-        project.tasks.getByName(generateSourcesTaskName)
+    Task getMergeDebugResources(Project project, String variantName) {
+        String mergeResourcesTaskName = "merge${variantName}Resources"
+        project.tasks.getByName(mergeResourcesTaskName)
     }
 
     Task getTransformClassesWithMultidexlistTask(Project project, String variantName) {
@@ -205,6 +210,15 @@ class FastdexPlugin implements Plugin<Project> {
             return project.tasks.getByName(transformClassesWithMultidexlistTaskName)
         } catch (Throwable e) {
             //fix issue #1 如果没有开启multidex会报错
+            return null
+        }
+    }
+
+    Task getCollectMultiDexComponentsTask(Project project, String variantName) {
+        try {
+            String collectMultiDexComponents = "collect${variantName}MultiDexComponents"
+            return project.tasks.findByName(collectMultiDexComponents)
+        } catch (Throwable e) {
             return null
         }
     }

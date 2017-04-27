@@ -7,7 +7,7 @@
 
 Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
-[版本记录](https://raw.githubusercontent.com/typ0520/fastdex/master/CHANGELOG.md)
+[版本记录](https://github.com/typ0520/fastdex/blob/master/CHANGELOG.md)
 
 ## 使用方式
 - 1、关闭Instant Run功能
@@ -23,7 +23,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         dependencies {
             ......
 
-            classpath 'com.dx168.fastdex:gradle-plugin:0.1.5'
+            classpath 'com.dx168.fastdex:gradle-plugin:0.1.6'
         }
     }
     ````
@@ -101,5 +101,4 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 [Android应用程序资源的编译和打包过程分析](http://blog.csdn.net/luoshengyang/article/details/8744683)
   
   
-
- 
+  

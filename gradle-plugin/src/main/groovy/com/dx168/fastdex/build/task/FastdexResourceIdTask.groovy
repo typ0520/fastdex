@@ -43,13 +43,25 @@ public class FastdexResourceIdTask extends DefaultTask {
 
         File idsXmlFile = FastdexUtils.getIdxXmlFile(project,fastdexVariant.variantName)
         File publicXmlFile = FastdexUtils.getPublicXmlFile(project,fastdexVariant.variantName)
-        if (FileUtils.isLegalFile(idsXmlFile) && FileUtils.isLegalFile(publicXmlFile)) {
-            project.logger.error("==fastdex public xml file and ids xml file already exist, just ignore")
-            return
-        }
 
         String idsXml = resDir + "/values/ids.xml";
         String publicXml = resDir + "/values/public.xml";
+        File resDirIdsXmlFile = new File(idsXml)
+        File resDirPublicXmlFile = new File(publicXml)
+
+        if (FileUtils.isLegalFile(idsXmlFile) && FileUtils.isLegalFile(publicXmlFile)) {
+            if (!FileUtils.isLegalFile(resDirIdsXmlFile) || idsXmlFile.lastModified() != resDirIdsXmlFile.lastModified()) {
+                FileUtils.copyFileUsingStream(idsXmlFile,resDirIdsXmlFile)
+                project.logger.error("==fastdex apply cached resource idx.xml ${idsXml}")
+            }
+
+            if (!FileUtils.isLegalFile(resDirPublicXmlFile) || publicXmlFile.lastModified() != resDirPublicXmlFile.lastModified()) {
+                FileUtils.copyFileUsingStream(publicXmlFile,resDirPublicXmlFile)
+                project.logger.error("==fastdex apply cached resource public.xml ${publicXml}")
+            }
+            return
+        }
+
         FileUtils.deleteFile(idsXml);
         FileUtils.deleteFile(publicXml);
         List<String> resourceDirectoryList = new ArrayList<String>()
@@ -61,7 +73,6 @@ public class FastdexResourceIdTask extends DefaultTask {
         AaptResourceCollector aaptResourceCollector = AaptUtil.collectResource(resourceDirectoryList, rTypeResourceMap)
         PatchUtil.generatePublicResourceXml(aaptResourceCollector, idsXml, publicXml)
         File publicFile = new File(publicXml)
-
 
         if (publicFile.exists()) {
             FileUtils.copyFileUsingStream(publicFile, publicXmlFile)
