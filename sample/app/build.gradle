@@ -1,27 +1,26 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'me.tatarka.retrolambda'
-apply plugin: 'com.antfortune.freeline'
-//apply plugin: 'com.github.typ0520.fastdex'
-//
-//fastdex {
-//    //default true
-//    //开启
-//    fastdexEnable = true
-//
-//    //default false
-//    //debug模式输出的调试信息比较多
-//    debug = true
-//
-//    //default false
-//    //自定义的compile任务,用来代替compileXXXXJavaWithJavac(实验性功能,建议暂时别打开)
-//    useCustomCompile = false
-//
-//    //default 4
-//    //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
-//    //如果依赖的library工程比较多建议设置稍微大一些
-//    dexMergeThreshold = 6
-//}
+apply plugin: 'com.github.typ0520.fastdex'
+
+fastdex {
+    //default true
+    //开启
+    fastdexEnable = true
+
+    //default false
+    //debug模式输出的调试信息比较多
+    debug = true
+
+    //default false
+    //自定义的compile任务,用来代替compileXXXXJavaWithJavac(实验性功能,建议暂时别打开)
+    useCustomCompile = false
+
+    //default 4
+    //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
+    //如果依赖的library工程比较多建议设置稍微大一些
+    dexMergeThreshold = 6
+}
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)

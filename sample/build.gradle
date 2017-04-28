@@ -10,8 +10,6 @@ buildscript {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
         classpath 'com.dx168.fastdex:gradle-plugin:0.1.5'
         classpath "me.tatarka:gradle-retrolambda:3.6.0"
-
-        classpath 'com.antfortune.freeline:gradle:0.8.7'
     }
 }
 
