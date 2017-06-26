@@ -20,16 +20,26 @@ android {
     }
 }
 
-//如果runtime代码有变化,生成fastdex-runtime.dex放进buildSrc/src/main/resources/fastdex-runtime.dex
+dependencies {
+    compile project(':fastdex-common')
+}
+
+//如果runtime代码有变化,生成fastdex-runtime.dex放进fastdex-gradle/src/main/resources/fastdex-runtime.dex
 project.afterEvaluate {
     android.libraryVariants.all { variant ->
         def variantName = variant.name.capitalize()
+        if (!"Release".equals(variantName)) {
+            return
+        }
         Task generateDexTask = project.tasks.create("generateRuntimeDexFor${variantName}")
         generateDexTask.group = 'fastdex'
-        generateDexTask.doFirst {
+        generateDexTask.dependsOn variant.javaCompile
+        generateDexTask.doLast {
+            File inputDirectory = project.file("build/intermediates/classes/release")
+            new File(inputDirectory,"com").deleteDir()
             project.copy {
-                from project.zipTree(project.file("build/outputs/aar/${project.name}-${variantName}.aar"))
-                into project.file("build/intermediates/fastdex/${variantName}")
+                from project.rootProject.file("fastdex-common/build/classes/main/fastdex")
+                into project.file("build/intermediates/classes/release/fastdex")
             }
 
             String sdkDirectory = project.android.getSdkDirectory()
@@ -43,15 +53,23 @@ project.afterEvaluate {
                 dxcmd =  "${dxcmd}.bat"
             }
             project.file("build/outputs/fastdex/${variantName.toLowerCase()}").mkdirs()
-            dxcmd = "${dxcmd} --dex --output=${project.file("build/outputs/fastdex/${variantName.toLowerCase()}/fastdex-runtime.dex")} ${project.file("build/intermediates/fastdex/${variantName}/classes.jar")}"
+            File outDex = project.file("build/outputs/fastdex/${variantName.toLowerCase()}/fastdex-runtime.dex")
+            dxcmd = "${dxcmd} --dex --output=${outDex} ${inputDirectory}"
 
+            println("==dxcmd: \n${dxcmd}")
             def process = dxcmd.execute()
             int status = process.waitFor()
             process.destroy()
             if (status != 0) {
                 throw new GradleException("generate fastdex runtime dex fail!")
             }
+
+            project.copy {
+                from outDex
+                into project.rootProject.file('fastdex-gradle/src/main/resources')
+            }
+
+            project.file("build/intermediates/classes/release").deleteDir()
         }
-        generateDexTask.dependsOn variant.assemble
     }
 }

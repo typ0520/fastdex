@@ -1,6 +1,6 @@
-//include ':app'
-rootProject.name = 'com.dx168.fastdex'
+rootProject.name = 'com.github.typ0520'
 
-include ':gradle-plugin'
-include ':build-lib'
+include ':fastdex-common'
+include ':fastdex-gradle'
+include ':fastdex-build-lib'
 include ':runtime'

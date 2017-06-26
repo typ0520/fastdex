@@ -3,6 +3,7 @@ package com.dx168.fastdex.sample;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import com.dx168.fastdex.sample.common.CommonUtils;
@@ -11,11 +12,16 @@ import com.dx168.fastdex.sample.common3.Common3Utils;
 import com.dx168.fastdex.sample.javalib.JavaLib;
 import java.lang.reflect.Field;
 
+import butterknife.BindView;
+
 /**
  * Created by tong on 17/10/3.
  */
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    @BindView(R.id.tv)
+    View view;
 
     public static void aa() {
 
@@ -76,7 +82,7 @@ public class MainActivity extends Activity {
             }
         };
 
-        SampleApplication realApp = (SampleApplication)getApplication();
+        //SampleApplication realApp = (SampleApplication)getApplication();
 
         new Runnable(){
             @Override

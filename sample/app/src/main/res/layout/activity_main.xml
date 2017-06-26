@@ -10,11 +10,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.dx168.fastdex.sample.MainActivity">
 
+    <include
+        android:id="@+id/my_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/my_view" />
     <Button
         android:id="@+id/btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="btn"/>
+        android:text="btn"
+        android:layout_below="@+id/my_view"/>
 
     <TextView
         android:id="@+id/textview"

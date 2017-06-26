@@ -3,6 +3,8 @@ package com.dx168.fastdex.sample;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 
+import java.io.IOException;
+
 /**
  * Created by tong on 17/10/3.
  */

@@ -41,9 +41,9 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
     
 - 2、fastdex会忽略开启混淆的buildType
 
-- 3、强烈建议你的application不要直接依赖library工程，打成aar包让application工程远程依赖
+- 3、强烈建议你的application不要直接依赖library工程，打成aar包让application工程远程依赖，目前还没有做充分测试
 
-- 4、开启自定义的编译任务能获得更快的构建速度，对使用了butterknife的大型项目效果最明显，这一特性目前还不稳定0.0.3-beta3后默认关闭了，使用了，如果想尝试在build.gradle中加入下面配置
+- 4、开启自定义的编译任务能获得更快的构建速度(这个特性目前不支持使用lambda)，对使用了butterknife的大型项目效果最明显，这一特性目前还不稳定0.0.3-beta3后默认关闭了，使用了，如果想尝试在build.gradle中加入下面配置
  
   ````
   fastdex {

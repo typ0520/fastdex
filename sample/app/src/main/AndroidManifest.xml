@@ -9,13 +9,323 @@
         android:label="@string/app_name"
         android:supportsRtl="true">
         <activity
-            android:name=".MainActivity">
+            android:name="com.dx168.fastdex.sample.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:scheme="http" android:host="www.dx168.com"/>
+            </intent-filter>
+
+
         </activity>
+
+        <!--<activity android:name="com.dx168.fastdex.sample.MainActivity2"-->
+            <!--t="s">-->
+
+            <!--<intent-filter>-->
+
+            <!--</intent-filter>-->
+        <!--</activity>-->
+
+        <!--<activity android:name="com.dx168.fastdex.sample.MainActivity3"-->
+            <!--t="s">-->
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+
+                <!--<data android:scheme="https" android:host="www.dx168.com"/>-->
+            <!--</intent-filter>-->
+        <!--</activity>-->
+
+
+        <!--<activity-->
+            <!--android:name=".activity.SplashActivity"-->
+            <!--android:screenOrientation="portrait">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.MAIN"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.LAUNCHER"/>-->
+            <!--</intent-filter>-->
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+
+                <!--<data android:scheme="epmyg"/>-->
+            <!--</intent-filter>-->
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+
+                <!--<data android:scheme="http" android:host="www.dx168.com"/>-->
+            <!--</intent-filter>-->
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+
+                <!--<data android:scheme="https" android:host="www.dx168.com"/>-->
+            <!--</intent-filter>-->
+        <!--</activity>-->
+
+        <!--&lt;!&ndash; 个推服务 &ndash;&gt;-->
+        <!--<receiver-->
+            <!--android:name=".apn.GetuiPushReceiver"-->
+            <!--android:exported="false">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.igexin.sdk.action.${GETUI_APP_ID}"/>-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+
+        <!--&lt;!&ndash;sharesdk分享&ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name="com.mob.tools.MobUIShell"-->
+            <!--android:configChanges="keyboardHidden|orientation|screenSize"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:theme="@android:style/Theme.Translucent.NoTitleBar"-->
+            <!--android:windowSoftInputMode="stateHidden|adjustResize">-->
+            <!--<intent-filter>-->
+                <!--<data android:scheme="tencent1105056237"/>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+            <!--</intent-filter>-->
+
+        <!--</activity>-->
+
+        <!--&lt;!&ndash;微信分享回调&ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.WXEntryActivity"-->
+            <!--android:configChanges="keyboardHidden|orientation|screenSize"-->
+            <!--android:exported="true"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:theme="@android:style/Theme.Translucent.NoTitleBar"/>-->
+
+        <!--&lt;!&ndash; 设置环信应用的AppKey &ndash;&gt;-->
+        <!--<meta-data-->
+            <!--android:name="EASEMOB_APPKEY"-->
+            <!--android:value="${EASEMOB_APPKEY}"/>-->
+
+        <!--&lt;!&ndash; 声明SDK所需的service SDK核心功能 &ndash;&gt;-->
+        <!--<service-->
+            <!--android:name="com.hyphenate.chat.EMChatService"-->
+            <!--android:exported="true" />-->
+        <!--&lt;!&ndash; 声明SDK所需的receiver &ndash;&gt;-->
+        <!--<receiver android:name="com.hyphenate.chat.EMMonitorReceiver">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.PACKAGE_REMOVED" />-->
+
+                <!--<data android:scheme="package" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+
+        <!--&lt;!&ndash; 给我回电 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.CallMeActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 绑定号码 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.BindPhoneActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 登录页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.LoginActivity"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustResize|stateHidden"/>-->
+
+        <!--&lt;!&ndash; 接口调用demo &ndash;&gt;-->
+
+        <!--&lt;!&ndash; 购买页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.BuyActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustPan"/>-->
+
+        <!--&lt;!&ndash; 持仓/撤单页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.HoldPositionActivity"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 通用的webview页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.WebViewActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 通用的webview页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.BridgeWebViewActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 市价平仓页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.MarketPriceSellActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 限价平仓页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.LimitSellActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustPan"/>-->
+
+        <!--&lt;!&ndash; 我设置页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.SettingActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 昵称修改页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.NicknameModifyActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 用户反馈页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.FeedbackActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 重要提醒页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.ImportantNoteActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 交易计划 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.TradePlanActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 我的交易计划 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.MyTradePlanActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 闪屏页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.MainActivity"-->
+            <!--android:configChanges="orientation|keyboardHidden|screenSize"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 忘记密码页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.ForgetPwdActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 开户页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.OpenAccountActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustResize"/>-->
+
+        <!--&lt;!&ndash; 直播室 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.LiveActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 带我交易 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.AboutWebViewActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 通知代码页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.NoticeProxyActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:theme="@style/Activity_dialog"/>-->
+
+        <!--&lt;!&ndash; 直播室 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.LiveRoomActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 今日平仓页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.TodayClosePositionActivity"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 被T弹出框页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.UserConflictActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:theme="@style/Activity_dialog"/>-->
+
+        <!--&lt;!&ndash; 被T弹出框页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.TradeTimeoutActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:theme="@style/Activity_dialog"/>-->
+
+        <!--&lt;!&ndash; 注册页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.RegistActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustResize|stateHidden"/>-->
+
+        <!--&lt;!&ndash; 我的账户 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.MyAccountActivity"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="adjustPan"/>-->
+
+        <!--&lt;!&ndash; 历史转账记录页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.HistoryTransferActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+        <!--&lt;!&ndash;历史交易记录&ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.HistoryTradeQueryActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+        <!--&lt;!&ndash; 重要提醒-文章或活动页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.ShareWebViewActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 我的奖品列表页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.PrizeListActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--&lt;!&ndash; 设置现金券密码页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.WPBSetPwdActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--<activity-->
+            <!--android:name=".activity.WithdrawActivity"-->
+            <!--android:screenOrientation="portrait"/>-->
+
+        <!--<activity-->
+            <!--android:name=".activity.BankSelectActivity"-->
+            <!--android:screenOrientation="portrait"-->
+            <!--android:windowSoftInputMode="stateHidden"/>-->
+
+        <!--<service-->
+            <!--android:name=".tinker.TinkerResultService"-->
+            <!--android:exported="false"/>-->
+
+        <!--&lt;!&ndash; 客服页面 &ndash;&gt;-->
+        <!--<activity-->
+            <!--android:name=".activity.Chat2Activity"-->
+            <!--android:screenOrientation="portrait"/>-->
     </application>
 
 </manifest>
