@@ -3,7 +3,7 @@
 
 [![license](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/typ0520/fastdex/master/LICENSE)
 
-[ ![Download](https://api.bintray.com/packages/typ0520/maven/com.dx168.fastdex%3Agradle-plugin/images/download.svg) ](https://bintray.com/typ0520/maven/com.dx168.fastdex%3Agradle-plugin/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/typ0520/maven/com.github.typ0520%3Afastdex-gradle/images/download.svg) ](https://bintray.com/typ0520/maven/com.github.typ0520%3Agradle-plugin/_latestVersion)
 
 Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
@@ -12,8 +12,8 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 ## 使用方式
 - 1、关闭Instant Run功能
      点击左上角Android studio -> Preferences -> Build,Execution,Deployment -> Instant Run -> Enable Instant Run......(把对勾去掉)
-     
-- 2、在root project下的build.gradle中添加依赖 
+
+- 2、在root project下的build.gradle中添加依赖
 
     ````
     buildscript {
@@ -23,7 +23,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         dependencies {
             ......
 
-            classpath 'com.dx168.fastdex:gradle-plugin:0.1.6'
+            classpath 'com.github.typ0520:fastdex-gradle:0.1.6'
         }
     }
     ````
