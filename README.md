@@ -72,16 +72,16 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
      classes.dex         => classes2.dex
      classes2.dex        => classes3.dex
      然后运行期在入口Application(com.dx168.fastdex.runtime.FastdexApplication)使用MultiDex把所有的dex加载进来
-  - @see [com.dx168.fastdex.build.transform.FastdexTransform](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/transform/FastdexTransform.groovy)
+  - @see [com.dx168.fastdex.build.transform.FastdexTransform](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/transform/FastdexTransform.groovy)
   - 7、保存资源映射表，为了保持id的值一致，详情看
-  - @see [com.dx168.fastdex.build.task.FastdexResourceIdTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexResourceIdTask.groovy)
+  - @see [com.dx168.fastdex.build.task.FastdexResourceIdTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexResourceIdTask.groovy)
 
 
 ##### 补丁打包时的流程
   - 1、检查缓存的有效性
-  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexCustomJavacTask.groovy) 的prepareEnv方法说明
+  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexCustomJavacTask.groovy) 的prepareEnv方法说明
   - 2、扫描所有变化的java文件并编译成class
-  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/buildSrc/src/main/groovy/com/dx168/fastdex/build/task/FastdexCustomJavacTask.groovy)
+  - @see [com.dx168.fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexCustomJavacTask.groovy)
   - 3、合并所有变化的class并生成jar包
   - 4、生成补丁dex
   - 5、把所有的dex按照一定规律放在transformClassesWithMultidexlistFor${variantName}任务的输出目录

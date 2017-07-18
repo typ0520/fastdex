@@ -82,15 +82,15 @@ android {
 ////        }
 //    }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
 }
 
-retrolambda {
-    javaVersion JavaVersion.VERSION_1_7
-}
+//retrolambda {
+//    javaVersion JavaVersion.VERSION_1_7
+//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
