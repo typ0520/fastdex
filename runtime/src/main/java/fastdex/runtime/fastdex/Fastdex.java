@@ -139,11 +139,11 @@ public class Fastdex {
         File patchDex = new File(dexDirectory,ShareConstants.PATCH_DEX);
 
         ArrayList<File> dexList = new ArrayList<>();
-        if (FileUtils.isLegalFile(mergedPatchDex)) {
-            dexList.add(mergedPatchDex);
-        }
         if (FileUtils.isLegalFile(patchDex)) {
             dexList.add(patchDex);
+        }
+        if (FileUtils.isLegalFile(mergedPatchDex)) {
+            dexList.add(mergedPatchDex);
         }
 
         if (!dexList.isEmpty()) {

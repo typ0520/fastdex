@@ -466,7 +466,7 @@ public class Server {
         }
 
        // android.os.Process.killProcess(android.os.Process.myPid());
-        List<Activity> activities = Restarter.getActivities(context, false);
+        final List<Activity> activities = Restarter.getActivities(context, false);
 
         if (!hasDex && incrementalResources && updateMode == UPDATE_MODE_WARM_SWAP) {
             // Try to just replace the resources on the fly!

@@ -32,6 +32,19 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
     ````
     apply plugin: 'com.github.typ0520.fastdex'
     ````
+    
+- 4、直接点击studio的run或者执行打包命令，就会在任务执行的过程中做hook
+
+    ````
+    第一次全量打包成功后，fastdex支持把增量的dex和资源推送到正在运行的app里重启并加载，这样会省去安装app的时间开销
+    拿debug为例如果没有配置flavor就执行(gradlew fastdex${Variant})
+    
+    Mac/Linux:
+    ./gradlew fastdexDebug
+    
+    Windows:
+    gradlew fastdexDebug
+    ````
 
 ## 注意事项
 

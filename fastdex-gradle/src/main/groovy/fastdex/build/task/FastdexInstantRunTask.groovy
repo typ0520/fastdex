@@ -5,6 +5,7 @@ import com.android.ddmlib.IDevice
 import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.util.FastdexUtils
 import fastdex.build.util.GradleUtils
+import fastdex.build.util.JumpException
 import fastdex.build.util.MetaInfo
 import fastdex.build.variant.FastdexVariant
 import fastdex.build.lib.fd.Communicator
@@ -89,10 +90,10 @@ public class FastdexInstantRunTask extends DefaultTask {
             })
             project.logger.error("==fastdex receive: ${runtimeMetaInfo}")
             if (fastdexVariant.metaInfo.buildMillis != runtimeMetaInfo.buildMillis) {
-                throw new IOException("buildMillis not equal")
+                throw new JumpException("buildMillis not equal")
             }
             if (!fastdexVariant.metaInfo.variantName.equals(runtimeMetaInfo.variantName)) {
-                throw new IOException("variantName not equal")
+                throw new JumpException("variantName not equal")
             }
 
             File resourcesApk = FastdexUtils.getResourcesApk(project,fastdexVariant.variantName)
@@ -154,6 +155,8 @@ public class FastdexInstantRunTask extends DefaultTask {
             project.tasks.getByName("package${fastdexVariant.variantName}").enabled = false
             project.tasks.getByName("assemble${fastdexVariant.variantName}").enabled = false
             alreadySendPatch = true
+        } catch (JumpException e) {
+
         } catch (IOException e) {
             if (fastdexVariant.configuration.debug) {
                 e.printStackTrace()
@@ -185,8 +188,10 @@ public class FastdexInstantRunTask extends DefaultTask {
         if (appPid == -1) {
             return
         }
+        //adb shell am force-stop 包名
+        def packageName = fastdexVariant.getMergedPackageName()
         //$ adb shell kill {appPid}
-        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","kill","${appPid}").start()
+        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","am","force-stop","${packageName}").start()
         int status = process.waitFor()
         try {
             process.destroy()
@@ -194,7 +199,7 @@ public class FastdexInstantRunTask extends DefaultTask {
 
         }
 
-        String cmd = "adb shell kill ${appPid}"
+        String cmd = "adb shell am force-stop ${packageName}"
         if (fastdexVariant.configuration.debug) {
             project.logger.error("${cmd}")
         }

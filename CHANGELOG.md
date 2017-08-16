@@ -1,3 +1,10 @@
+## 0.1.12 (2017-8-16)
+
+Bugfixes:
+
+   - 修复dex loader顺序错误的逻辑
+   - 杀掉应用进程修改成adb shell am force-stop 包名
+   
 ## 0.1.11 (2017-7-18)
 
 Bugfixes:
