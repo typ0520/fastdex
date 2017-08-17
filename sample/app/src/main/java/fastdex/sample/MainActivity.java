@@ -1,4 +1,4 @@
-package com.dx168.fastdex.sample;
+package fastdex.sample;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -7,12 +7,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import com.dx168.fastdex.sample.common.CommonUtils;
-import com.dx168.fastdex.sample.common2.Common2Utils;
-import com.dx168.fastdex.sample.common3.Common3Utils;
-import com.dx168.fastdex.sample.javalib.JavaLib;
-import java.lang.reflect.Field;
+import com.github.typ0520.fastdex.sample.R;
 
+import fastdex.sample.common2.Common2Utils;
+import fastdex.sample.common3.Common3Utils;
+import fastdex.sample.javalib.JavaLib;
+import java.lang.reflect.Field;
 import butterknife.BindView;
+import fastdex.sample.kotlinlib.KotlinHello;
 
 /**
  * Created by tong on 17/10/3.
@@ -52,7 +54,7 @@ public class MainActivity extends Activity {
         String s2 = getString(R.string.s2);
         int common3str = 0;
         try {
-            Class common3RClass = Class.forName("com.dx168.fastdex.sample.common3.R$string");
+            Class common3RClass = Class.forName("fastdex.sample.common3.R$string");
             Field field = common3RClass.getField("common3str");
             common3str = (Integer) field.get(null);
         } catch (Throwable e) {
@@ -68,6 +70,8 @@ public class MainActivity extends Activity {
         sb.append("\n");
         sb.append(Common3Utils.str);
         sb.append("\n");
+        sb.append(new KotlinHello().getName());
+        sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
         sb.append("haha");
@@ -82,7 +86,7 @@ public class MainActivity extends Activity {
             }
         };
 
-        //SampleApplication realApp = (SampleApplication)getApplication();
+        SampleApplication realApp = (SampleApplication)getApplication();
 
         new Runnable(){
             @Override

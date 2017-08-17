@@ -1,4 +1,4 @@
-include ':app'
+include ':app', ':kotlinlib'
 include ':common'
 include ':common-group:common2'
 include ':common-group:common3'

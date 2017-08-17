@@ -1,4 +1,4 @@
-package com.dx168.fastdex.sample.javalib;
+package fastdex.sample.javalib;
 
 /**
  * Created by tong on 17/4/14.

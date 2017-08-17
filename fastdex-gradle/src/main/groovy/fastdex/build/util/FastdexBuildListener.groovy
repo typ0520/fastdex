@@ -3,6 +3,7 @@ package fastdex.build.util
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.BuildListener;
 import org.gradle.BuildResult
+import org.gradle.api.Plugin
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionListener;
@@ -21,7 +22,8 @@ import fastdex.common.utils.FileUtils
 class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     private Clock clock
     private times = []
-    private Project project
+    private final Project project
+    private long startMillis
 
     FastdexBuildListener(Project project) {
         this.project = project
@@ -41,7 +43,9 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     }
 
     @Override
-    void buildStarted(Gradle gradle) {}
+    void buildStarted(Gradle gradle) {
+        startMillis = System.currentTimeMillis()
+    }
 
     @Override
     void projectsEvaluated(Gradle gradle) {}
@@ -61,6 +65,9 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     printf "%7sms  %s\n", time
                 }
             }
+
+            long dMillis = System.currentTimeMillis() - startMillis
+
         }
         else {
             if (project == null || !project.plugins.hasPlugin("com.android.application")) {
@@ -115,6 +122,13 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                 report.append("default targetSdkVersion  : ${project.android.defaultConfig.targetSdkVersion.getApiString()}\n")
                 report.append("default multiDexEnabled   : ${project.android.defaultConfig.multiDexEnabled}\n\n")
 
+                List<String> plugins = new ArrayList<>()
+                for (Plugin plugin : project.plugins.findAll()) {
+                    if (!plugin.getClass().getName().startsWith("org.gradle")) {
+                        plugins.add(plugin.getClass().getName())
+                    }
+                }
+                report.append("plugins                   : ${plugins}\n\n")
                 try {
                     int keyLength = str.length();
                     if (!map.isEmpty()) {

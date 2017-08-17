@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.dx168.fastdex.sample.MainActivity">
+    tools:context="com.dx168.fastdex.sample.fastdex.sample.MainActivity">
 
     <include
         android:id="@+id/my_view"
@@ -37,7 +37,7 @@
         android:layout_below="@+id/textview"
         android:layout_marginTop="20dp"/>
 
-    <com.dx168.fastdex.sample.CustomView
+    <fastdex.sample.CustomView
         android:layout_width="120dp"
         android:layout_height="50dp"
         android:textColor="#ffffff"

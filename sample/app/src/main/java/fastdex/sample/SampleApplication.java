@@ -1,9 +1,7 @@
-package com.dx168.fastdex.sample;
+package fastdex.sample;
 
 import android.content.Context;
 import android.support.multidex.MultiDex;
-
-import java.io.IOException;
 
 /**
  * Created by tong on 17/10/3.

@@ -1,6 +1,6 @@
 package com.dx168.fastdex.sample.common;
 
-import com.dx168.fastdex.sample.common3.Common3Utils;
+import fastdex.sample.common3.Common3Utils;
 
 /**
  * Created by tong on 17/4/13.

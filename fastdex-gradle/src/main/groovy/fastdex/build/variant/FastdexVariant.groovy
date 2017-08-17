@@ -129,7 +129,7 @@ public class FastdexVariant {
             }
         }
 
-        if (hasDexCache) {
+        if (hasDexCache && metaInfo != null) {
             project.logger.error("==fastdex discover dex cache for ${variantName.toLowerCase()}")
         }
         else {

@@ -3,7 +3,7 @@ package com.dx168.fastdex.sample.common;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
-import com.dx168.fastdex.sample.common.R;
+import fastdex.sample.common.R;
 
 /**
  * Created by tong on 17/4/13.
