@@ -5,6 +5,7 @@ package fastdex.common;
  */
 public interface ShareConstants {
     String JAVA_SUFFIX = ".java";
+    String KT_SUFFIX = ".java";
     String CLASS_SUFFIX = ".class";
     String DEX_SUFFIX = ".dex";
     String CLASSES = "classes";

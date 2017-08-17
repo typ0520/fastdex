@@ -10,8 +10,10 @@ import java.util.Set;
 public class FileSuffixFilter implements ScanFilter {
     private final Set<String> suffixList = new HashSet<>();
     
-    public FileSuffixFilter(String suffix) {
-        addSuffix(suffix);
+    public FileSuffixFilter(String ...suffixs) {
+        for (String suffix : suffixs) {
+            addSuffix(suffix);
+        }
     }
 
     public FileSuffixFilter(Set<String> suffixList) {

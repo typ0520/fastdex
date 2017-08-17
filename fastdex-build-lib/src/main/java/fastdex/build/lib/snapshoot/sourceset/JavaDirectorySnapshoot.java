@@ -14,7 +14,7 @@ import java.util.Collection;
  * Created by tong on 17/3/30.
  */
 public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffInfo,FileNode> {
-    private static final FileSuffixFilter JAVA_SUFFIX_FILTER = new FileSuffixFilter(".java");
+    private static final FileSuffixFilter JAVA_SUFFIX_FILTER = new FileSuffixFilter(".java",".kt");
     @Expose
     public String projectPath;
 

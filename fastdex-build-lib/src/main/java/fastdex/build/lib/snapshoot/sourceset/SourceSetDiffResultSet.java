@@ -64,7 +64,7 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
                 case ADDED:
                 case MODIFIED:
                     addOrModifiedPathInfos.add(new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey));
-                    String classRelativePath = javaFileDiffInfo.uniqueKey.substring(0, javaFileDiffInfo.uniqueKey.length() - ".java".length());
+                    String classRelativePath = javaFileDiffInfo.getClassRelativePath();
 
 //                    String entryName = classRelativePath;
 //                    if (entryName.contains("\\")) {
