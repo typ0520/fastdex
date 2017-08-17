@@ -1,16 +1,13 @@
 package fastdex.build.lib.snapshoot.sourceset;
 
 import fastdex.build.lib.snapshoot.api.DiffResultSet;
-import fastdex.build.lib.snapshoot.api.Status;
 import fastdex.build.lib.snapshoot.string.StringDiffInfo;
 import com.google.gson.annotations.Expose;
-
 import org.apache.tools.ant.taskdefs.condition.Os;
-
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +16,7 @@ import java.util.Set;
  * Created by tong on 17/3/31.
  */
 public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
-    public Set<JavaFileDiffInfo> changedJavaFileDiffInfos = new HashSet<JavaFileDiffInfo>();
+    public final Set<JavaFileDiffInfo> changedJavaFileDiffInfos = new HashSet<JavaFileDiffInfo>();
 
     @Expose
     public Set<String> addOrModifiedClasses = new HashSet<>();
@@ -55,7 +52,7 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
     public void mergeJavaDirectoryResultSet(String path,JavaDirectoryDiffResultSet javaDirectoryResultSet) {
         List<String> addOrModifiedClassRelativePathList = addOrModifiedClassesMap.get(javaDirectoryResultSet.projectPath);
         if (addOrModifiedClassRelativePathList == null) {
-            addOrModifiedClassRelativePathList = new ArrayList<>();
+            addOrModifiedClassRelativePathList = new LinkedList<>();
             addOrModifiedClassesMap.put(javaDirectoryResultSet.projectPath,addOrModifiedClassRelativePathList);
         }
 
@@ -65,21 +62,15 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
                 case MODIFIED:
                     addOrModifiedPathInfos.add(new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey));
                     String classRelativePath = javaFileDiffInfo.getClassRelativePath();
-
-//                    String entryName = classRelativePath;
-//                    if (entryName.contains("\\")) {
-//                        entryName = entryName.replace("\\", "/");
-//                    }
-//                    entryName = entryName + ".class";
-//                    addOrModifiedClassRelativePathList.add(entryName);
                     addOrModifiedClassRelativePathList.add(classRelativePath + ".class");
                     addOrModifiedClassRelativePathList.add(classRelativePath + "$*.class");
 
+                    //butterknife 8.2.0 以后生成的类MainActivity_ViewBinding.class、MainActivity_ViewBinding$1.class
+                    addOrModifiedClassRelativePathList.add(classRelativePath + "_ViewBinding.class");
+                    addOrModifiedClassRelativePathList.add(classRelativePath + "_ViewBinding$*.class");
+
                     classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.");
                     addOrModifiedClasses.add(classRelativePath);
-
-//                    addOrModifiedClasses.add(classRelativePath + ".class");
-//                    addOrModifiedClasses.add(classRelativePath + "\\$\\S{0,}.class");
                     break;
             }
         }

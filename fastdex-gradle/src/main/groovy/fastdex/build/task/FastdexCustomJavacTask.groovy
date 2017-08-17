@@ -3,6 +3,7 @@ package fastdex.build.task
 import fastdex.build.lib.snapshoot.sourceset.PathInfo
 import fastdex.build.lib.snapshoot.sourceset.SourceSetDiffResultSet
 import fastdex.build.util.FastdexUtils
+import fastdex.common.ShareConstants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
 import org.gradle.api.DefaultTask
@@ -76,8 +77,13 @@ public class FastdexCustomJavacTask extends DefaultTask {
         FileUtils.ensumeDir(patchClassesFileDir)
 
         for (PathInfo pathInfo : addOrModifiedPathInfos) {
-            project.logger.error("==fastdex changed java file: ${pathInfo.relativePath}")
-            FileUtils.copyFileUsingStream(pathInfo.absoluteFile,new File(patchJavaFileDir,pathInfo.relativePath))
+            if (pathInfo.relativePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
+                project.logger.error("==fastdex changed java file: ${pathInfo.relativePath}")
+                FileUtils.copyFileUsingStream(pathInfo.absoluteFile,new File(patchJavaFileDir,pathInfo.relativePath))
+            }
+            else {
+                project.logger.error("==fastdex skip kotlin file: ${pathInfo.relativePath}")
+            }
         }
 
         //处理动态生成的java文件

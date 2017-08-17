@@ -110,9 +110,7 @@ public class JarOperation implements Opcodes {
             }
         }
 
-        if (project.fastdex.debug) {
-            project.logger.error("==fastdex debug changedClasses: ${changedClasses}")
-        }
+        project.logger.error("==fastdex changedClasses: ${changedClasses}")
 
         if (changedClasses == null || changedClasses.isEmpty()) {
             throw new IllegalArgumentException("No java files changed!!")
@@ -161,8 +159,11 @@ public class JarOperation implements Opcodes {
                         else {
                             String className = relativePath.toString().substring(0,relativePath.toString().length() - Constants.CLASS_SUFFIX.length());
                             className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
+
                             for (String cn : changedClasses) {
-                                if (cn.equals(className) || className.startsWith("${cn}\$")) {
+                                if (cn.equals(className) || className.startsWith("${cn}\$")
+                                        ////butterknife 8.2.0 以后生成的类MainActivity_ViewBinding.class、MainActivity_ViewBinding$1.class
+                                        || className.startsWith("${cn}_ViewBinding")) {
 
                                     ZipEntry e = new ZipEntry(entryName)
                                     outputJarStream.putNextEntry(e)

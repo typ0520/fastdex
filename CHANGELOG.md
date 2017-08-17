@@ -1,3 +1,13 @@
+## 0.2.0 (2017-8-17)
+
+Features:
+   
+  - 支持kotlin
+      
+Bugfixes:
+
+   - 修复butterknife 8.2.0以后的版本生成的class文件名变成_ViewBinding*.class的问题
+   
 ## 0.1.13 (2017-8-16)
 
 Bugfixes:
@@ -13,15 +23,15 @@ Bugfixes:
    
 ## 0.1.9 (2017-6-10)
    
-   Features:
+Features:
    
-      - 支持免安装功能
+  - 支持免安装功能
       
 ## 0.1.6 (2017-4-27)
  
- Bugfixes:
+Bugfixes:
  
-    - 修复资源处理bug
+   - 修复资源处理bug
 
 ## 0.1.5 (2017-4-25)
 
