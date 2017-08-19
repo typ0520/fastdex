@@ -14,7 +14,6 @@ import fastdex.sample.common3.Common3Utils;
 import fastdex.sample.javalib.JavaLib;
 import java.lang.reflect.Field;
 import butterknife.BindView;
-import fastdex.sample.kotlinlib.KotlinHello;
 
 /**
  * Created by tong on 17/10/3.
@@ -23,7 +22,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @BindView(R.id.tv)
-    View view;
+    View view2;
 
     public static void aa() {
 
@@ -39,6 +38,12 @@ public class MainActivity extends Activity {
 
         new CustomView(this,null);
         //new CustomView2(this,null);
+        view2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "view2",Toast.LENGTH_LONG).show();
+            }
+        });
 
         Button btn = (Button) findViewById(R.id.btn);
         //btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
@@ -70,11 +75,11 @@ public class MainActivity extends Activity {
         sb.append("\n");
         sb.append(Common3Utils.str);
         sb.append("\n");
-        sb.append(new KotlinHello().getName());
-        sb.append("\n");
+//        sb.append(new fastdex.sample.kotlinlib.KotlinHello().getName());
+//        sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
-        sb.append("haha");
+        sb.append("haha222");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();

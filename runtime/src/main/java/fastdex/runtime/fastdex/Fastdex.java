@@ -60,11 +60,11 @@ public class Fastdex {
         try {
             InputStream is = applicationContext.getAssets().open(ShareConstants.META_INFO_FILENAME);
             String assetsMetaInfoJson = new String(FileUtils.readStream(is));
+            Log.d(Fastdex.LOG_TAG,"load meta-info from assets: \n" + assetsMetaInfoJson);
             assetsMetaInfo = RuntimeMetaInfo.load(assetsMetaInfoJson);
             if (assetsMetaInfo == null) {
                 throw new NullPointerException("AssetsMetaInfo can not be null!!!");
             }
-            Log.d(Fastdex.LOG_TAG,"load meta-info from assets: \n" + assetsMetaInfoJson);
             if (metaInfo == null) {
                 assetsMetaInfo.save(this);
                 metaInfo = assetsMetaInfo;

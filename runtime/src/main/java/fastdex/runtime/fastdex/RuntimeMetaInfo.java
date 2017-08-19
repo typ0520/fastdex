@@ -1,13 +1,13 @@
 package fastdex.runtime.fastdex;
 
 import android.util.Log;
-import com.google.gson.Gson;
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import fastdex.common.ShareConstants;
 import fastdex.common.utils.FileUtils;
-import fastdex.common.utils.SerializeUtils;
 import fastdex.runtime.fd.Logging;
 
 /**
@@ -89,7 +89,29 @@ public class RuntimeMetaInfo {
     public void save(Fastdex fastdex) {
         File metaInfoFile = new File(fastdex.fastdexDirectory, ShareConstants.META_INFO_FILENAME);
         try {
-            SerializeUtils.serializeTo(metaInfoFile,this);
+            JSONObject jObj = new JSONObject();
+            try {
+                jObj.put("buildMillis",buildMillis);
+                jObj.put("variantName",variantName);
+                jObj.put("lastPatchPath",lastPatchPath);
+                jObj.put("patchPath",patchPath);
+                jObj.put("preparedPatchPath",preparedPatchPath);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            FileOutputStream outputStream = null;
+            FileUtils.ensumeDir(metaInfoFile.getParentFile());
+            try {
+                outputStream = new FileOutputStream(metaInfoFile);
+                outputStream.write(jObj.toString().getBytes());
+                outputStream.flush();
+            } finally {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+            //SerializeUtils.serializeTo(metaInfoFile,this);
         } catch (IOException e) {
             e.printStackTrace();
             Log.e(Logging.LOG_TAG,e.getMessage());
@@ -99,17 +121,8 @@ public class RuntimeMetaInfo {
     public static RuntimeMetaInfo load(Fastdex fastdex) {
         File metaInfoFile = new File(fastdex.fastdexDirectory, ShareConstants.META_INFO_FILENAME);
         try {
-            return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),RuntimeMetaInfo.class);
-        } catch (Throwable e) {
-            Log.e(Logging.LOG_TAG,e.getMessage());
-        }
-
-        return null;
-    }
-
-    public static RuntimeMetaInfo load(InputStream is) {
-        try {
-            return new Gson().fromJson(new String(FileUtils.readStream(is)),RuntimeMetaInfo.class);
+            return RuntimeMetaInfo.parse(new String(FileUtils.readContents(metaInfoFile)));
+            //return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),RuntimeMetaInfo.class);
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG,e.getMessage());
         }
@@ -119,11 +132,30 @@ public class RuntimeMetaInfo {
 
     public static RuntimeMetaInfo load(String json) {
         try {
-            return new Gson().fromJson(json,RuntimeMetaInfo.class);
+            return RuntimeMetaInfo.parse(json);
+            //return new Gson().fromJson(json,RuntimeMetaInfo.class);
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG,e.getMessage());
         }
 
+        return null;
+    }
+
+    private static RuntimeMetaInfo parse(String json) {
+        try {
+            JSONObject jObj = new JSONObject(json);
+            RuntimeMetaInfo metaInfo = new RuntimeMetaInfo();
+
+            metaInfo.buildMillis = jObj.optLong("buildMillis");
+            metaInfo.variantName = jObj.optString("variantName");
+            metaInfo.lastPatchPath = jObj.optString("lastPatchPath");
+            metaInfo.patchPath = jObj.optString("patchPath");
+            metaInfo.preparedPatchPath = jObj.optString("preparedPatchPath");
+
+            return metaInfo;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 }

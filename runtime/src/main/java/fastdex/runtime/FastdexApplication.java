@@ -155,7 +155,7 @@ public class FastdexApplication extends Application {
                 // the package name (for the current pid), it's the main process.
                 startServer = false;
                 for (ActivityManager.RunningAppProcessInfo processInfo : processes) {
-                    if (AppInfo.applicationId.equals(processInfo.processName)) {
+                    if (getPackageName().equals(processInfo.processName)) {
                         foundPackage = true;
                         if (processInfo.pid == pid) {
                             startServer = true;

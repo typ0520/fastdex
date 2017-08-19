@@ -19,6 +19,7 @@ public interface Constants extends ShareConstants {
     String DEPENDENCIES_FILENAME = "dependencies.json"
     String SOURCESET_SNAPSHOOT_FILENAME = "sourceSets.json"
     String LAST_DIFF_RESULT_SET_FILENAME = "lastDiffResultSet.json"
+    String CLASSPATH_FILENAME = "classpath.json"
     String ERROR_REPORT_FILENAME = "last-build-error-report.txt"
     String DEFAULT_LIBRARY_VARIANT_DIR_NAME = "release"
 

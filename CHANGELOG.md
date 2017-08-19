@@ -1,13 +1,24 @@
-## 0.2.0 (2017-8-17)
+## 0.3.0 (2017-8-19)
 
 Features:
    
-  - 支持kotlin
+  - 适配butterknife,可以把useCustomCompile打开了
       
 Bugfixes:
 
+   - 修复runtime中空指针的问题
+
+## 0.2.0 (2017-8-17)
+
+Features:
+
+  - 支持kotlin
+
+Bugfixes:
+
    - 修复butterknife 8.2.0以后的版本生成的class文件名变成_ViewBinding*.class的问题
-   
+
+
 ## 0.1.13 (2017-8-16)
 
 Bugfixes:

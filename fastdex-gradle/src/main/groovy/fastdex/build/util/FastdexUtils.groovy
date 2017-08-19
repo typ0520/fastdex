@@ -96,6 +96,22 @@ public class FastdexUtils {
     }
 
     /**
+     * 获取javac命令路径
+     * @return
+     */
+    public static final String getJavacCmdPath() {
+        StringBuilder cmd = new StringBuilder(getCurrentJdk())
+        if (!cmd.toString().endsWith(File.separator)) {
+            cmd.append(File.separator)
+        }
+        cmd.append("bin${File.separator}javac")
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            cmd.append(".exe")
+        }
+        return new File(cmd.toString()).absolutePath
+    }
+
+    /**
      * 是否存在dex缓存
      * @param project
      * @param variantName
