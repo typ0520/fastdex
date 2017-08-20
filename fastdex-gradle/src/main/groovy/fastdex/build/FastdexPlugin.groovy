@@ -164,14 +164,15 @@ class FastdexPlugin implements Plugin<Project> {
                         fastdexInstantRunTask.onDexTransformComplete()
                     }
 
+
                     project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
                         @Override
                         public void graphPopulated(TaskExecutionGraph taskGraph) {
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task.getProject().equals(project)
                                         && task instanceof TransformTask
-                                        && task.name.toLowerCase().contains(variant.name.toLowerCase())) {
-
+                                        //fix #
+                                        && task.name.endsWith("For" + variantName)) {
                                     Transform transform = ((TransformTask) task).getTransform()
                                     //如果开启了multiDexEnabled true,存在transformClassesWithJarMergingFor${variantName}任务
                                     if ((((transform instanceof JarMergingTransform)) && !(transform instanceof FastdexJarMergingTransform))) {
@@ -190,6 +191,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         if (fastdexVariant.configuration.debug) {
                                             project.logger.error("==fastdex find dex transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
                                         }
+
                                         //代理DexTransform,实现自定义的转换
                                         FastdexTransform fastdexTransform = new FastdexTransform(transform,fastdexVariant)
                                         Field field = getFieldByName(task.getClass(),'transform')

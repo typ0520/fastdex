@@ -1,6 +1,5 @@
 package fastdex.build.transform
 
-import com.android.build.api.transform.DirectoryInput
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
@@ -140,19 +139,6 @@ class FastdexTransform extends TransformProxy {
                         FileUtils.copyFileUsingStream(combinedJar,injectedJar)
                     }
                 } else {
-                    //所有输入的jar
-                    Set<String> jarInputFiles = new HashSet<>();
-                    for (TransformInput input : transformInvocation.getInputs()) {
-                        Collection<JarInput> jarInputs = input.getJarInputs()
-                        if (jarInputs != null) {
-                            for (JarInput jarInput : jarInputs) {
-                                jarInputFiles.add(jarInput.getFile().absolutePath)
-                            }
-                        }
-                    }
-                    File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
-                    SerializeUtils.serializeTo(classpathFile,jarInputFiles)
-
                     ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
                     File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
                     GradleUtils.executeMerge(project,transformInvocation,injectedJar)
@@ -180,6 +166,19 @@ class FastdexTransform extends TransformProxy {
             fastdexVariant.metaInfo.buildMillis = System.currentTimeMillis()
 
             fastdexVariant.onDexGenerateSuccess(true,false)
+
+            //所有输入的jar
+            Set<String> jarInputFiles = new HashSet<>();
+            for (TransformInput input : transformInvocation.getInputs()) {
+                Collection<JarInput> jarInputs = input.getJarInputs()
+                if (jarInputs != null) {
+                    for (JarInput jarInput : jarInputs) {
+                        jarInputFiles.add(jarInput.getFile().absolutePath)
+                    }
+                }
+            }
+            File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
+            SerializeUtils.serializeTo(classpathFile,jarInputFiles)
 
             project.logger.error("==fastdex normal transform end")
         }

@@ -2,6 +2,7 @@ package fastdex.build.variant
 
 import fastdex.build.extension.FastdexExtension
 import fastdex.build.task.FastdexInstantRunTask
+import fastdex.build.util.Constants
 import fastdex.common.utils.SerializeUtils
 import fastdex.build.util.LibDependency
 import fastdex.build.util.MetaInfo
@@ -109,6 +110,11 @@ public class FastdexVariant {
                     File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
                     if (!FileUtils.isLegalFile(injectedJarFile)) {
                         throw new CheckException("miss injected jar file: ${injectedJarFile}")
+                    }
+
+                    File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
+                    if (!FileUtils.isLegalFile(classpathFile)) {
+                        throw new CheckException("miss classpath file: ${classpathFile}")
                     }
                 }
 
