@@ -23,18 +23,23 @@ import org.gradle.api.tasks.TaskAction
  */
 public class FastdexCustomJavacTask extends DefaultTask {
     FastdexVariant fastdexVariant
+    Object javaCompile
+    Object javacIncrementalSafeguard
 
     FastdexCustomJavacTask() {
         group = 'fastdex'
     }
 
     def disableJavaCompile(boolean disable) {
+        javaCompile.enabled = !disable
 
+        if (javacIncrementalSafeguard != null) {
+            javacIncrementalSafeguard.enabled = !disable
+        }
     }
 
     @TaskAction
     void compile() {
-        def javaCompile = fastdexVariant.androidVariant.javaCompile
         disableJavaCompile(false)
 
         def project = fastdexVariant.project
@@ -69,7 +74,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
                 && projectSnapshoot.oldDiffResultSet != null
                 && projectSnapshoot.diffResultSet.equals(projectSnapshoot.oldDiffResultSet)) {
             project.logger.error("==fastdex java files not changed, just ignore")
-            javaCompile.enabled = false
+            disableJavaCompile(true)
             return
         }
         Set<PathInfo> addOrModifiedPathInfos = sourceSetDiffResultSet.addOrModifiedPathInfos

@@ -1,12 +1,16 @@
-## 0.3.0 (2017-8-19)
+## 0.3.0-rc1 (2017-8-21)
 
 Features:
    
-  - 适配butterknife,可以把useCustomCompile打开了
+  - 适配apt(butterknife、......),可以把useCustomCompile打开了
       
 Bugfixes:
 
    - 修复runtime中空指针的问题
+   - 修复项目快照丢失r文件映射的问题
+   - 修复dex加载顺序错误的问题
+   - 修复加载resource.ap_文件路径错误的问题
+   - fix [issue#51](https://github.com/typ0520/fastdex/issues/51)
 
 ## 0.2.0 (2017-8-17)
 
