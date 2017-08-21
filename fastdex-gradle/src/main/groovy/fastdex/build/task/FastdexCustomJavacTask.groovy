@@ -28,10 +28,14 @@ public class FastdexCustomJavacTask extends DefaultTask {
         group = 'fastdex'
     }
 
+    def disableJavaCompile(boolean disable) {
+
+    }
+
     @TaskAction
     void compile() {
         def javaCompile = fastdexVariant.androidVariant.javaCompile
-        javaCompile.enabled = true
+        disableJavaCompile(false)
 
         def project = fastdexVariant.project
         def projectSnapshoot = fastdexVariant.projectSnapshoot
@@ -56,7 +60,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         //java文件是否发生变化
         if (!sourceSetDiffResultSet.isJavaFileChanged()) {
             project.logger.error("==fastdex no java files changed, just ignore")
-            javaCompile.enabled = false
+            disableJavaCompile(true)
             return
         }
 
@@ -255,7 +259,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
 //                return FileVisitResult.CONTINUE
 //            }
 //        })
-        javaCompile.enabled = false
+        disableJavaCompile(true)
         //保存对比信息
         fastdexVariant.projectSnapshoot.saveDiffResultSet()
     }
