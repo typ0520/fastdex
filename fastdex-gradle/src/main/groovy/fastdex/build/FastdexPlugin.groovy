@@ -127,6 +127,9 @@ class FastdexPlugin implements Plugin<Project> {
                     if (configuration.useCustomCompile) {
                         Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
                         customJavacTask.fastdexVariant = fastdexVariant
+                        customJavacTask.javaCompile = variant.javaCompile
+                        customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
+
                         customJavacTask.dependsOn prepareTask
                         variant.javaCompile.dependsOn customJavacTask
                     }
@@ -208,24 +211,37 @@ class FastdexPlugin implements Plugin<Project> {
         }
     }
 
-    Task getTinkerPatchManifestTask(Project project, String variantName) {
-        String tinkerPatchManifestTaskName = "tinkerpatchSupportProcess${variantName}Manifest"
+    Task getJavacIncrementalSafeguardTask(Project project, String variantName) {
+        String taskName = "incremental${variantName}JavaCompilationSafeguard"
         try {
-            return  project.tasks.getByName(tinkerPatchManifestTaskName)
+            return  project.tasks.getByName(taskName)
+        } catch (Throwable e) {
+            return null
+        }
+    }
+
+    Task getTinkerPatchManifestTask(Project project, String variantName) {
+        String taskName = "tinkerpatchSupportProcess${variantName}Manifest"
+        try {
+            return project.tasks.getByName(taskName)
         } catch (Throwable e) {
             return null
         }
     }
 
     Task getMergeDebugResources(Project project, String variantName) {
-        String mergeResourcesTaskName = "merge${variantName}Resources"
-        project.tasks.getByName(mergeResourcesTaskName)
+        String taskName = "merge${variantName}Resources"
+        try {
+            return project.tasks.getByName(taskName)
+        } catch (Throwable e) {
+            return null
+        }
     }
 
     Task getTransformClassesWithMultidexlistTask(Project project, String variantName) {
-        String transformClassesWithMultidexlistTaskName = "transformClassesWithMultidexlistFor${variantName}"
+        String taskName = "transformClassesWithMultidexlistFor${variantName}"
         try {
-            return project.tasks.getByName(transformClassesWithMultidexlistTaskName)
+            return project.tasks.getByName(taskName)
         } catch (Throwable e) {
             //fix issue #1 如果没有开启multidex会报错
             return null
@@ -234,13 +250,17 @@ class FastdexPlugin implements Plugin<Project> {
 
     Task getTransformClassesWithDex(Project project, String variantName) {
         String taskName = "transformClassesWithDexFor${variantName}"
-        return project.tasks.getByName(taskName)
+        try {
+            return project.tasks.findByName(taskName)
+        } catch (Throwable e) {
+            return null
+        }
     }
 
     Task getCollectMultiDexComponentsTask(Project project, String variantName) {
+        String taskName = "collect${variantName}MultiDexComponents"
         try {
-            String collectMultiDexComponents = "collect${variantName}MultiDexComponents"
-            return project.tasks.findByName(collectMultiDexComponents)
+            return project.tasks.findByName(taskName)
         } catch (Throwable e) {
             return null
         }
