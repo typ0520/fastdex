@@ -37,6 +37,10 @@ public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffI
         super(directory, childPath);
     }
 
+    public JavaDirectorySnapshoot(File directory,boolean useMd5, String ...childPath) throws IOException {
+        super(directory, useMd5, childPath);
+    }
+
     public JavaDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
         super(directory, childPath);
     }

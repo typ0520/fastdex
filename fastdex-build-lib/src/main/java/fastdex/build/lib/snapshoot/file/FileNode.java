@@ -1,6 +1,8 @@
 package fastdex.build.lib.snapshoot.file;
 
 import fastdex.build.lib.snapshoot.api.Node;
+import fastdex.common.utils.DigestUtils;
+import fastdex.common.utils.FileUtils;
 
 import java.io.File;
 
@@ -12,6 +14,7 @@ public class FileNode extends Node {
     public String relativePath;
     public long lastModified;
     public long fileLength;
+    public String md5;
 
     @Override
     public String getUniqueKey() {
@@ -24,8 +27,15 @@ public class FileNode extends Node {
         if (anNode == null) return false;
 
         FileNode fileNode = (FileNode) anNode;
-        if (lastModified != fileNode.lastModified) return false;
         if (fileLength != fileNode.fileLength) return false;
+
+
+        if (lastModified != fileNode.lastModified) {
+            if (md5 != null && md5.equals(((FileNode) anNode).md5)) {
+                return true;
+            }
+            return false;
+        }
         return equals(fileNode);
     }
 
@@ -35,6 +45,7 @@ public class FileNode extends Node {
                 "relativePath='" + relativePath + '\'' +
                 ", lastModified=" + lastModified +
                 ", fileLength=" + fileLength +
+                ", md5=" + md5 +
                 '}';
     }
 
@@ -46,6 +57,25 @@ public class FileNode extends Node {
 
         fileInfo.lastModified = file.lastModified();
         fileInfo.fileLength = file.length();
+        return fileInfo;
+    }
+
+    public static FileNode create(File rootDir, File file, boolean useMd5) {
+        //相对路径作为key
+        FileNode fileInfo = new FileNode();
+        //fileInfo.absolutePath = file.getAbsolutePath();
+        fileInfo.relativePath = rootDir.toPath().relativize(file.toPath()).toString();
+
+        fileInfo.lastModified = file.lastModified();
+        fileInfo.fileLength = file.length();
+
+        if (useMd5) {
+            try {
+                fileInfo.md5 = DigestUtils.md5DigestAsHex(FileUtils.readContents(file));
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
         return fileInfo;
     }
 }

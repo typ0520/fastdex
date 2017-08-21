@@ -124,6 +124,11 @@ class FastdexPlugin implements Plugin<Project> {
                     prepareTask.fastdexVariant = fastdexVariant
                     prepareTask.mustRunAfter variantOutput.processResources
 
+                    Task generateSourcesTask = getGenerateSourcesTask(project, variantName)
+                    if (generateSourcesTask != null) {
+                        prepareTask.mustRunAfter generateSourcesTask
+                    }
+
                     if (configuration.useCustomCompile) {
                         Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
                         customJavacTask.fastdexVariant = fastdexVariant
@@ -213,6 +218,15 @@ class FastdexPlugin implements Plugin<Project> {
 
     Task getJavacIncrementalSafeguardTask(Project project, String variantName) {
         String taskName = "incremental${variantName}JavaCompilationSafeguard"
+        try {
+            return  project.tasks.getByName(taskName)
+        } catch (Throwable e) {
+            return null
+        }
+    }
+
+    Task getGenerateSourcesTask(Project project, String variantName) {
+        String taskName = "generate${variantName}Sources"
         try {
             return  project.tasks.getByName(taskName)
         } catch (Throwable e) {

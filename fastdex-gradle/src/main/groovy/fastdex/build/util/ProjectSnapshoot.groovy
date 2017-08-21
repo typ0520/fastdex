@@ -169,7 +169,7 @@ public class ProjectSnapshoot {
             if (fastdexVariant.configuration.debug) {
                 fastdexVariant.project.logger.error("==fastdex buildConfigJavaFile: ${buildConfigJavaFile}")
             }
-            JavaDirectorySnapshoot buildConfigSnapshoot = new JavaDirectorySnapshoot(buildConfigDir,buildConfigJavaFile.absolutePath)
+            JavaDirectorySnapshoot buildConfigSnapshoot = new JavaDirectorySnapshoot(buildConfigDir,true,buildConfigJavaFile.absolutePath)
             buildConfigSnapshoot.projectPath = project.projectDir.absolutePath
             snapshoot.addJavaDirectorySnapshoot(buildConfigSnapshoot)
 
@@ -177,8 +177,13 @@ public class ProjectSnapshoot {
             if (fastdexVariant.configuration.debug) {
                 fastdexVariant.project.logger.error("==fastdex rJavaFile: ${rJavaFile}")
             }
-            JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,rJavaFile.absolutePath)
+            JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,true,rJavaFile.absolutePath)
             rSnapshoot.projectPath = project.projectDir.absolutePath
+
+
+            //TODO tmpdebug
+            fastdexVariant.project.logger.error("==fastdex tmpdebug rSnapshoot : " + rSnapshoot.nodes)
+
             snapshoot.addJavaDirectorySnapshoot(rSnapshoot)
         }
     }

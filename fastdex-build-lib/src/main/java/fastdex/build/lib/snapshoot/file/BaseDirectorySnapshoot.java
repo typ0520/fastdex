@@ -10,7 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 目录快照
@@ -18,6 +22,7 @@ import java.util.Collection;
  */
 public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends FileNode> extends Snapshoot<DIFF_INFO,NODE> {
     public String path;
+    public boolean useMd5;
 
     public BaseDirectorySnapshoot() {
     }
@@ -32,38 +37,51 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     public BaseDirectorySnapshoot(File directory, ScanFilter scanFilter) throws IOException {
-        if (directory == null) {
-            throw new IllegalArgumentException("Directory can not be null!!");
-        }
-//        if (!directory.exists() || !directory.isDirectory()) {
-//            throw new IllegalArgumentException("Invalid directory: " + directory);
+//        if (directory == null) {
+//            throw new IllegalArgumentException("Directory can not be null!!");
 //        }
-        this.path = directory.getAbsolutePath();
+////        if (!directory.exists() || !directory.isDirectory()) {
+////            throw new IllegalArgumentException("Invalid directory: " + directory);
+////        }
+//        this.path = directory.getAbsolutePath();
+//
+//        if (directory.exists() && directory.isDirectory()) {
+//            walkFileTree(directory,scanFilter);
+//        }
 
-        if (directory.exists() && directory.isDirectory()) {
-            walkFileTree(directory,scanFilter);
-        }
+        this(directory, null, scanFilter,false);
     }
 
-    public BaseDirectorySnapshoot(File directory, String ...childPath) throws IOException {
-        if (directory == null) {
-            throw new IllegalArgumentException("Directory can not be null!!");
-        }
-//        if (!directory.exists() || !directory.isDirectory()) {
-//            throw new IllegalArgumentException("Invalid directory: " + directory);
-//        }
-        this.path = directory.getAbsolutePath();
-
-        if (childPath != null) {
-            for (String path : childPath) {
-                if (path != null) {
-                    visitFile(new File(path).toPath(),null,null);
-                }
-            }
-        }
+    public BaseDirectorySnapshoot(File directory, String ...childPaths) throws IOException {
+        this(directory, toFileList(childPaths));
     }
 
     public BaseDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
+//        if (directory == null) {
+//            throw new IllegalArgumentException("Directory can not be null!!");
+//        }
+////        if (!directory.exists() || !directory.isDirectory()) {
+////            throw new IllegalArgumentException("Invalid directory: " + directory);
+////        }
+//
+//        this.path = directory.getAbsolutePath();
+//
+//        if (childPath != null) {
+//            for (File f : childPath) {
+//                if (f != null) {
+//                    visitFile(f.toPath(),null,null);
+//                }
+//            }
+//        }
+
+        this(directory,childPath,null, false);
+    }
+
+    public BaseDirectorySnapshoot(File directory,boolean useMd5, String ...childPaths) throws IOException {
+        this(directory,toFileList(childPaths),null, useMd5);
+    }
+
+    public BaseDirectorySnapshoot(File directory, Collection<File> childPaths, ScanFilter scanFilter,boolean useMd5) throws IOException {
         if (directory == null) {
             throw new IllegalArgumentException("Directory can not be null!!");
         }
@@ -72,11 +90,17 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
 //        }
 
         this.path = directory.getAbsolutePath();
+        this.useMd5 = useMd5;
 
-        if (childPath != null) {
-            for (File f : childPath) {
+        if (childPaths == null) {
+            if (directory.exists() && directory.isDirectory()) {
+                walkFileTree(directory,scanFilter);
+            }
+        }
+        else {
+            for (File f : childPaths) {
                 if (f != null) {
-                    visitFile(f.toPath(),null,null);
+                    visitFile(f.toPath(),null,scanFilter);
                 }
             }
         }
@@ -102,8 +126,12 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
                 return FileVisitResult.CONTINUE;
             }
         }
-        addNode((NODE) FileNode.create(new File(path),filePath.toFile()));
+        addNode(createNode(path, filePath));
         return FileVisitResult.CONTINUE;
+    }
+
+    protected NODE createNode(String path, Path filePath) {
+        return (NODE) FileNode.create(new File(path),filePath.toFile(), useMd5);
     }
 
     public File getAbsoluteFile(FileNode fileItemInfo) {
@@ -140,5 +168,17 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         return "BaseDirectorySnapshoot{" +
                 "path='" + path + '\'' +
                 '}';
+    }
+
+    private static Collection<File> toFileList(String[] childPaths) {
+        List<File> files = new ArrayList<>();
+        if (childPaths != null) {
+            for (String path : childPaths) {
+                if (path != null) {
+                    files.add(new File(path));
+                }
+            }
+        }
+        return files;
     }
 }
