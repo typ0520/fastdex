@@ -1,13 +1,18 @@
 package fastdex.build.transform
 
+import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformException
+import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
 import fastdex.build.util.ClassInject
+import fastdex.build.util.Constants
+import fastdex.build.util.FastdexUtils
 import fastdex.build.util.JarOperation
 import fastdex.build.variant.FastdexVariant
 import com.android.build.api.transform.Format
 import fastdex.common.utils.FileUtils
+import fastdex.common.utils.SerializeUtils
 
 /**
  * 拦截transformClassesWithJarMergingFor${variantName}任务,
@@ -35,6 +40,19 @@ class FastdexJarMergingTransform extends TransformProxy {
             }
         }
         else {
+            //所有输入的jar
+            Set<String> jarInputFiles = new HashSet<>();
+            for (TransformInput input : transformInvocation.getInputs()) {
+                Collection<JarInput> jarInputs = input.getJarInputs()
+                if (jarInputs != null) {
+                    for (JarInput jarInput : jarInputs) {
+                        jarInputFiles.add(jarInput.getFile().absolutePath)
+                    }
+                }
+            }
+            File classpathFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project,fastdexVariant.variantName),Constants.CLASSPATH_FILENAME)
+            SerializeUtils.serializeTo(classpathFile,jarInputFiles)
+
             //inject dir input
             ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
             base.transform(transformInvocation)

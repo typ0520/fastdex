@@ -125,6 +125,21 @@ class FastdexTransform extends TransformProxy {
             }
         }
         else {
+            if (!fastdexVariant.executedJarMerge) {
+                //所有输入的jar
+                Set<String> jarInputFiles = new HashSet<>();
+                for (TransformInput input : transformInvocation.getInputs()) {
+                    Collection<JarInput> jarInputs = input.getJarInputs()
+                    if (jarInputs != null) {
+                        for (JarInput jarInput : jarInputs) {
+                            jarInputFiles.add(jarInput.getFile().absolutePath)
+                        }
+                    }
+                }
+                File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
+                SerializeUtils.serializeTo(classpathFile,jarInputFiles)
+            }
+
             def config = fastdexVariant.androidVariant.getVariantData().getVariantConfiguration()
             boolean isMultiDexEnabled = config.isMultiDexEnabled()
 
@@ -166,19 +181,6 @@ class FastdexTransform extends TransformProxy {
             fastdexVariant.metaInfo.buildMillis = System.currentTimeMillis()
 
             fastdexVariant.onDexGenerateSuccess(true,false)
-
-            //所有输入的jar
-            Set<String> jarInputFiles = new HashSet<>();
-            for (TransformInput input : transformInvocation.getInputs()) {
-                Collection<JarInput> jarInputs = input.getJarInputs()
-                if (jarInputs != null) {
-                    for (JarInput jarInput : jarInputs) {
-                        jarInputFiles.add(jarInput.getFile().absolutePath)
-                    }
-                }
-            }
-            File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
-            SerializeUtils.serializeTo(classpathFile,jarInputFiles)
 
             project.logger.error("==fastdex normal transform end")
         }
