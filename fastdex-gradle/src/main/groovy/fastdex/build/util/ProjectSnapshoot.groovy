@@ -110,19 +110,6 @@ public class ProjectSnapshoot {
             }
         }
 
-        //TODO change api
-        //File rDir = new File(fastdexVariant.project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
-        //File rDir = fastdexVariant.androidVariant.getVariantData().getScope().getRClassSourceOutputDir()
-
-        //TODO tmpdebug
-        //fastdexVariant.project.logger.error("==fastdex tmpdebug rdir: ${rDir}")
-
-
-        //r
-//        JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,getAllRjavaPath(fastdexVariant.project,androidLibDependencies))
-//        rSnapshoot.projectPath = fastdexVariant.project.projectDir.absolutePath
-//        snapshoot.addJavaDirectorySnapshoot(rSnapshoot)
-
         //buildconfig
         List<Project> projectList = new ArrayList<>()
         projectList.add(fastdexVariant.project)

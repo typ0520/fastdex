@@ -155,7 +155,7 @@ class FastdexPlugin implements Plugin<Project> {
 
                     FastdexInstantRunTask fastdexInstantRunTask = project.tasks.create("fastdex${variantName}",FastdexInstantRunTask)
                     fastdexInstantRunTask.fastdexVariant = fastdexVariant
-                    fastdexInstantRunTask.resourceApFile = variantOutput.getVariantOutputData().getScope().getProcessResourcePackageOutputFile()
+                    fastdexInstantRunTask.resourceApFile = variantOutput.processResources.packageOutputFile
                     fastdexInstantRunTask.resDir = variantOutput.processResources.resDir
                     fastdexInstantRunTask.dependsOn variant.assemble
                     fastdexVariant.fastdexInstantRunTask = fastdexInstantRunTask

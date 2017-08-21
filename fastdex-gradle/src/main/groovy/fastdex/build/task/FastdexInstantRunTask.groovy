@@ -237,10 +237,9 @@ public class FastdexInstantRunTask extends DefaultTask {
         long start = System.currentTimeMillis()
         File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
         FileUtils.cleanDir(tempDir)
-        File resourceAp = new File(project.buildDir,"intermediates${File.separator}res${File.separator}resources-debug.ap_")
 
         File tempResourcesApk = new File(tempDir,resourcesApk.getName())
-        FileUtils.copyFileUsingStream(resourceAp,tempResourcesApk)
+        FileUtils.copyFileUsingStream(resourceApFile,tempResourcesApk)
 
         File assetsPath = fastdexVariant.androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
         List<String> assetFiles = getAssetFiles(assetsPath)
