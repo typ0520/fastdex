@@ -34,14 +34,16 @@ public class FastdexCustomJavacTask extends DefaultTask {
         javaCompile.enabled = !disable
 
         if (javacIncrementalSafeguard != null) {
-            javacIncrementalSafeguard.enabled = !disable
+            try {
+                javacIncrementalSafeguard.enabled = !disable
+            } catch (Throwable e) {
+
+            }
         }
     }
 
     @TaskAction
     void compile() {
-        disableJavaCompile(false)
-
         def project = fastdexVariant.project
         def projectSnapshoot = fastdexVariant.projectSnapshoot
 

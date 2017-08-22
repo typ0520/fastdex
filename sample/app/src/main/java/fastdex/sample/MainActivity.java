@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.dx168.fastdex.sample.common.CommonUtils;
 import com.github.typ0520.fastdex.sample.R;
 
+import butterknife.ButterKnife;
 import fastdex.sample.common2.Common2Utils;
 import fastdex.sample.common3.Common3Utils;
 import fastdex.sample.javalib.JavaLib;
@@ -35,6 +36,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         new CustomView(this,null);
         //new CustomView2(this,null);
@@ -79,7 +81,7 @@ public class MainActivity extends Activity {
 //        sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
-        sb.append("haha222");
+        sb.append("haha2");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();
@@ -91,7 +93,7 @@ public class MainActivity extends Activity {
             }
         };
 
-        SampleApplication realApp = (SampleApplication)getApplication();
+        //SampleApplication realApp = (SampleApplication)getApplication();
 
         new Runnable(){
             @Override

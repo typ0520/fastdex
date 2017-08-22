@@ -55,13 +55,13 @@ public class FastdexInstantRunTask extends DefaultTask {
         IDevice[] devices = bridge.getDevices()
         if (devices != null && devices.length > 0) {
             if (devices.length > 1) {
-                throw new FastdexRuntimeException("Find multiple devices!!")
+                throw new FastdexRuntimeException("发现了多个Android设备，请拔掉数据线，只留一个设备 V_V ")
             }
             device = devices[0]
         }
 
         if (device == null) {
-            throw new FastdexRuntimeException("Device not found!!")
+            throw new FastdexRuntimeException("没有发现Android设备，请确认连接是否正常 adb devices")
         }
         project.logger.error("==fastdex device connected ${device.toString()}")
     }
