@@ -148,6 +148,13 @@ public class FastdexVariant {
         }
 
         projectSnapshoot.prepareEnv()
+
+        new Thread(new Runnable() {
+            @Override
+            void run() {
+                fastdexInstantRunTask.preparedDevice()
+            }
+        }).start()
     }
 
     /**

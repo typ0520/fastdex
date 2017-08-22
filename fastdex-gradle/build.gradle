@@ -15,3 +15,8 @@ repositories {
 }
 
 apply from: rootProject.file('bintray.gradle')
+
+
+tasks['install'].doLast {
+    project.file('build/libs').deleteDir()
+}

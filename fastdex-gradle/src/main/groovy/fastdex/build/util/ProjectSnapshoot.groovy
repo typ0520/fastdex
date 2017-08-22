@@ -179,11 +179,6 @@ public class ProjectSnapshoot {
             }
             JavaDirectorySnapshoot rSnapshoot = new JavaDirectorySnapshoot(rDir,true,rJavaFile.absolutePath)
             rSnapshoot.projectPath = project.projectDir.absolutePath
-
-
-            //TODO tmpdebug
-            fastdexVariant.project.logger.error("==fastdex tmpdebug rSnapshoot : " + rSnapshoot.nodes)
-
             snapshoot.addJavaDirectorySnapshoot(rSnapshoot)
         }
     }

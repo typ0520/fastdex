@@ -70,6 +70,8 @@ public class FastdexInstantRunTask extends DefaultTask {
         if (!isInstantRunBuild()) {
             return
         }
+        //TODO 判断AndroidManifest.xml是否发生变化，如果变化,走安装
+
         preparedDevice()
         def packageName = fastdexVariant.getMergedPackageName()
         ServiceCommunicator serviceCommunicator = new ServiceCommunicator(packageName)
@@ -169,6 +171,15 @@ public class FastdexInstantRunTask extends DefaultTask {
         if (alreadySendPatch) {
             return
         }
+
+        //是否能ping通
+
+//        if (fastdexVariant.hasDexCache && !fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
+//            //kill app
+//            killApp(-1)
+//            startBootActivity()
+//            return
+//        }
 
         preparedDevice()
         normalRun(device)

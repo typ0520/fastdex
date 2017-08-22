@@ -96,7 +96,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
         //compile java
         File androidJar = new File("${FastdexUtils.getSdkDirectory(project)}${File.separator}platforms${File.separator}${project.android.getCompileSdkVersion()}${File.separator}android.jar")
-        File classpathJar = FastdexUtils.getInjectedJarFile(project,fastdexVariant.variantName)
+        //File classpathJar = FastdexUtils.getInjectedJarFile(project,fastdexVariant.variantName)
 
         //def classpath = project.files(classpathJar.absolutePath) + javaCompile.classpath +
         //def classpath = project.files(classpathJar.absolutePath)
@@ -108,7 +108,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         ArrayList<String> list = SerializeUtils.load(new FileInputStream(classpathFile), ArrayList.class)
         classpath.addAll(list)
 
-        classpath.add(classpathJar.absolutePath)
+        //classpath.add(classpathJar.absolutePath)
 
         def executable = FastdexUtils.getJavacCmdPath()
         project.logger.error("==fastdex executable ${executable}")
