@@ -87,12 +87,12 @@ public class FastdexCustomJavacTask extends DefaultTask {
 //        FileUtils.ensumeDir(patchClassesFileDir)
 //
 //        for (PathInfo pathInfo : addOrModifiedPathInfos) {
-//            if (pathInfo.relativePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
-//                project.logger.error("==fastdex changed java file: ${pathInfo.relativePath}")
-//                FileUtils.copyFileUsingStream(pathInfo.absoluteFile,new File(patchJavaFileDir,pathInfo.relativePath))
+//            if (pathInfo.nodePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
+//                project.logger.error("==fastdex changed java file: ${pathInfo.nodePath}")
+//                FileUtils.copyFileUsingStream(pathInfo.absoluteFile,new File(patchJavaFileDir,pathInfo.nodePath))
 //            }
 //            else {
-//                project.logger.error("==fastdex skip kotlin file: ${pathInfo.relativePath}")
+//                project.logger.error("==fastdex skip kotlin file: ${pathInfo.nodePath}")
 //            }
 //        }
 
@@ -258,8 +258,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
 //        Files.walkFileTree(patchClassesFileDir.toPath(),new SimpleFileVisitor<Path>(){
 //            @Override
 //            FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                Path relativePath = patchClassesFileDir.toPath().relativize(file)
-//                File destFile = new File(classesDir,relativePath.toString())
+//                Path nodePath = patchClassesFileDir.toPath().relativize(file)
+//                File destFile = new File(classesDir,nodePath.toString())
 //                FileUtils.copyFileUsingStream(file.toFile(),destFile)
 //
 //                project.logger.error("==fastdex apply class to ${destFile}")

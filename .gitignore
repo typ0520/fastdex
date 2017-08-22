@@ -41,6 +41,7 @@ proguard/
 
 /*/.idea
 .idea
+.test
 sample/.idea/
 runtime/build/
 

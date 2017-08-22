@@ -1,5 +1,7 @@
 package fastdex.build.lib.snapshoot.file;
 
+import com.google.gson.annotations.Expose;
+
 import fastdex.build.lib.snapshoot.api.DiffInfo;
 import fastdex.build.lib.snapshoot.api.DiffResultSet;
 import fastdex.build.lib.snapshoot.api.Snapshoot;
@@ -11,9 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,6 +21,8 @@ import java.util.List;
  * Created by tong on 17/3/29.
  */
 public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends FileNode> extends Snapshoot<DIFF_INFO,NODE> {
+    @Expose
+    protected ScanFilter scanFilter;
     public String path;
     public boolean useMd5;
 
@@ -37,18 +39,6 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     public BaseDirectorySnapshoot(File directory, ScanFilter scanFilter) throws IOException {
-//        if (directory == null) {
-//            throw new IllegalArgumentException("Directory can not be null!!");
-//        }
-////        if (!directory.exists() || !directory.isDirectory()) {
-////            throw new IllegalArgumentException("Invalid directory: " + directory);
-////        }
-//        this.path = directory.getAbsolutePath();
-//
-//        if (directory.exists() && directory.isDirectory()) {
-//            walkFileTree(directory,scanFilter);
-//        }
-
         this(directory, null, scanFilter,false);
     }
 
@@ -57,23 +47,6 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     public BaseDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
-//        if (directory == null) {
-//            throw new IllegalArgumentException("Directory can not be null!!");
-//        }
-////        if (!directory.exists() || !directory.isDirectory()) {
-////            throw new IllegalArgumentException("Invalid directory: " + directory);
-////        }
-//
-//        this.path = directory.getAbsolutePath();
-//
-//        if (childPath != null) {
-//            for (File f : childPath) {
-//                if (f != null) {
-//                    visitFile(f.toPath(),null,null);
-//                }
-//            }
-//        }
-
         this(directory,childPath,null, false);
     }
 
@@ -85,12 +58,10 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         if (directory == null) {
             throw new IllegalArgumentException("Directory can not be null!!");
         }
-//        if (!directory.exists() || !directory.isDirectory()) {
-//            throw new IllegalArgumentException("Invalid directory: " + directory);
-//        }
 
         this.path = directory.getAbsolutePath();
         this.useMd5 = useMd5;
+        this.scanFilter = scanFilter;
 
         if (childPaths == null) {
             if (directory.exists() && directory.isDirectory()) {
@@ -120,6 +91,14 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         });
     }
 
+    public void addFile(File file) {
+        try {
+            visitFile(file.toPath(),null,scanFilter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     protected FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs,ScanFilter scanFilter) throws IOException {
         if (scanFilter != null) {
             if (!scanFilter.preVisitFile(filePath.toFile())) {
@@ -131,7 +110,11 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     protected NODE createNode(String path, Path filePath) {
-        return (NODE) FileNode.create(new File(path),filePath.toFile(), useMd5);
+        File rootDir = null;
+        if (path != null) {
+            rootDir = new File(path);
+        }
+        return (NODE) FileNode.create(rootDir,filePath.toFile(), useMd5);
     }
 
     public File getAbsoluteFile(FileNode fileItemInfo) {

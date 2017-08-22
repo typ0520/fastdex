@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.github.typ0520.fastdex.sample">
 
+
     <application
         android:name="fastdex.sample.SampleApplication"
         android:allowBackup="true"

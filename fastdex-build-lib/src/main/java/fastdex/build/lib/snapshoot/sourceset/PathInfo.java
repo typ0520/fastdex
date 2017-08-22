@@ -38,7 +38,7 @@ public class PathInfo {
     public String toString() {
         return "PathInfo{" +
                 "absoluteFile=" + absoluteFile +
-                ", relativePath='" + relativePath + '\'' +
+                ", nodePath='" + relativePath + '\'' +
                 '}';
     }
 }
