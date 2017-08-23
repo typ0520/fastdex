@@ -1,5 +1,8 @@
 package fastdex.build.util
 
+import fastdex.build.lib.snapshoot.api.DiffResultSet
+import fastdex.build.lib.snapshoot.file.FileDiffInfo
+import fastdex.build.lib.snapshoot.res.AndManifestDirectorySnapshoot
 import fastdex.build.lib.snapshoot.sourceset.JavaDirectorySnapshoot
 import fastdex.build.lib.snapshoot.sourceset.SourceSetDiffResultSet
 import fastdex.build.lib.snapshoot.sourceset.SourceSetSnapshoot
@@ -20,6 +23,8 @@ public class ProjectSnapshoot {
     SourceSetDiffResultSet oldDiffResultSet
     StringSnapshoot dependenciesSnapshoot
     StringSnapshoot oldDependenciesSnapshoot
+    AndManifestDirectorySnapshoot andManifestDirectorySnapshoot
+    AndManifestDirectorySnapshoot oldAndManifestDirectorySnapshoot
 
     ProjectSnapshoot(FastdexVariant fastdexVariant) {
         this.fastdexVariant = fastdexVariant
@@ -37,11 +42,15 @@ public class ProjectSnapshoot {
         File dependenciesListFile = FastdexUtils.getCachedDependListFile(project,fastdexVariant.variantName)
         oldDependenciesSnapshoot = StringSnapshoot.load(dependenciesListFile,StringSnapshoot.class)
 
+        File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,fastdexVariant.variantName)
+        oldAndManifestDirectorySnapshoot = AndManifestDirectorySnapshoot.load(androidManifestStatFile,AndManifestDirectorySnapshoot.class)
+
         String oldProjectPath = fastdexVariant.metaInfo.projectPath
         String curProjectPath = project.projectDir.absolutePath
 
         String oldRootProjectPath = fastdexVariant.metaInfo.rootProjectPath
         String curRootProjectPath = project.rootProject.projectDir.absolutePath
+
         boolean isRootProjectDirChanged = fastdexVariant.metaInfo.isRootProjectDirChanged(curRootProjectPath)
         if (isRootProjectDirChanged) {
             //已存在构建缓存的情况下,如果移动了项目目录要把缓存中的老的路径全部替换掉
@@ -89,11 +98,30 @@ public class ProjectSnapshoot {
         handleGeneratedSource(sourceSetSnapshoot)
         handleLibraryDependencies(sourceSetSnapshoot)
 
+        andManifestDirectorySnapshoot = new AndManifestDirectorySnapshoot()
+        andManifestDirectorySnapshoot.addFile(fastdexVariant.project.android.sourceSets.main.manifest.srcFile)
+        for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
+            if (libDependency.androidLibrary) {
+                File file = libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile
+                andManifestDirectorySnapshoot.addFile(file)
+            }
+        }
+
         if (fastdexVariant.hasDexCache) {
             diffResultSet = sourceSetSnapshoot.diff(oldSourceSetSnapshoot)
             if (!fastdexVariant.firstPatchBuild) {
                 File diffResultSetFile = FastdexUtils.getDiffResultSetFile(project,fastdexVariant.variantName)
                 oldDiffResultSet = SourceSetDiffResultSet.load(diffResultSetFile,SourceSetDiffResultSet.class)
+            }
+
+            DiffResultSet<FileDiffInfo> diffResultSet = andManifestDirectorySnapshoot.diff(oldAndManifestDirectorySnapshoot)
+            if (diffResultSet != null && diffResultSet.changedDiffInfos.size() > 0) {
+                //如果manifest文件发生变化，改变buildMillis的值，这样走到免安装时就会重新安装(如果增加了四大组件必须重新安装app)
+                fastdexVariant.metaInfo.buildMillis = System.currentTimeMillis()
+                fastdexVariant.saveMetaInfo()
+
+                File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,fastdexVariant.variantName)
+                andManifestDirectorySnapshoot.serializeTo(new FileOutputStream(androidManifestStatFile))
             }
         }
     }
@@ -197,30 +225,6 @@ public class ProjectSnapshoot {
                 snapshoot.addJavaDirectorySnapshoot(javaDirectorySnapshoot)
             }
         }
-    }
-
-    /**
-     * 获取application工程自身和依赖的aar工程的所有R文件相对路径
-     * @param appProject
-     * @param androidLibDependencies
-     * @return
-     */
-    def getAllRjavaPath(Project appProject,List<LibDependency> androidLibDependencies) {
-        File rDir = new File(appProject.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
-        List<File> fileList = new ArrayList<>()
-        for (LibDependency libDependency : androidLibDependencies) {
-            String packageName = GradleUtils.getPackageName(libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile.absolutePath)
-            String packageNamePath = packageName.split("\\.").join(File.separator)
-
-            String rjavaRelativePath = "${packageNamePath}${File.separator}R.java"
-            File rjavaFile = new File(rDir,rjavaRelativePath)
-            fileList.add(rjavaFile)
-
-            if (fastdexVariant.configuration.debug) {
-                fastdexVariant.project.logger.error("==fastdex rjavaFile: ${rjavaFile}")
-            }
-        }
-        return fileList
     }
 
     /**
@@ -352,6 +356,9 @@ public class ProjectSnapshoot {
             saveCurrentSourceSetSnapshoot()
             //save dependencies
             saveDependenciesSnapshoot()
+
+            File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(fastdexVariant.project,fastdexVariant.variantName)
+            andManifestDirectorySnapshoot.serializeTo(new FileOutputStream(androidManifestStatFile))
         }
         else {
             if (dexMerge) {

@@ -3,6 +3,7 @@
     package="com.github.typ0520.fastdex.sample">
 
 
+
     <application
         android:name="fastdex.sample.SampleApplication"
         android:allowBackup="true"

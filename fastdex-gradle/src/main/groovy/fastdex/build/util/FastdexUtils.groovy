@@ -306,6 +306,11 @@ public class FastdexUtils {
         return cachedDependListFile
     }
 
+    public static File getAndroidManifestStatFile(Project project,String variantName) {
+        File file = new File(getBuildDir(project,variantName),Constants.ANDROID_MANIFEST_FILENAME)
+        return file
+    }
+
     public static File getMetaInfoFile(Project project,String variantName) {
         File cachedDependListFile = new File(getBuildDir(project,variantName),Constants.META_INFO_FILENAME)
         return cachedDependListFile

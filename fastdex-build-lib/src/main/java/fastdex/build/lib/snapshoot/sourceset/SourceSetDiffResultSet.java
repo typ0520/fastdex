@@ -25,6 +25,9 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
     public Set<PathInfo> addOrModifiedPathInfos = new HashSet<>();
 
     @Expose
+    public Map<String,Set<PathInfo>> addOrModifiedPathInfosMap = new HashMap<>();
+
+    @Expose
     public Map<String,List<String>> addOrModifiedClassesMap = new HashMap<>();
 
     public SourceSetDiffResultSet() {
@@ -56,11 +59,20 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
             addOrModifiedClassesMap.put(javaDirectoryResultSet.projectPath,addOrModifiedClassRelativePathList);
         }
 
+        Set<PathInfo> pathInfoSet = addOrModifiedPathInfosMap.get(javaDirectoryResultSet.projectPath);
+        if (pathInfoSet == null) {
+            pathInfoSet = new HashSet<>();
+            addOrModifiedPathInfosMap.put(javaDirectoryResultSet.projectPath,pathInfoSet);
+        }
+
         for (JavaFileDiffInfo javaFileDiffInfo : javaDirectoryResultSet.changedDiffInfos) {
             switch (javaFileDiffInfo.status) {
                 case ADDED:
                 case MODIFIED:
-                    addOrModifiedPathInfos.add(new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey));
+                    PathInfo pathInfo = new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey);
+                    addOrModifiedPathInfos.add(pathInfo);
+                    pathInfoSet.add(pathInfo);
+
                     String classRelativePath = javaFileDiffInfo.getClassRelativePath();
                     addOrModifiedClassRelativePathList.add(classRelativePath + ".class");
                     addOrModifiedClassRelativePathList.add(classRelativePath + "$*.class");

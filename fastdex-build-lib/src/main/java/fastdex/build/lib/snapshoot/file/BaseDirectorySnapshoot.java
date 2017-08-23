@@ -1,7 +1,5 @@
 package fastdex.build.lib.snapshoot.file;
 
-import com.google.gson.annotations.Expose;
-
 import fastdex.build.lib.snapshoot.api.DiffInfo;
 import fastdex.build.lib.snapshoot.api.DiffResultSet;
 import fastdex.build.lib.snapshoot.api.Snapshoot;
@@ -21,8 +19,6 @@ import java.util.List;
  * Created by tong on 17/3/29.
  */
 public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends FileNode> extends Snapshoot<DIFF_INFO,NODE> {
-    @Expose
-    protected ScanFilter scanFilter;
     public String path;
     public boolean useMd5;
 
@@ -61,7 +57,6 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
 
         this.path = directory.getAbsolutePath();
         this.useMd5 = useMd5;
-        this.scanFilter = scanFilter;
 
         if (childPaths == null) {
             if (directory.exists() && directory.isDirectory()) {
@@ -92,6 +87,10 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
     }
 
     public void addFile(File file) {
+        addFile(file,null);
+    }
+
+    public void addFile(File file,ScanFilter scanFilter) {
         try {
             visitFile(file.toPath(),null,scanFilter);
         } catch (IOException e) {

@@ -23,10 +23,7 @@ public class AndManifestDirectorySnapshoot extends BaseDirectorySnapshoot<FileDi
 
     @Override
     public void addFile(File file) {
-        if (!SUFFIX_FILTER.preVisitFile(file)) {
-            return;
-        }
-        super.addFile(file);
+        addFile(file,SUFFIX_FILTER);
     }
 
     @Override

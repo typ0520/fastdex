@@ -79,7 +79,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
             disableJavaCompile(true)
             return
         }
-        Set<PathInfo> addOrModifiedPathInfos = sourceSetDiffResultSet.addOrModifiedPathInfos
+
+        Set<PathInfo> addOrModifiedPathInfos = sourceSetDiffResultSet.addOrModifiedPathInfosMap.get(project.projectDir.absolutePath)
 
 //        File patchJavaFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind")
 //        File patchClassesFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind-classes")

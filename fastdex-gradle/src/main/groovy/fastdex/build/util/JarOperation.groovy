@@ -142,11 +142,12 @@ public class JarOperation implements Opcodes {
 
                         if (skip) {
                             ZipEntry e = new ZipEntry(entryName)
-                            outputJarStream.putNextEntry(e)
 
                             if (project.fastdex.debug) {
-                                project.logger.error("==fastdex add entry: ${e}")
+                                project.logger.error("==fastdex add entry1: ${e}")
                             }
+                            outputJarStream.putNextEntry(e)
+
                             byte[] bytes = FileUtils.readContents(file.toFile())
                             //如果需要触发dex merge,必须注入代码
                             if (willExeDexMerge) {
@@ -166,11 +167,12 @@ public class JarOperation implements Opcodes {
                                         || className.startsWith("${cn}_ViewBinding")) {
 
                                     ZipEntry e = new ZipEntry(entryName)
+                                    if (project.fastdex.debug) {
+                                        project.logger.error("==fastdex add entry2: ${e}")
+                                    }
+
                                     outputJarStream.putNextEntry(e)
 
-                                    if (project.fastdex.debug) {
-                                        project.logger.error("==fastdex add entry: ${e}")
-                                    }
                                     byte[] bytes = FileUtils.readContents(file.toFile())
                                     //如果需要触发dex merge,必须注入代码
                                     if (willExeDexMerge) {

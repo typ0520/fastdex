@@ -106,11 +106,16 @@ public class FastdexVariant {
                     throw new CheckException("miss resource mapping file: ${resourceMappingFile}")
                 }
 
+                File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,variantName)
+                if (!FileUtils.isLegalFile(androidManifestStatFile)) {
+                    throw new CheckException("miss android manifest stat file: ${androidManifestStatFile}")
+                }
+
                 if (configuration.useCustomCompile) {
-                    File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
-                    if (!FileUtils.isLegalFile(injectedJarFile)) {
-                        throw new CheckException("miss injected jar file: ${injectedJarFile}")
-                    }
+//                    File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
+//                    if (!FileUtils.isLegalFile(injectedJarFile)) {
+//                        throw new CheckException("miss injected jar file: ${injectedJarFile}")
+//                    }
 
                     File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
                     if (!FileUtils.isLegalFile(classpathFile)) {

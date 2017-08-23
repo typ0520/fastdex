@@ -149,10 +149,10 @@ class FastdexTransform extends TransformProxy {
                     //如果开启了multidex,FastdexJarMergingTransform完成了inject的操作，不需要在做处理
                     File combinedJar = getCombinedJarFile(transformInvocation)
 
-                    if (fastdexVariant.configuration.useCustomCompile) {
-                        File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
-                        FileUtils.copyFileUsingStream(combinedJar,injectedJar)
-                    }
+//                    if (fastdexVariant.configuration.useCustomCompile) {
+//                        File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
+//                        FileUtils.copyFileUsingStream(combinedJar,injectedJar)
+//                    }
                 } else {
                     ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
                     File injectedJar = FastdexUtils.getInjectedJarFile(project,variantName)
