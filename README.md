@@ -23,14 +23,14 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         dependencies {
             ......
 
-            classpath 'com.github.typ0520:fastdex-gradle:0.3-rc4'
+            classpath 'com.github.typ0520:fastdex-gradle:0.3-rc6'
         }
     }
     ````
     
 - 3、在app的项目中的build.gradle添加插件
     ````
-    apply plugin: 'com.github.typ0520.fastdex'
+    apply plugin: 'fastdex.app'
     ````
     
 - 4、直接点击studio的run或者执行打包命令，就会在任务执行的过程中做hook
