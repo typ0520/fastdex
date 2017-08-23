@@ -209,6 +209,8 @@ public class FastdexVariant {
         }
         copyMetaInfo2Assets()
         projectSnapshoot.onDexGenerateSuccess(nornalBuild,dexMerge)
+
+        fastdexInstantRunTask.onDexTransformComplete()
     }
 
     def saveMetaInfo() {
@@ -219,7 +221,11 @@ public class FastdexVariant {
     def copyMetaInfo2Assets() {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
         File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
-        FileUtils.copyFileUsingStream(metaInfoFile,new File(assetsPath,metaInfoFile.getName()))
+
+        File dest = new File(assetsPath,metaInfoFile.getName())
+        if (!FileUtils.isLegalFile(dest)) {
+            FileUtils.copyFileUsingStream(metaInfoFile,dest)
+        }
     }
 
     /**

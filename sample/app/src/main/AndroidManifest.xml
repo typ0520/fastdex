@@ -2,32 +2,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.github.typ0520.fastdex.sample">
 
-
-
     <application
         android:name="fastdex.sample.SampleApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true">
-        <activity
-            android:name="fastdex.sample.MainActivity">
+        <activity android:name="fastdex.sample.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
 
-                <data android:scheme="http" android:host="www.dx168.com"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="www.dx168.com"
+                    android:scheme="http" />
             </intent-filter>
-
-
         </activity>
+        <activity android:name="fastdex.sample.LoginActivity"></activity>
     </application>
 
 </manifest>

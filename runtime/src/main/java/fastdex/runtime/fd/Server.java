@@ -273,8 +273,15 @@ public class Server {
 
                         // Send an "ack" back to the IDE; this is used for timing purposes only
                         output.writeBoolean(true);
-
                         restart(updateMode,hasDex, hasResources, showToast);
+
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        output.writeBoolean(true);
                         continue;
                     }
 

@@ -34,6 +34,8 @@ public class MetaInfo {
 
     public int patchDexVersion
 
+    public boolean active
+
 
     /**
      * 是否移动了工程目录

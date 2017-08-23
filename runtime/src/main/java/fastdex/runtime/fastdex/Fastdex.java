@@ -63,7 +63,7 @@ public class Fastdex {
             Log.d(Fastdex.LOG_TAG,"load meta-info from assets: \n" + assetsMetaInfoJson);
             assetsMetaInfo = RuntimeMetaInfo.load(assetsMetaInfoJson);
             if (assetsMetaInfo == null) {
-                throw new NullPointerExcePption("AssetsMetaInfo can not be null!!!");
+                throw new NullPointerException("AssetsMetaInfo can not be null!!!");
             }
             if (metaInfo == null) {
                 assetsMetaInfo.save(this);

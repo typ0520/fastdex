@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:textColor="#ffffff"
         android:layout_centerInParent="true"
-        android:text="Fastdex sample"/>
+        android:text="Fastdex sample - 哈哈1"/>
 
     <com.dx168.fastdex.sample.common.CommonView
         android:layout_width="wrap_content"

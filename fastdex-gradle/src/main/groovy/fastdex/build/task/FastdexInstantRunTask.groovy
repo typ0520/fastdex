@@ -24,6 +24,7 @@ public class FastdexInstantRunTask extends DefaultTask {
     File resourceApFile
     String resDir
     boolean alreadySendPatch
+    boolean alreadyExecDexTransform
     IDevice device
 
     FastdexInstantRunTask() {
@@ -67,29 +68,18 @@ public class FastdexInstantRunTask extends DefaultTask {
     }
 
     public void onDexTransformComplete() {
-        if (!isInstantRunBuild()) {
+        if (!isInstantRunBuild() || !fastdexVariant.hasDexCache) {
             return
         }
-        //TODO 判断AndroidManifest.xml是否发生变化，如果变化,走安装
+
+        alreadyExecDexTransform = true
 
         preparedDevice()
-        def packageName = fastdexVariant.getMergedPackageName()
-        ServiceCommunicator serviceCommunicator = new ServiceCommunicator(packageName)
         try {
-            boolean active = false
-            int appPid = -1
-            MetaInfo runtimeMetaInfo = serviceCommunicator.talkToService(device, new Communicator<MetaInfo>() {
-                @Override
-                public MetaInfo communicate(DataInputStream input, DataOutputStream output) throws IOException {
-                    output.writeInt(ProtocolConstants.MESSAGE_PING)
-                    MetaInfo runtimeMetaInfo = new MetaInfo()
-                    active = input.readBoolean()
-                    runtimeMetaInfo.buildMillis = input.readLong()
-                    runtimeMetaInfo.variantName = input.readUTF()
-                    appPid = input.readInt()
-                    return runtimeMetaInfo
-                }
-            })
+            def packageName = fastdexVariant.getMergedPackageName()
+            ServiceCommunicator serviceCommunicator = new ServiceCommunicator(packageName)
+
+            MetaInfo runtimeMetaInfo = ping(device,serviceCommunicator)
             project.logger.error("==fastdex receive: ${runtimeMetaInfo}")
             if (fastdexVariant.metaInfo.buildMillis != runtimeMetaInfo.buildMillis) {
                 throw new JumpException("buildMillis not equal")
@@ -112,7 +102,6 @@ public class FastdexInstantRunTask extends DefaultTask {
             }
 
             long start = System.currentTimeMillis()
-
             serviceCommunicator.talkToService(device, new Communicator<Boolean>() {
                 @Override
                 public Boolean communicate(DataInputStream input, DataOutputStream output) throws IOException {
@@ -150,7 +139,7 @@ public class FastdexInstantRunTask extends DefaultTask {
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
             //kill app
-            killApp(appPid)
+            killApp()
             startBootActivity()
 
             //project.tasks.getByName("validateSigning${fastdexVariant.variantName}").enabled = false
@@ -166,22 +155,100 @@ public class FastdexInstantRunTask extends DefaultTask {
         }
     }
 
+    MetaInfo ping(IDevice device,ServiceCommunicator serviceCommunicator) {
+        MetaInfo runtimeMetaInfo = serviceCommunicator.talkToService(device, new Communicator<MetaInfo>() {
+            @Override
+            public MetaInfo communicate(DataInputStream input, DataOutputStream output) throws IOException {
+                output.writeInt(ProtocolConstants.MESSAGE_PING)
+                MetaInfo runtimeMetaInfo = new MetaInfo()
+                runtimeMetaInfo.active = input.readBoolean()
+                runtimeMetaInfo.buildMillis = input.readLong()
+                runtimeMetaInfo.variantName = input.readUTF()
+                //int appPid = input.readInt()
+                return runtimeMetaInfo
+            }
+        })
+
+        return runtimeMetaInfo
+    }
+
     @TaskAction
     void instantRun() {
         if (alreadySendPatch) {
             return
         }
 
-        //是否能ping通
-
-//        if (fastdexVariant.hasDexCache && !fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
-//            //kill app
-//            killApp(-1)
-//            startBootActivity()
-//            return
-//        }
-
         preparedDevice()
+
+        //是否能ping通
+        if (!alreadyExecDexTransform && fastdexVariant.hasDexCache) {
+            //如果有dex缓存并且本次编译没有执行dex transform就当做资源变化处理
+            //TODO 最好是对资源做下比对
+            try {
+                def packageName = fastdexVariant.getMergedPackageName()
+                ServiceCommunicator serviceCommunicator = new ServiceCommunicator(packageName)
+
+                MetaInfo runtimeMetaInfo = ping(device,serviceCommunicator)
+
+                project.logger.error("==fastdex receive: ${runtimeMetaInfo}")
+                if (fastdexVariant.metaInfo.buildMillis != runtimeMetaInfo.buildMillis) {
+                    throw new JumpException("buildMillis not equal")
+                }
+                if (!fastdexVariant.metaInfo.variantName.equals(runtimeMetaInfo.variantName)) {
+                    throw new JumpException("variantName not equal")
+                }
+
+                File resourcesApk = FastdexUtils.getResourcesApk(project,fastdexVariant.variantName)
+                generateResourceApk(resourcesApk)
+
+                long start = System.currentTimeMillis()
+
+                boolean result = serviceCommunicator.talkToService(device, new Communicator<Boolean>() {
+                    @Override
+                    public Boolean communicate(DataInputStream input, DataOutputStream output) throws IOException {
+                        output.writeInt(ProtocolConstants.MESSAGE_PATCHES)
+                        output.writeLong(0L)
+                        output.writeInt(1)
+
+                        project.logger.error("==fastdex write ${ShareConstants.RESOURCE_APK_FILE_NAME}")
+                        output.writeUTF(ShareConstants.RESOURCE_APK_FILE_NAME)
+                        byte[] bytes = FileUtils.readContents(resourcesApk)
+                        output.writeInt(bytes.length)
+                        output.write(bytes)
+
+                        output.writeInt(ProtocolConstants.UPDATE_MODE_WARM_SWAP)
+                        output.writeBoolean(true)
+
+                        input.readBoolean()
+
+                        try {
+                            return input.readBoolean()
+                        } catch (Throwable e) {
+
+                        }
+
+                        return false
+                    }
+                })
+                long end = System.currentTimeMillis();
+                project.logger.error("==fastdex send resources.apk success. use: ${end - start}ms")
+
+                //kill app
+
+                if (!runtimeMetaInfo.active || !result) {
+                    killApp()
+                    startBootActivity()
+                }
+                return
+            } catch (JumpException e) {
+
+            } catch (Throwable e) {
+                if (fastdexVariant.configuration.debug) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
         normalRun(device)
     }
 
@@ -195,10 +262,7 @@ public class FastdexInstantRunTask extends DefaultTask {
         startBootActivity()
     }
 
-    def killApp(appPid) {
-        if (appPid == -1) {
-            return
-        }
+    def killApp() {
         //adb shell am force-stop 包名
         def packageName = fastdexVariant.getMergedPackageName()
         //$ adb shell kill {appPid}

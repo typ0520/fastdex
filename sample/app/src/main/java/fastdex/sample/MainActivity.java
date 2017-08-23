@@ -1,6 +1,7 @@
 package fastdex.sample;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -48,6 +49,13 @@ public class MainActivity extends Activity {
         });
 
         Button btn = (Button) findViewById(R.id.btn);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this,LoginActivity.class);
+                startActivity(intent);
+            }
+        });
         //btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
 
         String s1 = getString(R.string.s1);
@@ -81,7 +89,7 @@ public class MainActivity extends Activity {
 //        sb.append("\n");
         sb.append(getResources().getString(common3str));
         sb.append("\n");
-        sb.append("哈哈22");
+        sb.append("哈哈11");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();

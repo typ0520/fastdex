@@ -168,10 +168,16 @@ class FastdexPlugin implements Plugin<Project> {
                     fastdexInstantRunTask.dependsOn variant.assemble
                     fastdexVariant.fastdexInstantRunTask = fastdexInstantRunTask
 
-                    getTransformClassesWithDex(project,variantName).doLast {
-                        fastdexInstantRunTask.onDexTransformComplete()
-                    }
+//                    getTransformClassesWithDex(project,variantName).doLast {
+//                        fastdexInstantRunTask.onDexTransformComplete()
+//                    }
 
+                    Task packageTask = getPackageTask(project, variantName)
+                    if (packageTask != null) {
+                        packageTask.doFirst {
+                            fastdexVariant.copyMetaInfo2Assets()
+                        }
+                    }
 
                     project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
                         @Override
@@ -213,6 +219,15 @@ class FastdexPlugin implements Plugin<Project> {
 
                 }
             }
+        }
+    }
+
+    Task getPackageTask(Project project, String variantName) {
+        String taskName = "package${variantName}"
+        try {
+            return  project.tasks.getByName(taskName)
+        } catch (Throwable e) {
+            return null
         }
     }
 
