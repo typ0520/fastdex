@@ -77,11 +77,13 @@ android {
         }
     }
 
-//    productFlavors {
-////        normal {
-////
-////        }
-//    }
+    productFlavors {
+        flavor1 {
+        }
+
+        flavor2 {
+        }
+    }
 
 //    compileOptions {
 //        sourceCompatibility JavaVersion.VERSION_1_8

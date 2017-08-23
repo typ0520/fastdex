@@ -99,7 +99,13 @@ public class ProjectSnapshoot {
         handleLibraryDependencies(sourceSetSnapshoot)
 
         andManifestDirectorySnapshoot = new AndManifestDirectorySnapshoot()
-        andManifestDirectorySnapshoot.addFile(fastdexVariant.project.android.sourceSets.main.manifest.srcFile)
+
+        def list = getProjectManifestFiles(fastdexVariant.project)
+        list.each {
+            andManifestDirectorySnapshoot.addFile(it)
+        }
+
+       // andManifestDirectorySnapshoot.addFile(fastdexVariant.project.android.sourceSets.main.manifest.srcFile)
         for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
             if (libDependency.androidLibrary) {
                 File file = libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile
@@ -145,34 +151,9 @@ public class ProjectSnapshoot {
             projectList.add(libDependency.dependencyProject)
         }
 
-        String buildTypeName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
-        String dirName = fastdexVariant.androidVariant.dirName
-        //buildTypeName         "debug"
-        //dirName               "debug"
-        //libraryVariantdirName Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME
-        def libraryVariantdirName = Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME
-        /**
-         * fix-issue32 https://github.com/typ0520/fastdex/issues/32
-         * 正常的buildConfig目录
-         * /Users/zhengmj/Desktop/TjrTaojinRoad/common/build/generated/source/buildConfig/release
-         *
-         * issue32对应的buildConfig目录
-         * /Users/zhengmj/Desktop/TjrTaojinRoad/common/build/generated/source/buildConfig/taojinroad/release
-         */
-        if (!dirName.equals(buildTypeName)) {
-            //buildTypeName         "debug"
-            //dirName               "xxxx/debug"
-            //libraryVariantdirName Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME
-            libraryVariantdirName = dirName.substring(0,dirName.length() - buildTypeName.length())
-            libraryVariantdirName = "${libraryVariantdirName}${Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME}"
 
-            if (libraryVariantdirName.startsWith(File.separator)) {
-                libraryVariantdirName = libraryVariantdirName.substring(1)
-            }
-            if (libraryVariantdirName.endsWith(File.separator)) {
-                libraryVariantdirName = libraryVariantdirName.substring(0,libraryVariantdirName.length() - 1)
-            }
-        }
+        def libraryVariantdirName = Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME
+
         for (int i = 0;i < projectList.size();i++) {
             Project project = projectList.get(i)
             String packageName = GradleUtils.getPackageName(project.android.sourceSets.main.manifest.srcFile.absolutePath)
@@ -185,8 +166,6 @@ public class ProjectSnapshoot {
             if (i == 0) {
                 //TODO change api
                 buildConfigDir = fastdexVariant.androidVariant.getVariantData().getScope().getBuildConfigSourceOutputDir()
-                //buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${fastdexVariant.androidVariant.dirName}${File.separator}")
-
                 rDir = fastdexVariant.androidVariant.getVariantData().getScope().getRClassSourceOutputDir()
             }
             else {
@@ -271,6 +250,47 @@ public class ProjectSnapshoot {
             }
         }
         return srcDirSet
+    }
+
+    def getProjectManifestFiles(Project project) {
+        def manifestFiles = new LinkedHashSet()
+
+        if (project.hasProperty("android") && project.android.hasProperty("sourceSets")) {
+            manifestFiles.addAll(FastdexUtils.getManifestFile(project,"main"))
+
+            String buildTypeName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
+            String flavorName = fastdexVariant.androidVariant.flavorName
+
+            if (buildTypeName && flavorName) {
+                File file = FastdexUtils.getManifestFile(project,flavorName + buildTypeName.capitalize() as String)
+
+                if (FileUtils.isLegalFile(file)) {
+                    manifestFiles.add(file)
+                }
+            }
+
+            if (buildTypeName) {
+                File file = FastdexUtils.getManifestFile(project,buildTypeName)
+
+                if (FileUtils.isLegalFile(file)) {
+                    manifestFiles.add(file)
+                }
+            }
+
+            if (flavorName) {
+                File file = FastdexUtils.getManifestFile(project,flavorName)
+
+                if (FileUtils.isLegalFile(file)) {
+                    manifestFiles.add(file)
+                }
+            }
+        }
+
+        if (fastdexVariant.configuration.debug) {
+            project.logger.error("==fastdex: manifestFiles ${manifestFiles}")
+        }
+
+        return manifestFiles
     }
 
     /**

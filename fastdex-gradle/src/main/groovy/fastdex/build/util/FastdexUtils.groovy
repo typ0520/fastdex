@@ -346,4 +346,12 @@ public class FastdexUtils {
         }
         return srcDirs
     }
+
+    public static File getManifestFile(Project project,String sourceSetKey) {
+        def sourceSetsValue = project.android.sourceSets.findByName(sourceSetKey)
+        if (sourceSetsValue) {
+             return sourceSetsValue.manifest.srcFile
+        }
+        return null
+    }
 }
