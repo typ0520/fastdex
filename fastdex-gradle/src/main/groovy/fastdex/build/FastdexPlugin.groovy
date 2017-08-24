@@ -174,6 +174,8 @@ class FastdexPlugin implements Plugin<Project> {
 
                     Task packageTask = getPackageTask(project, variantName)
                     if (packageTask != null) {
+                        project.logger.error("==fastdex find package task: " + packageTask.name)
+
                         packageTask.doFirst {
                             fastdexVariant.copyMetaInfo2Assets()
                         }

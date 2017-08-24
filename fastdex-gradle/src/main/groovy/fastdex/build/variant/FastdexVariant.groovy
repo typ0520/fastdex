@@ -223,6 +223,8 @@ public class FastdexVariant {
         File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
 
         File dest = new File(assetsPath,metaInfoFile.getName())
+
+        project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
         if (!FileUtils.isLegalFile(dest)) {
             FileUtils.copyFileUsingStream(metaInfoFile,dest)
         }

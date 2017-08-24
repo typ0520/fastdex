@@ -27,6 +27,8 @@ public class RuntimeMetaInfo {
 
     private String preparedPatchPath;
 
+    private long lastSourceModified;
+
     public long getBuildMillis() {
         return buildMillis;
     }
@@ -67,6 +69,14 @@ public class RuntimeMetaInfo {
         this.preparedPatchPath = preparedPatchPath;
     }
 
+    public long getLastSourceModified() {
+        return lastSourceModified;
+    }
+
+    public void setLastSourceModified(long lastSourceModified) {
+        this.lastSourceModified = lastSourceModified;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -96,6 +106,7 @@ public class RuntimeMetaInfo {
                 jObj.put("lastPatchPath",lastPatchPath);
                 jObj.put("patchPath",patchPath);
                 jObj.put("preparedPatchPath",preparedPatchPath);
+                jObj.put("lastSourceModified",lastSourceModified);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -151,6 +162,7 @@ public class RuntimeMetaInfo {
             metaInfo.lastPatchPath = jObj.optString("lastPatchPath");
             metaInfo.patchPath = jObj.optString("patchPath");
             metaInfo.preparedPatchPath = jObj.optString("preparedPatchPath");
+            metaInfo.lastSourceModified = jObj.optLong("lastSourceModified");
 
             return metaInfo;
         } catch (Exception e) {

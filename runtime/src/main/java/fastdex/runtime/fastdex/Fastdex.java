@@ -3,6 +3,9 @@ package fastdex.runtime.fastdex;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -57,6 +60,9 @@ public class Fastdex {
 
         RuntimeMetaInfo metaInfo = RuntimeMetaInfo.load(this);
         RuntimeMetaInfo assetsMetaInfo = null;
+
+        long lastSourceModified = SharePatchFileUtil.getLastSourceModified(applicationContext);
+        Log.d(Fastdex.LOG_TAG,"lastSourceModified: " + lastSourceModified);
         try {
             InputStream is = applicationContext.getAssets().open(ShareConstants.META_INFO_FILENAME);
             String assetsMetaInfoJson = new String(FileUtils.readStream(is));
@@ -65,22 +71,50 @@ public class Fastdex {
             if (assetsMetaInfo == null) {
                 throw new NullPointerException("AssetsMetaInfo can not be null!!!");
             }
+
+            boolean metaInfoChanged = false;
+            boolean sourceChanged = false;
+
             if (metaInfo == null) {
+                assetsMetaInfo.setLastSourceModified(lastSourceModified);
                 assetsMetaInfo.save(this);
                 metaInfo = assetsMetaInfo;
                 File metaInfoFile = new File(fastdexDirectory, ShareConstants.META_INFO_FILENAME);
+                FileUtils.cleanDir(fastdexDirectory);
+                FileUtils.cleanDir(tempDirectory);
+
                 if (!FileUtils.isLegalFile(metaInfoFile)) {
                     throw new FastdexRuntimeException("save meta-info fail: " + metaInfoFile.getAbsolutePath());
                 }
             }
-            else if (!metaInfo.equals(assetsMetaInfo)) {
+            else if (!(metaInfoChanged = metaInfo.equals(assetsMetaInfo)) || (sourceChanged = metaInfo.getLastSourceModified() != lastSourceModified)) {
                 File metaInfoFile = new File(fastdexDirectory, ShareConstants.META_INFO_FILENAME);
                 String metaInfoJson = new String(FileUtils.readContents(metaInfoFile));
+
+                try {
+                    JSONObject jObj = new JSONObject(metaInfoJson);
+                    jObj.put("sourceChanged",sourceChanged);
+                    metaInfoJson = jObj.toString();
+                } catch (Throwable e) {
+
+                }
+
                 Log.d(Fastdex.LOG_TAG,"load meta-info from files: \n" + metaInfoJson);
-                Log.d(Fastdex.LOG_TAG,"meta-info content changed clean");
+
+                if (metaInfoChanged && sourceChanged) {
+                    Log.d(Fastdex.LOG_TAG,"\nmeta-info content and source changed, clean patch info\n");
+                }
+                else if (metaInfoChanged) {
+                    Log.d(Fastdex.LOG_TAG,"\nmeta-info content changed, clean patch info\n");
+                }
+                else if (sourceChanged) {
+                    Log.d(Fastdex.LOG_TAG,"\nmeta-info source changed, clean patch info\n");
+                }
 
                 FileUtils.cleanDir(fastdexDirectory);
                 FileUtils.cleanDir(tempDirectory);
+
+                assetsMetaInfo.setLastSourceModified(lastSourceModified);
                 assetsMetaInfo.save(this);
                 metaInfo = assetsMetaInfo;
             }
@@ -120,6 +154,8 @@ public class Fastdex {
         if (TextUtils.isEmpty(runtimeMetaInfo.getPatchPath())) {
             return;
         }
+
+
 
         final File dexDirectory = new File(new File(runtimeMetaInfo.getPatchPath()),Constants.DEX_DIR);
         final File optDirectory = new File(new File(runtimeMetaInfo.getPatchPath()),Constants.OPT_DIR);

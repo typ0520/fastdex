@@ -38,6 +38,20 @@ public class SharePatchFileUtil {
         return new File(applicationInfo.dataDir, Constants.FASTDEX_DIR);
     }
 
+    /**
+     * 获取上一次源码发生变化的日期
+     * @param context
+     * @return
+     */
+    public static long getLastSourceModified(Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        if (applicationInfo == null) {
+            return 0;
+        }
+
+        return new File(applicationInfo.sourceDir).lastModified();
+    }
+
 
     /**
      * data dir, such as /data/data/com.github.typ0520.fastdex.sample/fastdex/patch

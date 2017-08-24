@@ -16,11 +16,11 @@ repositories {
 
 apply from: rootProject.file('bintray.gradle')
 
-tasks['install'].doLast {
-    String launchTaskName = project.gradle.startParameter.taskRequests.get(0).args.get(0).toString()
-
-    println("launchTaskName: " + launchTaskName)
-    if ("install".equals(launchTaskName)) {
-        project.file('build/libs').deleteDir()
-    }
-}
+//tasks['install'].doLast {
+//    String launchTaskName = project.gradle.startParameter.taskRequests.get(0).args.get(0).toString()
+//
+//    println("launchTaskName: " + launchTaskName)
+//    if ("install".equals(launchTaskName)) {
+//        project.file('build/libs').deleteDir()
+//    }
+//}
