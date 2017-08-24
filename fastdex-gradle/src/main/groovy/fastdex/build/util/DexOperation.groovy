@@ -3,6 +3,7 @@ package fastdex.build.util
 import com.android.build.api.transform.Transform
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.FileUtils
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.objectweb.asm.*
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.ParsingProcessOutputHandler
@@ -34,63 +35,96 @@ public class DexOperation implements Opcodes {
         FileUtils.ensumeDir(patchDex.parentFile)
         String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
         long start = System.currentTimeMillis()
-        if ("2.0.0".equals(androidGradlePluginVersion)) {
-            base.androidBuilder.convertByteCode(
-                    inputFiles,
-                    patchDex.parentFile,
-                    false,
-                    null,
-                    base.dexOptions,
-                    null,
-                    false,
-                    true,
-                    outputHandler,
-                    false)
-        }
-        else if ("2.1.0".equals(androidGradlePluginVersion) || "2.1.2".equals(androidGradlePluginVersion) || "2.1.3".equals(androidGradlePluginVersion)) {
-            base.androidBuilder.convertByteCode(
-                    inputFiles,
-                    patchDex.parentFile,
-                    false,
-                    null,
-                    base.dexOptions,
-                    null,
-                    false,
-                    true,
-                    outputHandler)
-        }
-        else if (androidGradlePluginVersion.startsWith("2.2.")) {
-            base.androidBuilder.convertByteCode(
-                    inputFiles,
-                    patchDex.parentFile,
-                    false,
-                    null,
-                    base.dexOptions,
-                    base.getOptimize(),
-                    outputHandler);
-        }
-        else if ("2.3.0".equals(androidGradlePluginVersion)) {
-            base.androidBuilder.convertByteCode(
-                    inputFiles,
-                    patchDex.parentFile,
-                    false,
-                    null,//fix-issue#27  fix-issue#22
-                    base.dexOptions,
-                    outputHandler)
+
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            if ("2.0.0".equals(androidGradlePluginVersion)) {
+                base.androidBuilder.convertByteCode(
+                        inputFiles,
+                        patchDex.parentFile,
+                        false,
+                        null,
+                        base.dexOptions,
+                        null,
+                        false,
+                        true,
+                        outputHandler,
+                        false)
+            }
+            else if ("2.1.0".equals(androidGradlePluginVersion) || "2.1.2".equals(androidGradlePluginVersion) || "2.1.3".equals(androidGradlePluginVersion)) {
+                base.androidBuilder.convertByteCode(
+                        inputFiles,
+                        patchDex.parentFile,
+                        false,
+                        null,
+                        base.dexOptions,
+                        null,
+                        false,
+                        true,
+                        outputHandler)
+            }
+            else if (androidGradlePluginVersion.startsWith("2.2.")) {
+                base.androidBuilder.convertByteCode(
+                        inputFiles,
+                        patchDex.parentFile,
+                        false,
+                        null,
+                        base.dexOptions,
+                        base.getOptimize(),
+                        outputHandler);
+            }
+            else if ("2.3.0".equals(androidGradlePluginVersion)) {
+                base.androidBuilder.convertByteCode(
+                        inputFiles,
+                        patchDex.parentFile,
+                        false,
+                        null,//fix-issue#27  fix-issue#22
+                        base.dexOptions,
+                        outputHandler)
+            }
+            else {
+                //TODO 补丁的方法数也有可能超过65535个，最好加上使dx生成多个dex的参数，但是一般补丁不会那么大所以暂时不处理
+                //调用dx命令
+                def process = new ProcessBuilder(FastdexUtils.getDxCmdPath(fastdexVariant.project),"--dex","--output=${patchDex}",patchJar.absolutePath).start()
+                int status = process.waitFor()
+                try {
+                    process.destroy()
+                } catch (Throwable e) {
+
+                }
+                if (status != 0) {
+                    //拼接生成dex的命令 project.android.getSdkDirectory()
+                    String dxcmd = "sh ${FastdexUtils.getDxCmdPath(fastdexVariant.project)} --dex --output=${patchDex} ${patchJar}"
+                    throw new RuntimeException("==fastdex generate dex fail: \n${dxcmd}")
+                }
+            }
         }
         else {
-            //TODO 补丁的方法数也有可能超过65535个，最好加上使dx生成多个dex的参数，但是一般补丁不会那么大所以暂时不处理
+            File dxJarFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project),"fastdex-dx.jar")
+            File dxCommandFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project),"fastdex-dx")
+
+            if (!FileUtils.isLegalFile(dxJarFile)) {
+                FileUtils.copyResourceUsingStream("fastdex-dx.jar",dxJarFile)
+            }
+
+            if (!FileUtils.isLegalFile(dxCommandFile)) {
+                FileUtils.copyResourceUsingStream("fastdex-dx",dxCommandFile)
+            }
+
+            String dxcmd = "sh ${dxCommandFile.absolutePath} --dex --no-optimize --force-jumbo --output=${patchDex} ${patchJar}"
+            if (fastdexVariant.configuration.debug) {
+                fastdexVariant.project.logger.error("==fastdex exec dx: \n" + dxcmd)
+            }
+
             //调用dx命令
-            def process = new ProcessBuilder(FastdexUtils.getDxCmdPath(fastdexVariant.project),"--dex","--output=${patchDex}",patchJar.absolutePath).start()
+            def process = new ProcessBuilder("sh",dxCommandFile.absolutePath,"--dex","--no-optimize","--force-jumbo","--output=${patchDex}",patchJar.absolutePath).start()
             int status = process.waitFor()
             try {
                 process.destroy()
             } catch (Throwable e) {
 
             }
+
             if (status != 0) {
-                //拼接生成dex的命令 project.android.getSdkDirectory()
-                String dxcmd = "${FastdexUtils.getDxCmdPath(fastdexVariant.project)} --dex --output=${patchDex} ${patchJar}"
                 throw new RuntimeException("==fastdex generate dex fail: \n${dxcmd}")
             }
         }

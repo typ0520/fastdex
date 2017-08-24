@@ -34,8 +34,8 @@ progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 cd "${oldwd}"
 
-jarfile=dx.jar
-libdir="freeline/release-tools"
+jarfile=fastdex-dx.jar
+libdir=$(dirname $0)
 
 if [ ! -r "$libdir/$jarfile" ]; then
     # set dx.jar location for the SDK case
