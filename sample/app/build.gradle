@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
-//apply plugin: 'com.antfortune.freeline'
 //apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'com.github.typ0520.fastdex'
 
@@ -115,13 +114,13 @@ dependencies {
     compile 'com.bigkoo:pickerview:2.0.8'
 
 
-//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
-//    compile 'org.xutils:xutils:3.3.36'
-//    compile 'de.hdodenhof:circleimageview:2.0.0'
-//    compile 'de.hdodenhof:circleimageview:2.0.0'
-//    compile 'com.squareup.retrofit:retrofit:1.9.0'
-//    compile 'info.hoang8f:android-segmented:1.0.6'
-//    compile 'com.squareup.okio:okio:1.0.1'
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+    compile 'org.xutils:xutils:3.3.36'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'info.hoang8f:android-segmented:1.0.6'
+    compile 'com.squareup.okio:okio:1.0.1'
 //    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 //    compile 'com.zhy:okhttputils:2.4.1'
 //    compile 'joda-time:joda-time:2.6'

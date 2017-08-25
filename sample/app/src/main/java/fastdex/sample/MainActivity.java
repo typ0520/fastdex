@@ -9,10 +9,8 @@ import android.widget.Button;
 import android.widget.Toast;
 import com.dx168.fastdex.sample.common.CommonUtils;
 import com.github.typ0520.fastdex.sample.R;
-
 import butterknife.ButterKnife;
 import fastdex.sample.common2.Common2Utils;
-import fastdex.sample.common3.Common3Utils;
 import fastdex.sample.javalib.JavaLib;
 import java.lang.reflect.Field;
 import butterknife.BindView;
@@ -67,11 +65,11 @@ public class MainActivity extends Activity {
         System.out.println("==app: " + javaLib.str);
 
         String s2 = getString(R.string.s2);
-        int common3str = 0;
+        int commonstr = 0;
         try {
-            Class common3RClass = Class.forName("fastdex.sample.common3.R$string");
-            Field field = common3RClass.getField("common3str");
-            common3str = (Integer) field.get(null);
+            Class commonRClass = Class.forName("fastdex.sample.common.R$string");
+            Field field = commonRClass.getField("st");
+            commonstr = (Integer) field.get(null);
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -83,13 +81,11 @@ public class MainActivity extends Activity {
         sb.append("\n");
         sb.append(Common2Utils.str);
         sb.append("\n");
-        sb.append(Common3Utils.str);
-        sb.append("\n");
 //        sb.append(new fastdex.sample.kotlinlib.KotlinHello().getName());
 //        sb.append("\n");
-        sb.append(getResources().getString(common3str));
+        sb.append(getResources().getString(commonstr));
         sb.append("\n");
-        sb.append("哈哈11");
+        sb.append("1");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();

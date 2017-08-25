@@ -225,9 +225,12 @@ public class FastdexVariant {
         File dest = new File(assetsPath,metaInfoFile.getName())
 
         project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
-        if (!FileUtils.isLegalFile(dest)) {
-            FileUtils.copyFileUsingStream(metaInfoFile,dest)
-        }
+        //TODO fixbug
+//        if (!FileUtils.isLegalFile(dest)) {
+//            FileUtils.copyFileUsingStream(metaInfoFile,dest)
+//        }
+
+        FileUtils.copyFileUsingStream(metaInfoFile,dest)
     }
 
     /**
