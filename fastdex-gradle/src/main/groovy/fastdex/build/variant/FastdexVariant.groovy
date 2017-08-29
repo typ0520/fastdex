@@ -56,8 +56,8 @@ public class FastdexVariant {
         tagManager = new TagManager(this.project,this.variantName)
         libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
 
-        if (configuration.dexMergeThreshold <= 0) {
-            throw new GradleException("dexMergeThreshold Must be greater than 0!!")
+        if (configuration.dexMergeThreshold <= 1) {
+            throw new GradleException("dexMergeThreshold Must be greater than 1!!")
         }
     }
 

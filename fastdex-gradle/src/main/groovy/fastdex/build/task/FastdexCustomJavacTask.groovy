@@ -3,10 +3,8 @@ package fastdex.build.task
 import fastdex.build.lib.snapshoot.sourceset.PathInfo
 import fastdex.build.lib.snapshoot.sourceset.SourceSetDiffResultSet
 import fastdex.build.util.Constants
-import fastdex.build.util.FastdexBuildListener
 import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.util.FastdexUtils
-import fastdex.build.util.JumpException
 import fastdex.common.ShareConstants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
@@ -120,7 +118,6 @@ public class FastdexCustomJavacTask extends DefaultTask {
         project.logger.error("==fastdex executable ${executable}")
         //处理retrolambda
         if (project.plugins.hasPlugin("me.tatarka.retrolambda")) {
-            fork = true
             //def retrolambda = project.extensions.getByType(RetrolambdaExtension)
             def retrolambda = project.retrolambda
             def rt = "$retrolambda.jdk/jre/lib/rt.jar"

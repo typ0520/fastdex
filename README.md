@@ -84,7 +84,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
 ##### 补丁打包时的流程
   - 1、检查缓存的有效性
-  - @see [fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexCustomJavacTask.groovy) 的prepareEnv方法说明
+  - @see [fastdex.build.variant.FastdexVariant](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/variant/FastdexVariant.groovy) 的prepareEnv方法说明
   - 2、扫描所有变化的java文件并编译成class
   - @see [fastdex.build.task.FastdexCustomJavacTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexCustomJavacTask.groovy)
   - 3、合并所有变化的class并生成jar包

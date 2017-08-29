@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
-        //btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
+        btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
 
         String s1 = getString(R.string.s1);
         String s3 = getString(R.string.s3);
@@ -86,7 +86,7 @@ public class MainActivity extends Activity {
 //        sb.append("\n");
         sb.append(getResources().getString(commonstr));
         sb.append("\n");
-        sb.append("1");
+        sb.append("4545");
 
         Log.d(TAG,"sb: \n" + sb.toString());
         Toast.makeText(this, sb.toString(),Toast.LENGTH_LONG).show();
