@@ -161,6 +161,7 @@ public class FastdexInstantRun {
     def getResourcesApk() {
         File resourcesApk = FastdexUtils.getResourcesApk(project,fastdexVariant.variantName)
         if (resourceChanged || assetsChanged || !FileUtils.isLegalFile(resourcesApk)) {
+            FileUtils.deleteFile(resourcesApk)
             generateResourceApk(resourcesApk)
             fastdexVariant.metaInfo.resourcesVersion += 1
             fastdexVariant.metaInfo.save(fastdexVariant)
