@@ -20,6 +20,7 @@ import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATCHES;
 import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATH_CHECKSUM;
 import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATH_EXISTS;
 import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING;
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING_AND_SHOW_TOAST;
 import static fastdex.common.fd.ProtocolConstants.MESSAGE_RESTART_ACTIVITY;
 import static fastdex.common.fd.ProtocolConstants.MESSAGE_SHOW_TOAST;
 import static fastdex.common.fd.ProtocolConstants.PROTOCOL_IDENTIFIER;
@@ -34,11 +35,14 @@ import android.content.Context;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import fastdex.common.ShareConstants;
 import fastdex.common.utils.FileUtils;
 import fastdex.runtime.Constants;
 import fastdex.runtime.fastdex.Fastdex;
+import fastdex.runtime.fastdex.RuntimeMetaInfo;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -249,6 +253,34 @@ public class Server {
                         continue;
                     }
 
+                    case MESSAGE_PING_AND_SHOW_TOAST: {
+                        // Send an "ack" back to the IDE.
+                        // The value of the boolean is true only when the app is in the
+                        // foreground.
+                        boolean active = Restarter.getForegroundActivity(context) != null;
+                        output.writeBoolean(active);
+
+                        RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
+
+                        output.writeLong(runtimeMetaInfo.getBuildMillis());
+                        output.writeUTF(runtimeMetaInfo.getVariantName());
+
+                        output.writeInt(runtimeMetaInfo.getResourcesVersion());
+                        output.writeInt(runtimeMetaInfo.getPatchDexVersion());
+                        output.writeInt(runtimeMetaInfo.getMergedDexVersion());
+
+                        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                            Log.v(Logging.LOG_TAG, "Received Ping message from the IDE; " + "returned active = " + active);
+                        }
+
+                        String text = input.readUTF();
+
+                        if (text != null && !TextUtils.isEmpty(text.trim())) {
+                            showToast(text,context);
+                        }
+                        continue;
+                    }
+
                     case MESSAGE_PATCHES: {
                         if (!authenticate(input)) {
                             return;
@@ -275,11 +307,11 @@ public class Server {
                         output.writeBoolean(true);
                         restart(updateMode,hasDex, hasResources, showToast);
 
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            Thread.sleep(300);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
 
                         output.writeBoolean(true);
                         continue;
@@ -350,8 +382,9 @@ public class Server {
         }
     }
 
-    private static boolean isResourcePath(String path) {
-        return path.equals(Constants.RESOURCE_APK_FILE_NAME) || path.equals(Paths.RESOURCE_FILE_NAME) || path.startsWith("res/");
+    public static boolean isResourcePath(String path) {
+        return path.endsWith(Constants.RES_SPLIT_STR + Constants.RESOURCE_APK_FILE_NAME);
+        //return path.equals(Constants.RESOURCE_APK_FILE_NAME) || path.equals(Paths.RESOURCE_FILE_NAME) || path.startsWith("res/");
     }
 
     private static boolean hasResources(List<ApplicationPatch> changes) {
@@ -367,8 +400,8 @@ public class Server {
         return false;
     }
 
-    private static boolean isDexPath(String path) {
-        return path.endsWith(Constants.DEX_SUFFIX);
+    public static boolean isDexPath(String path) {
+        return path.endsWith(Constants.RES_SPLIT_STR + Constants.PATCH_DEX) || path.endsWith(Constants.RES_SPLIT_STR + Constants.MERGED_PATCH_DEX);
     }
 
     private static boolean hasDex(List<ApplicationPatch> changes) {
@@ -406,21 +439,57 @@ public class Server {
 //        return updateMode;
 
 
-        Fastdex fastdex = Fastdex.get(context);
-        File workDir = new File(fastdex.getTempDirectory(),System.currentTimeMillis() + "-" + UUID.randomUUID().toString());
+        final Fastdex fastdex = Fastdex.get(context);
+        final RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
+
+        final File workDir = new File(fastdex.getTempDirectory(),System.currentTimeMillis() + "-" + UUID.randomUUID().toString());
+        final File patchDir = fastdex.getPatchDirectory();
+
+        final File dexDirectory = new File(patchDir,Constants.DEX_DIR);
+        final File resourceDirectory = new File(patchDir,Constants.RES_DIR);
+
+        final File workDexDirectory = new File(workDir,Constants.DEX_DIR);
+        final File workResourceDirectory = new File(workDir,Constants.RES_DIR);
+
         try {
+
+            boolean hasResourcesApk = false;
+            boolean hasMergedDex = false;
+            boolean hasPatchDex = false;
             for (ApplicationPatch change : changes) {
                 String path = change.getPath();
                 if (path.endsWith(Constants.DEX_SUFFIX)) {
+                    if (path.endsWith(ShareConstants.RES_SPLIT_STR + ShareConstants.MERGED_PATCH_DEX)) {
+                        hasMergedDex = true;
+                    }
+                    if (path.endsWith(ShareConstants.RES_SPLIT_STR + ShareConstants.PATCH_DEX)) {
+                        hasPatchDex = true;
+                    }
                     updateMode = handleHotSwapPatch(updateMode, change,workDir);
                 } else if (isResourcePath(path)) {
+                    hasResourcesApk = true;
                     updateMode = handleResourcePatch(updateMode, change, path,workDir);
                 }
             }
 
-            fastdex.getRuntimeMetaInfo().setPreparedPatchPath(workDir.getAbsolutePath());
-            fastdex.getRuntimeMetaInfo().save(fastdex);
+            File currentResourcesApk = new File(resourceDirectory,ShareConstants.RESOURCE_APK_FILE_NAME);
+            if (!hasResourcesApk && runtimeMetaInfo.getResourcesVersion() > 0 && FileUtils.isLegalFile(currentResourcesApk)) {
+                FileUtils.copyFileUsingStream(currentResourcesApk,new File(workResourceDirectory,ShareConstants.RESOURCE_APK_FILE_NAME));
+            }
+
+            File currentPatchDex = new File(dexDirectory,ShareConstants.PATCH_DEX);
+            if (!hasPatchDex && runtimeMetaInfo.getPatchDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
+                FileUtils.copyFileUsingStream(currentPatchDex,new File(workDexDirectory,ShareConstants.PATCH_DEX));
+            }
+            File currentMergedPatchDex = new File(dexDirectory,ShareConstants.MERGED_PATCH_DEX);
+            if (!hasMergedDex && runtimeMetaInfo.getMergedDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
+                FileUtils.copyFileUsingStream(currentMergedPatchDex,new File(workDexDirectory,ShareConstants.MERGED_PATCH_DEX));
+            }
+
+            runtimeMetaInfo.setPreparedPatchPath(workDir.getAbsolutePath());
+            runtimeMetaInfo.save(fastdex);
         } catch (Throwable e) {
+            e.printStackTrace();
             return UPDATE_MODE_NONE;
         }
         return updateMode;
@@ -431,7 +500,8 @@ public class Server {
             Log.v(Logging.LOG_TAG, "Received resource changes (" + path + ")");
         }
 
-        FileUtils.write2file(patch.getBytes(),new File(workDir, Constants.RES_DIR + "/" + Constants.RESOURCE_APK_FILE_NAME));
+        FileUtils.write2file(patch.getBytes(),new File(workDir, Constants.RES_DIR + "/" + path));
+
         //noinspection ResourceType
         updateMode = Math.max(updateMode, UPDATE_MODE_WARM_SWAP);
         return updateMode;
@@ -443,12 +513,17 @@ public class Server {
         }
         try {
             File tempDexDir = new File(workDir, Constants.DEX_DIR + "/");
+
             FileUtils.write2file(patch.getBytes(),new File(tempDexDir,patch.getPath()));
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG, "Couldn't apply code changes", e);
             updateMode = UPDATE_MODE_COLD_SWAP;
         }
         return UPDATE_MODE_COLD_SWAP;
+    }
+
+    public static String[] splitPatchPath(String path) {
+        return path.split(Constants.RES_SPLIT_STR);
     }
 
     private void restart(int updateMode, boolean hasDex, boolean incrementalResources, boolean toast) {
@@ -480,36 +555,35 @@ public class Server {
 
             File resDir = new File(Fastdex.get(context).getRuntimeMetaInfo().getPreparedPatchPath(),Constants.RES_DIR);
             File file = new File(resDir, ShareConstants.RESOURCE_APK_FILE_NAME);
-            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                Log.v(Logging.LOG_TAG, "About to update resource file=" + file +
-                        ", activities=" + activities);
-            }
+            Log.v(Logging.LOG_TAG, "About to update resource file=" + file +
+                    ", activities=" + activities);
 
-            if (file != null) {
+            if (FileUtils.isLegalFile(file)) {
                 String resources = file.getPath();
+
                 MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
             } else {
                 Log.e(Logging.LOG_TAG, "No resource file found to apply");
                 updateMode = UPDATE_MODE_COLD_SWAP;
             }
         }
-        else {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    for (Activity activity : activities) {
-                        try {
-                            activity.finish();
-                        } catch (Throwable e) {
-
-                        }
-                    }
-
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                    System.exit(0);
-                }
-            });
-        }
+//        else {
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    for (Activity activity : activities) {
+//                        try {
+//                            activity.finish();
+//                        } catch (Throwable e) {
+//
+//                        }
+//                    }
+//
+//                    android.os.Process.killProcess(android.os.Process.myPid());
+//                    System.exit(0);
+//                }
+//            });
+//        }
 
         Activity activity = Restarter.getForegroundActivity(context);
         if (updateMode == UPDATE_MODE_WARM_SWAP) {

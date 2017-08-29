@@ -72,8 +72,9 @@ class FastdexTransform extends TransformProxy {
                 //生成补丁jar包
                 File patchJar = generatePatchJar(transformInvocation)
                 File patchDex = FastdexUtils.getPatchDexFile(fastdexVariant.project,fastdexVariant.variantName)
-
                 DexOperation.generatePatchDex(fastdexVariant,base,patchJar,patchDex)
+                fastdexVariant.metaInfo.patchDexVersion += 1
+
                 //获取dex输出路径
                 File dexOutputDir = GradleUtils.getDexOutputDir(project,base,transformInvocation)
                 //merged dex
@@ -88,8 +89,8 @@ class FastdexTransform extends TransformProxy {
                         File mergedPatchDex = new File(mergedPatchDexDir,Constants.CLASSES_DEX)
                         //更新patch.dex
                         DexOperation.mergeDex(fastdexVariant,mergedPatchDex,patchDex,mergedPatchDex)
-                        FileUtils.cleanDir(dexOutputDir)
 
+                        FileUtils.cleanDir(dexOutputDir)
                         FileUtils.copyDir(cacheDexDir,dexOutputDir,Constants.DEX_SUFFIX)
 
                         incrementDexDir(dexOutputDir,2)
@@ -109,12 +110,18 @@ class FastdexTransform extends TransformProxy {
 
                         FileUtils.cleanDir(mergedPatchDexDir)
                         FileUtils.ensumeDir(mergedPatchDexDir)
-                        patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+
+                        //copy 一份相同的，做冗余操作，如果直接移动文件，会丢失patch.dex造成免安装模块特别难处理
+                        FileUtils.copyFileUsingStream(patchDex,new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+                        //patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
                     }
+
+                    fastdexVariant.metaInfo.mergedDexVersion += 1
+                    fastdexVariant.metaInfo.save(fastdexVariant)
                     fastdexVariant.onDexGenerateSuccess(false,true)
                 }
                 else {
-                    fastdexVariant.metaInfo.patchDexVersion += 1
+                    fastdexVariant.metaInfo.save(fastdexVariant)
                     //复制补丁打包的dex到输出路径
                     hookPatchBuildDex(dexOutputDir,mergedPatchDexDir,patchDex)
                     fastdexVariant.onDexGenerateSuccess(false,false)

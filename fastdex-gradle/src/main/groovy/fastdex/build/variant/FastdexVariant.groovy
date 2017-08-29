@@ -1,8 +1,10 @@
 package fastdex.build.variant
 
+import com.github.typ0520.fastdex.Version
 import fastdex.build.extension.FastdexExtension
 import fastdex.build.task.FastdexInstantRunTask
 import fastdex.build.util.Constants
+import fastdex.build.util.FastdexInstantRun
 import fastdex.common.utils.SerializeUtils
 import fastdex.build.util.LibDependency
 import fastdex.build.util.MetaInfo
@@ -37,6 +39,7 @@ public class FastdexVariant {
     boolean executedJarMerge
     boolean executedDexTransform
     MetaInfo metaInfo
+    FastdexInstantRun fastdexInstantRun
     FastdexInstantRunTask fastdexInstantRunTask
 
     FastdexVariant(Project project, Object androidVariant) {
@@ -91,6 +94,14 @@ public class FastdexVariant {
                     }
                 }
 
+                if (metaInfo.fastdexVersion == null) {
+                    throw new CheckException("cache already expired")
+                }
+
+                if (metaInfo.fastdexVersion == null || !Version.FASTDEX_BUILD_VERSION.equals(metaInfo.fastdexVersion)) {
+                    throw new CheckException("cache fastdexVersion: ${metaInfo.fastdexVersion}, current fastdexVersion: ${Version.FASTDEX_BUILD_VERSION}")
+                }
+
                 File cachedDependListFile = FastdexUtils.getCachedDependListFile(project,variantName)
                 if (!FileUtils.isLegalFile(cachedDependListFile)) {
                     throw new CheckException("miss depend list file: ${cachedDependListFile}")
@@ -109,6 +120,13 @@ public class FastdexVariant {
                 File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,variantName)
                 if (!FileUtils.isLegalFile(androidManifestStatFile)) {
                     throw new CheckException("miss android manifest stat file: ${androidManifestStatFile}")
+                }
+
+                if (metaInfo.mergedDexVersion > 0) {
+                    File mergedPatchDex = FastdexUtils.getMergedPatchDex(project,variantName)
+                    if (!FileUtils.isLegalFile(androidManifestStatFile)) {
+                        throw new CheckException("miss merged dex file: ${mergedPatchDex}")
+                    }
                 }
 
                 if (configuration.useCustomCompile) {
@@ -145,6 +163,8 @@ public class FastdexVariant {
         }
         else {
             metaInfo = new MetaInfo()
+            metaInfo.fastdexVersion = Version.FASTDEX_BUILD_VERSION
+
             metaInfo.projectPath = project.projectDir.absolutePath
             metaInfo.rootProjectPath = project.rootProject.projectDir.absolutePath
             metaInfo.variantName = variantName
@@ -157,7 +177,7 @@ public class FastdexVariant {
         new Thread(new Runnable() {
             @Override
             void run() {
-                fastdexInstantRunTask.preparedDevice()
+                fastdexInstantRun.preparedDevice()
             }
         }).start()
     }
@@ -209,8 +229,7 @@ public class FastdexVariant {
         }
         copyMetaInfo2Assets()
         projectSnapshoot.onDexGenerateSuccess(nornalBuild,dexMerge)
-
-        fastdexInstantRunTask.onDexTransformComplete()
+        fastdexInstantRun.onSourceChanged()
     }
 
     def saveMetaInfo() {

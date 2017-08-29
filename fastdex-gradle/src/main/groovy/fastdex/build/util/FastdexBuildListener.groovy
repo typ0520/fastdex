@@ -20,6 +20,7 @@ import fastdex.common.utils.FileUtils
  * Created by tong on 17/3/12.
  */
 class FastdexBuildListener implements TaskExecutionListener, BuildListener {
+    public static boolean skipReport = false
     private Clock clock
     private times = []
     private final Project project
@@ -70,7 +71,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
 
         }
         else {
-            if (project == null || !project.plugins.hasPlugin("com.android.application")) {
+            if (project == null || !project.plugins.hasPlugin("com.android.application") || skipReport) {
                 return
             }
 

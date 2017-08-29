@@ -34,6 +34,8 @@ public class MetaInfo {
 
     public int patchDexVersion
 
+    public int resourcesVersion
+
     public boolean active
 
 
@@ -60,11 +62,15 @@ public class MetaInfo {
         }
     }
 
+
     @Override
     public String toString() {
         return "MetaInfo{" +
                 "buildMillis=" + buildMillis +
                 ", variantName='" + variantName + '\'' +
+                ", mergedDexVersion=" + mergedDexVersion +
+                ", patchDexVersion=" + patchDexVersion +
+                ", resourcesVersion=" + resourcesVersion +
                 '}';
     }
 }

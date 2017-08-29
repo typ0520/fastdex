@@ -74,6 +74,7 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+
         StringBuilder sb = new StringBuilder();
         sb.append(JavaLib.str);
         sb.append("\n");

@@ -3,7 +3,10 @@ package fastdex.build.task
 import fastdex.build.lib.snapshoot.sourceset.PathInfo
 import fastdex.build.lib.snapshoot.sourceset.SourceSetDiffResultSet
 import fastdex.build.util.Constants
+import fastdex.build.util.FastdexBuildListener
+import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.util.FastdexUtils
+import fastdex.build.util.JumpException
 import fastdex.common.ShareConstants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
@@ -236,21 +239,38 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
         ProcessBuilder aaptProcess = new ProcessBuilder(cmdArr)
         def process = aaptProcess.start()
+
+        InputStream is = process.getInputStream()
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is))
+        String line = null
+        while ((line = reader.readLine()) != null) {
+            println(line)
+        }
+        reader.close()
+
         int status = process.waitFor()
+
+        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+        reader.close();
+
         try {
             process.destroy()
         } catch (Throwable e) {
 
         }
 
-        long end = System.currentTimeMillis()
-        project.logger.error("==fastdex javac success, use: ${end - start}ms")
-        if (project.fastdex.debug) {
-            project.logger.error("${cmd}")
-        }
-
         if (status != 0) {
-            throw new RuntimeException("==fastdex javac fail: \n${cmd}")
+            throw new FastdexRuntimeException("==fastdex javac fail: \n${cmd}")
+        }
+        else {
+            long end = System.currentTimeMillis()
+            if (project.fastdex.debug) {
+                project.logger.error("${cmd}")
+            }
+            project.logger.error("==fastdex javac success, use: ${end - start}ms")
         }
 
         //project.logger.error("==fastdex compile success: ${patchClassesFileDir}")

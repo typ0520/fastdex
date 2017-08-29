@@ -1,3 +1,27 @@
+## 0.3  (2017-8-29)
+
+Features:
+
+  - 适配apt(butterknife、......),可以把useCustomCompile打开了
+  - R和BuildConfig文件比对换成md5
+  - 检测manifest文件的变化，如果变化本次编译不允许走免安装
+  - 重构免安装模块
+  - 调用javac和dx命令时输入日志内容
+
+Bugfixes:
+
+   - 修复runtime中空指针的问题
+   - 修复项目快照丢失r文件映射的问题
+   - 修复dex加载顺序错误的问题
+   - 修复加载resource.ap_文件路径错误的问题
+   - fix [issue#51](https://github.com/typ0520/fastdex/issues/51)
+   - 解决开启customCompile时，修改library代码报类重复的错误
+   - 修复免安装和全量安装混用时，加载过期补丁dex和资源的问题
+
+Warn:
+
+   - 默认把useCustomCompile设置为true了
+
 ## 0.2.0 (2017-8-17)
 
 Features:

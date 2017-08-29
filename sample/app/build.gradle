@@ -147,8 +147,7 @@ project.afterEvaluate {
         def variantName = variant.name.capitalize()
         def variantOutput = variant.outputs.first()
 
-        if ("Debug".equals(variantName)) {
-        }
+
     }
 }
 

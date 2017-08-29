@@ -128,6 +128,8 @@ public class ProjectSnapshoot {
 
                 File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,fastdexVariant.variantName)
                 andManifestDirectorySnapshoot.serializeTo(new FileOutputStream(androidManifestStatFile))
+
+                fastdexVariant.fastdexInstantRun.onManifestChanged()
             }
         }
     }

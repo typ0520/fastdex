@@ -14,4 +14,5 @@ public interface ShareConstants {
     String RESOURCE_APK_FILE_NAME = "resources.apk";
     String MERGED_PATCH_DEX = "merged-patch.dex";
     String PATCH_DEX = "patch.dex";
+    String RES_SPLIT_STR = "__";
 }
