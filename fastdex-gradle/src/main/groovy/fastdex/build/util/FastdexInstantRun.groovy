@@ -19,11 +19,9 @@ public class FastdexInstantRun {
     boolean manifestChanged
     boolean resourceChanged
     boolean sourceChanged
-
     boolean assetsChanged
 
     IDevice device
-
     boolean installApk = true
 
     FastdexInstantRun(FastdexVariant fastdexVariant) {
@@ -116,9 +114,9 @@ public class FastdexInstantRun {
     public void onFastdexPrepare() {
         //ping app
         //如果资源发生变化生成
-        if (!isInstantRunBuild()) {
-            return
-        }
+//        if (!isInstantRunBuild()) {
+//            return
+//        }
     }
 
     def isInstantRunBuild() {
@@ -142,8 +140,21 @@ public class FastdexInstantRun {
         this.installApk = installApk
 
         if (!installApk) {
-            project.tasks.getByName("package${fastdexVariant.variantName}").enabled = false
-            project.tasks.getByName("assemble${fastdexVariant.variantName}").enabled = false
+            try {
+                project.tasks.getByName("package${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
+                project.tasks.getByName("assemble${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
+                project.tasks.getByName("validateSigning${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
         }
     }
 
@@ -194,6 +205,8 @@ public class FastdexInstantRun {
         }
 
         tempResourcesApk.renameTo(resourcesApk)
+
+        FileUtils.deleteDir(tempDir)
         def cmd = cmds.join(" ")
         if (fastdexVariant.configuration.debug) {
             project.logger.error("==fastdex add asset files into resources.apk. cmd:\n${cmd}")

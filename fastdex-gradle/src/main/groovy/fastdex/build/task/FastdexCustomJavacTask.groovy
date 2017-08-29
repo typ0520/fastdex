@@ -9,6 +9,7 @@ import fastdex.common.ShareConstants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.SerializeUtils
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
@@ -105,14 +106,12 @@ public class FastdexCustomJavacTask extends DefaultTask {
         //def classpath = project.files(classpathJar.absolutePath) + javaCompile.classpath +
         //def classpath = project.files(classpathJar.absolutePath)
         def classpath = new ArrayList()
-        classpath.add(androidJar.absolutePath)
         classpath.add(classesDir.absolutePath)
+        classpath.add(androidJar.absolutePath)
 
         File classpathFile = new File(FastdexUtils.getBuildDir(project,fastdexVariant.variantName),Constants.CLASSPATH_FILENAME)
         ArrayList<String> list = SerializeUtils.load(new FileInputStream(classpathFile), ArrayList.class)
         classpath.addAll(list)
-
-        //classpath.add(classpathJar.absolutePath)
 
         def executable = FastdexUtils.getJavacCmdPath()
         project.logger.error("==fastdex executable ${executable}")
@@ -120,10 +119,14 @@ public class FastdexCustomJavacTask extends DefaultTask {
         if (project.plugins.hasPlugin("me.tatarka.retrolambda")) {
             //def retrolambda = project.extensions.getByType(RetrolambdaExtension)
             def retrolambda = project.retrolambda
-            def rt = "$retrolambda.jdk/jre/lib/rt.jar"
+            def rt = "${retrolambda.jdk}${File.separator}jre${File.separator}lib${File.separator}rt.jar"
             classpath.add(rt)
 
-            executable = "${retrolambda.tryGetJdk()}/bin/javac"
+            executable = "${retrolambda.tryGetJdk()}${File.separator}bin${File.separator}javac"
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                executable = "${executable}.exe"
+            }
         }
 
         //https://ant.apache.org/manual/Tasks/javac.html
@@ -234,8 +237,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
         long start = System.currentTimeMillis()
 
-        ProcessBuilder aaptProcess = new ProcessBuilder(cmdArr)
-        def process = aaptProcess.start()
+        ProcessBuilder processBuilder = new ProcessBuilder(cmdArr)
+        def process = processBuilder.start()
 
         InputStream is = process.getInputStream()
         BufferedReader reader = new BufferedReader(new InputStreamReader(is))
@@ -291,12 +294,16 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
     def joinClasspath(List<String> collection) {
         StringBuilder sb = new StringBuilder()
+
+        boolean window = Os.isFamily(Os.FAMILY_WINDOWS)
         collection.each { file ->
             sb.append(file)
-            sb.append(":")
-        }
-        if (sb.toString().endsWith(":")) {
-            sb.deleteCharAt(sb.length() - 1)
+            if (window) {
+                sb.append(";")
+            }
+            else {
+                sb.append(":")
+            }
         }
         return sb
     }

@@ -12,8 +12,8 @@ fastdex {
     //debug模式输出的调试信息比较多
     debug = true
 
-    //default false
-    //自定义的compile任务,用来代替compileXXXXJavaWithJavac(实验性功能,建议暂时别打开)
+    //default true
+    //自定义的compile任务,用来代替compileXXXXJavaWithJavac
     useCustomCompile = true
 
     //default 4
@@ -151,6 +151,7 @@ project.afterEvaluate {
 }
 
 task mytest {
+
 
 }
 
