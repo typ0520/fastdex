@@ -89,7 +89,17 @@ public class MonkeyPatcher {
         try {
             // Create a new AssetManager instance and point it to the resources installed under
             // /sdcard
-            AssetManager newAssetManager = AssetManager.class.getConstructor().newInstance();
+
+            AssetManager newAssetManager = null;
+            AssetManager assets = context.getAssets();
+            // Baidu os
+            if (assets.getClass().getName().equals("android.content.res.BaiduAssetManager")) {
+                Class baiduAssetManager = Class.forName("android.content.res.BaiduAssetManager");
+                newAssetManager = (AssetManager) baiduAssetManager.getConstructor().newInstance();
+            } else {
+                newAssetManager = AssetManager.class.getConstructor().newInstance();
+            }
+
             Method mAddAssetPath = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
             mAddAssetPath.setAccessible(true);
             if (((Integer) mAddAssetPath.invoke(newAssetManager, externalResourceFile)) == 0) {

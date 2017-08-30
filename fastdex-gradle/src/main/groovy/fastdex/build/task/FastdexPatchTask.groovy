@@ -196,21 +196,17 @@ public class FastdexPatchTask extends DefaultTask {
             long end = System.currentTimeMillis();
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
-            //kill app
-            killApp()
-            fastdexInstantRun.startBootActivity()
-
-//            if (sourceChanged) {
-//                //kill app
-//                killApp()
-//                fastdexInstantRun.startBootActivity()
-//            }
-//            else {
-//                if (!runtimeMetaInfo.active || !result) {
-//                    killApp()
-//                    startBootActivity()
-//                }
-//            }
+            if (sourceChanged || fastdexVariant.configuration.forceRebootApp) {
+                //kill app
+                killApp()
+                fastdexInstantRun.startBootActivity()
+            }
+            else {
+                if (!runtimeMetaInfo.active || !result) {
+                    killApp()
+                    startBootActivity()
+                }
+            }
             fastdexInstantRun.setInstallApk(false)
         } catch (Throwable e) {
 

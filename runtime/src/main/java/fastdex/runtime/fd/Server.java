@@ -297,7 +297,18 @@ public class Server {
                         }
 
                         boolean hasDex = hasDex(changes);
-                        boolean hasResources = hasResources(changes);
+                        boolean hasResources = false;
+
+                        String resourcesApkPath = null;
+                        for (ApplicationPatch change : changes) {
+                            String path = change.getPath();
+                            if (isResourcePath(path)) {
+                                hasResources = true;
+                                resourcesApkPath = path;
+                            }
+
+                        }
+
                         int updateMode = input.readInt();
                         updateMode = handlePatches(changes, hasResources, updateMode);
 
@@ -305,7 +316,8 @@ public class Server {
 
                         // Send an "ack" back to the IDE; this is used for timing purposes only
                         output.writeBoolean(true);
-                        restart(updateMode,hasDex, hasResources, showToast);
+
+                        restart(updateMode,hasDex, hasResources,resourcesApkPath, showToast);
 
 //                        try {
 //                            Thread.sleep(300);
@@ -526,7 +538,7 @@ public class Server {
         return path.split(Constants.RES_SPLIT_STR);
     }
 
-    private void restart(int updateMode, boolean hasDex, boolean incrementalResources, boolean toast) {
+    private void restart(int updateMode, boolean hasDex, boolean incrementalResources, String resourcesApkPath, boolean toast) {
         if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
             Log.v(Logging.LOG_TAG, "Finished loading changes; update mode =" + updateMode);
         }
@@ -554,12 +566,12 @@ public class Server {
             // Try to just replace the resources on the fly!
 
             File resDir = new File(Fastdex.get(context).getRuntimeMetaInfo().getPreparedPatchPath(),Constants.RES_DIR);
-            File file = new File(resDir, ShareConstants.RESOURCE_APK_FILE_NAME);
+            File file = new File(resDir, resourcesApkPath);
             Log.v(Logging.LOG_TAG, "About to update resource file=" + file +
                     ", activities=" + activities);
 
             if (FileUtils.isLegalFile(file)) {
-                String resources = file.getPath();
+                String resources = file.getAbsolutePath();
 
                 MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
             } else {

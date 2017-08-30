@@ -88,6 +88,8 @@ public interface ProtocolConstants {
      */
     int MESSAGE_SHELL_COMMAND = 9;
 
+    int MESSAGE_PING_AND_SHOW_TOAST = 11;
+
     /**
      * No updates
      */
@@ -107,7 +109,4 @@ public interface ProtocolConstants {
      * Store change in app directory, restart app
      */
     int UPDATE_MODE_COLD_SWAP = 3;
-
-
-    int MESSAGE_PING_AND_SHOW_TOAST = 11;
 }

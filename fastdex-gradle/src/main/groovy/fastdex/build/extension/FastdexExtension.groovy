@@ -26,4 +26,9 @@ public class FastdexExtension {
     int dexMergeThreshold = 4
 
     boolean handleReflectR = true
+
+    /**
+     * 目前当只有资源改变时不会重启app，需要这个字段设置为true，那么每次补丁发过去都会重启app
+     */
+    boolean forceRebootApp = false
 }
