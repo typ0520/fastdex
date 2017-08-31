@@ -1,3 +1,10 @@
+## 0.3.3  (2017-8-31)
+
+Bugfixes:
+
+   - 修复runtime中复制marged-patch.dex有时会出错的问题
+   - 修复基准包不一致时没有触发安装的bug
+
 ## 0.3.2  (2017-8-30)
 
 Features:

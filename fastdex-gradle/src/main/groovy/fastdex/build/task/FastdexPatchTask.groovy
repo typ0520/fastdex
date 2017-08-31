@@ -3,8 +3,8 @@ package fastdex.build.task
 import fastdex.build.lib.fd.Communicator
 import fastdex.build.lib.fd.ServiceCommunicator
 import fastdex.build.util.FastdexInstantRun
+import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.util.FastdexUtils
-import fastdex.build.util.JumpException
 import fastdex.build.util.MetaInfo
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.ShareConstants
@@ -69,11 +69,11 @@ public class FastdexPatchTask extends DefaultTask {
 
                     if (fastdexVariant.metaInfo.buildMillis != info.buildMillis) {
                         fastdexVariant.project.logger.error("==fastdex buildMillis not equal, install apk")
-                        throw new JumpException()
+                        throw new FastdexRuntimeException()
                     }
                     if (!fastdexVariant.metaInfo.variantName.equals(info.variantName)) {
                         fastdexVariant.project.logger.error("==variantName not equal, install apk")
-                        throw new JumpException()
+                        throw new FastdexRuntimeException()
                     }
 
                     info.resourcesVersion = input.readInt()
@@ -104,13 +104,13 @@ public class FastdexPatchTask extends DefaultTask {
                 }
             })
 
-        } catch (JumpException e) {
-
         } catch (Throwable e) {
-            if (fastdexVariant.configuration.debug) {
-                e.printStackTrace()
+            if (!(e instanceof FastdexRuntimeException)) {
+                if (fastdexVariant.configuration.debug) {
+                    e.printStackTrace()
+                }
+                fastdexVariant.project.logger.error("==fastdex ping installed app fail: " + e.message)
             }
-            fastdexVariant.project.logger.error("==fastdex ping installed app fail: " + e.message)
             return
         }
         project.logger.error("==fastdex receive: ${runtimeMetaInfo}")
@@ -209,7 +209,6 @@ public class FastdexPatchTask extends DefaultTask {
             }
             fastdexInstantRun.setInstallApk(false)
         } catch (Throwable e) {
-
             e.printStackTrace()
         }
     }

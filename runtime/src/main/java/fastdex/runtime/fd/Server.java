@@ -494,7 +494,7 @@ public class Server {
                 FileUtils.copyFileUsingStream(currentPatchDex,new File(workDexDirectory,ShareConstants.PATCH_DEX));
             }
             File currentMergedPatchDex = new File(dexDirectory,ShareConstants.MERGED_PATCH_DEX);
-            if (!hasMergedDex && runtimeMetaInfo.getMergedDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
+            if (!hasMergedDex && runtimeMetaInfo.getMergedDexVersion() > 0 && FileUtils.isLegalFile(currentMergedPatchDex)) {
                 FileUtils.copyFileUsingStream(currentMergedPatchDex,new File(workDexDirectory,ShareConstants.MERGED_PATCH_DEX));
             }
 
@@ -502,6 +502,8 @@ public class Server {
             runtimeMetaInfo.save(fastdex);
         } catch (Throwable e) {
             e.printStackTrace();
+
+            Log.d(Logging.LOG_TAG,"exception when handlePatches: " + e.getMessage());
             return UPDATE_MODE_NONE;
         }
         return updateMode;
