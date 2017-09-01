@@ -112,8 +112,8 @@ class FastdexTransform extends TransformProxy {
                         FileUtils.ensumeDir(mergedPatchDexDir)
 
                         //copy 一份相同的，做冗余操作，如果直接移动文件，会丢失patch.dex造成免安装模块特别难处理
-                        FileUtils.copyFileUsingStream(patchDex,new File(mergedPatchDexDir,Constants.CLASSES_DEX))
-                        //patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+                        //FileUtils.copyFileUsingStream(patchDex,new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+                        patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
                     }
 
                     fastdexVariant.metaInfo.mergedDexVersion += 1

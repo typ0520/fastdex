@@ -489,10 +489,14 @@ public class Server {
                 FileUtils.copyFileUsingStream(currentResourcesApk,new File(workResourceDirectory,ShareConstants.RESOURCE_APK_FILE_NAME));
             }
 
-            File currentPatchDex = new File(dexDirectory,ShareConstants.PATCH_DEX);
-            if (!hasPatchDex && runtimeMetaInfo.getPatchDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
-                FileUtils.copyFileUsingStream(currentPatchDex,new File(workDexDirectory,ShareConstants.PATCH_DEX));
+            if (!(hasMergedDex && !hasPatchDex)) {
+                //如果只有merged-dex 没有patch.dex，说明是触发dex merge时发送过来的补丁
+                File currentPatchDex = new File(dexDirectory,ShareConstants.PATCH_DEX);
+                if (!hasPatchDex && runtimeMetaInfo.getPatchDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
+                    FileUtils.copyFileUsingStream(currentPatchDex,new File(workDexDirectory,ShareConstants.PATCH_DEX));
+                }
             }
+
             File currentMergedPatchDex = new File(dexDirectory,ShareConstants.MERGED_PATCH_DEX);
             if (!hasMergedDex && runtimeMetaInfo.getMergedDexVersion() > 0 && FileUtils.isLegalFile(currentMergedPatchDex)) {
                 FileUtils.copyFileUsingStream(currentMergedPatchDex,new File(workDexDirectory,ShareConstants.MERGED_PATCH_DEX));
@@ -527,8 +531,9 @@ public class Server {
         }
         try {
             File tempDexDir = new File(workDir, Constants.DEX_DIR + "/");
-
-            FileUtils.write2file(patch.getBytes(),new File(tempDexDir,patch.getPath()));
+            if (patch.getBytes() != null && patch.getBytes().length > 0) {
+                FileUtils.write2file(patch.getBytes(),new File(tempDexDir,patch.getPath()));
+            }
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG, "Couldn't apply code changes", e);
             updateMode = UPDATE_MODE_COLD_SWAP;

@@ -84,7 +84,7 @@ public class FastdexPatchTask extends DefaultTask {
                         sendResourcesApk = true
                     }
 
-                    if (sourceChanged || fastdexVariant.metaInfo.patchDexVersion != info.patchDexVersion) {
+                    if ((sourceChanged || fastdexVariant.metaInfo.patchDexVersion != info.patchDexVersion) && !fastdexVariant.willExecDexMerge()) {
                         sendPatchDex = true
                     }
 

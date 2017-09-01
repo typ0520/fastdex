@@ -1,6 +1,7 @@
 package fastdex.build.task
 
 import fastdex.build.util.FastdexInstantRun
+import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.variant.FastdexVariant
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -29,7 +30,11 @@ public class FastdexInstantRunTask extends DefaultTask {
         File apkFile = targetVariant.outputs.first().getOutputFile()
         project.logger.error("adb install -r ${apkFile}")
 
-        fastdexInstantRun.device.installPackage(apkFile.absolutePath,true)
+        try {
+            fastdexInstantRun.device.installPackage(apkFile.absolutePath,true)
+        } catch (Throwable e) {
+            throw new FastdexRuntimeException(e)
+        }
         fastdexInstantRun.startBootActivity()
     }
 }
