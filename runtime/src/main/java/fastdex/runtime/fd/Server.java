@@ -493,6 +493,7 @@ public class Server {
                 //如果只有merged-dex 没有patch.dex，说明是触发dex merge时发送过来的补丁
                 File currentPatchDex = new File(dexDirectory,ShareConstants.PATCH_DEX);
                 if (!hasPatchDex && runtimeMetaInfo.getPatchDexVersion() > 0 && FileUtils.isLegalFile(currentPatchDex)) {
+                    //Log.d(Logging.LOG_TAG,"复制patch.dex hasPatchDex: " + hasPatchDex + " hasMergedDex: " + hasMergedDex);
                     FileUtils.copyFileUsingStream(currentPatchDex,new File(workDexDirectory,ShareConstants.PATCH_DEX));
                 }
             }
