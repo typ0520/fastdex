@@ -204,7 +204,7 @@ public class FastdexPatchTask extends DefaultTask {
             else {
                 if (!runtimeMetaInfo.active || !result) {
                     killApp()
-                    startBootActivity()
+                    fastdexInstantRun.startBootActivity()
                 }
             }
             fastdexInstantRun.setInstallApk(false)
