@@ -18,5 +18,21 @@ public class FastdexInstantRunMarkTask extends DefaultTask {
     void mark() {
         fastdexVariant.fastdexInstantRun.fromFastdexInstantRun = true
         project.logger.error("==fastdex fromFastdexInstantRun: true")
+
+        new Thread(new Runnable() {
+            @Override
+            void run() {
+                try {
+                    fastdexVariant.fastdexInstantRun.preparedDevice()
+                } catch (Throwable e) {
+
+                }
+                try {
+                    fastdexVariant.fastdexInstantRun.startTransparentActivity()
+                } catch (Throwable e) {
+
+                }
+            }
+        }).start()
     }
 }

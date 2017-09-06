@@ -2,6 +2,7 @@ package fastdex.build.util
 
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
+import fastdex.build.task.FastdexManifestTask
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.FileUtils
 import org.gradle.api.Project
@@ -44,10 +45,6 @@ public class FastdexInstantRun {
     }
 
     def preparedDevice() {
-        preparedDevice(false)
-    }
-
-    def preparedDevice(boolean background) {
         if (device != null) {
             return
         }
@@ -58,32 +55,15 @@ public class FastdexInstantRun {
         IDevice[] devices = bridge.getDevices()
         if (devices != null && devices.length > 0) {
             if (devices.length > 1) {
-                String errmsg = "发现了多个Android设备，请拔掉数据线，只留一个设备 V_V "
-//                if (background) {
-//                    fastdexVariant.project.logger(errmsg)
-//                }
-//                else {
-//                    throw new FastdexRuntimeException(errmsg)
-//                }
-
-                throw new FastdexRuntimeException(errmsg)
+                throw new FastdexRuntimeException("发现了多个Android设备，请拔掉数据线，只留一个设备 V_V ")
             }
             device = devices[0]
         }
 
         if (device == null) {
-            String errmsg = "没有发现Android设备，请确认连接是否正常 adb devices"
-//            if (background) {
-//                fastdexVariant.project.logger(errmsg)
-//            }
-//            else {
-//                throw new FastdexRuntimeException(errmsg)
-//            }
-            throw new FastdexRuntimeException(errmsg)
+            throw new FastdexRuntimeException("没有发现Android设备，请确认连接是否正常 adb devices")
         }
-        if (!background) {
-            fastdexVariant.project.logger.error("==fastdex device connected ${device.toString()}")
-        }
+        fastdexVariant.project.logger.error("==fastdex device connected ${device.toString()}")
     }
 
     /**
@@ -112,11 +92,7 @@ public class FastdexInstantRun {
     }
 
     public void onFastdexPrepare() {
-        //ping app
-        //如果资源发生变化生成
-//        if (!isInstantRunBuild()) {
-//            return
-//        }
+
     }
 
     def isInstantRunBuild() {
@@ -168,7 +144,6 @@ public class FastdexInstantRun {
         }
         return resourcesApk
     }
-
 
     def generateResourceApk(File resourcesApk) {
         long start = System.currentTimeMillis()
@@ -251,12 +226,36 @@ public class FastdexInstantRun {
             }
 
             String cmd = "adb shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
-            if (fastdexVariant.configuration.debug) {
-                project.logger.error("${cmd}")
-            }
+            project.logger.error("${cmd}")
             if (status != 0) {
-                throw new RuntimeException("==fastdex start activity fail: \n${cmd}")
+                throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
             }
+        }
+    }
+
+    def startTransparentActivity() {
+        startTransparentActivity(false)
+    }
+
+    def startTransparentActivity(boolean background) {
+        def packageName = fastdexVariant.getMergedPackageName()
+
+        //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","am","start","-n","\"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\"").start()
+        int status = process.waitFor()
+        try {
+            process.destroy()
+        } catch (Throwable e) {
+
+        }
+
+        String cmd = "adb shell am start -n \"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\""
+        if (!background && fastdexVariant.configuration.debug) {
+            project.logger.error("${cmd}")
+        }
+
+        if (status != 0) {
+            throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
         }
     }
 }

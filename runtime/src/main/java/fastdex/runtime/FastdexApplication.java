@@ -130,6 +130,7 @@ public class FastdexApplication extends Application {
         super.onCreate();
 
         if (Fastdex.get(this).isFastdexEnabled()) {
+            Thread.setDefaultUncaughtExceptionHandler(new FastdexUncaughtExceptionHandler(getApplicationContext()));
             startServer();
         }
         if (this.realApplication != null) {

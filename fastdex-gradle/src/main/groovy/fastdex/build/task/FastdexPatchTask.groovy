@@ -121,9 +121,7 @@ public class FastdexPatchTask extends DefaultTask {
             fastdexInstantRun.setInstallApk(false)
 
             if (runtimeMetaInfo != null && !runtimeMetaInfo.active) {
-                //TODO 拉起app，暂时先重启
-                killApp()
-                fastdexInstantRun.startBootActivity()
+                fastdexInstantRun.startTransparentActivity()
             }
             return
         }
@@ -226,9 +224,7 @@ public class FastdexPatchTask extends DefaultTask {
         }
 
         String cmd = "adb shell am force-stop ${packageName}"
-        if (fastdexVariant.configuration.debug) {
-            project.logger.error("${cmd}")
-        }
+        project.logger.error("${cmd}")
         if (status != 0) {
             throw new RuntimeException("==fastdex kill app fail: \n${cmd}")
         }
