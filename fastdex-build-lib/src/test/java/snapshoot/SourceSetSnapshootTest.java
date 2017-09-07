@@ -37,6 +37,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testCreate() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
 
         SourceSetSnapshoot snapshoot = new SourceSetSnapshoot(new File(workDir),source_set1,source_set2);
@@ -49,6 +50,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testDiffAddOneSourceSet() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
         SourceSetSnapshoot now = new SourceSetSnapshoot(new File(workDir),source_set1,source_set2);
         SourceSetSnapshoot old = new SourceSetSnapshoot(new File(workDir),source_set1);
@@ -64,6 +66,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testSave() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
         SourceSetSnapshoot now = new SourceSetSnapshoot(new File(workDir),source_set1,source_set2);
         now.serializeTo(new FileOutputStream(new File(workDir,"now.json")));
@@ -73,6 +76,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testDiff1() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
 
         SourceSetSnapshoot now = new SourceSetSnapshoot(new File(workDir),source_set1);
@@ -87,6 +91,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testDiff2() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
 
         SourceSetSnapshoot now = new SourceSetSnapshoot(new File(workDir),source_set1);
@@ -107,6 +112,7 @@ public class SourceSetSnapshootTest extends TestCase {
     public void testDiff3() throws Throwable {
         if (!isDir(source_set1) || !isDir(source_set2) || !isDir(source_set11) || !isDir(source_set22)) {
             System.err.println("Test-env not init!!");
+            return;
         }
 
         SourceSetSnapshoot now = new SourceSetSnapshoot(new File("/Users/tong/Projects/fastdex/DevSample/app"),"");

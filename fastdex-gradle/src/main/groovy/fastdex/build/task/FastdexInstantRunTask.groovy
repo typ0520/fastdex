@@ -24,6 +24,7 @@ public class FastdexInstantRunTask extends DefaultTask {
             return
         }
 
+        fastdexInstantRun.preparedDevice()
         def targetVariant = fastdexVariant.androidVariant
         project.logger.error("==fastdex normal run ${fastdexVariant.variantName}")
         //安装app
