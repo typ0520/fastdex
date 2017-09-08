@@ -150,7 +150,6 @@ public class FastdexStatus {
 
         String variantName = Utils.getBuildVariantName(selectedModule);
         shell.add("fastdex" + String.valueOf(variantName.charAt(0)).toUpperCase() + variantName.substring(1));
-        shell.add("--i");
         return shell;
     }
 

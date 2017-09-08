@@ -53,6 +53,7 @@ sample/.gradle/
 fastdex-build/
 buildSrc/
 
+fastdex-idea-plugin/build/
 sample/common/build/
 sample/common-group/common2/build/
 sample/common-group/common3/build/
