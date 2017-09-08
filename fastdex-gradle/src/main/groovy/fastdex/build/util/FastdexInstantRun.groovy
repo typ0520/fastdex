@@ -45,6 +45,10 @@ public class FastdexInstantRun {
     }
 
     def preparedDevice() {
+        preparedDevice(false)
+    }
+
+    def preparedDevice(boolean background) {
         if (device != null) {
             return
         }
@@ -54,16 +58,18 @@ public class FastdexInstantRun {
         waitForDevice(bridge)
         IDevice[] devices = bridge.getDevices()
         if (devices != null && devices.length > 0) {
-            if (devices.length > 1) {
+            if (devices.length > 1 && !background) {
                 throw new FastdexRuntimeException("发现了多个Android设备，请拔掉数据线，只留一个设备 V_V ")
             }
             device = devices[0]
         }
 
-        if (device == null) {
+        if (device == null && !background) {
             throw new FastdexRuntimeException("没有发现Android设备，请确认连接是否正常 adb devices")
         }
-        fastdexVariant.project.logger.error("==fastdex device connected ${device.toString()}")
+        if (device != null) {
+            fastdexVariant.project.logger.error("==fastdex device connected ${device.toString()}")
+        }
     }
 
     /**
@@ -254,7 +260,7 @@ public class FastdexInstantRun {
             project.logger.error("${cmd}")
         }
 
-        if (status != 0) {
+        if (status != 0 && !background) {
             throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
         }
     }

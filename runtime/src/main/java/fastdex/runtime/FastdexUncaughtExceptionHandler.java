@@ -25,7 +25,7 @@ public class FastdexUncaughtExceptionHandler implements Thread.UncaughtException
             if (fastdex != null) {
                 RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
                 if (runtimeMetaInfo != null && (runtimeMetaInfo.getPatchDexVersion() > 0 || runtimeMetaInfo.getMergedDexVersion() > 0)) {
-                    Throwable root = getRootThowable(ex);
+                    Throwable root = getRootThrowable(ex);
                     if (root instanceof IncompatibleClassChangeError) {
                         //重新出发安装
                         runtimeMetaInfo.setBuildMillis(-1);
@@ -43,7 +43,7 @@ public class FastdexUncaughtExceptionHandler implements Thread.UncaughtException
         ueh.uncaughtException(thread, ex);
     }
 
-    Throwable getRootThowable(Throwable throwable) {
+    Throwable getRootThrowable(Throwable throwable) {
         if (throwable == null) {
             return null;
         }
@@ -54,6 +54,6 @@ public class FastdexUncaughtExceptionHandler implements Thread.UncaughtException
         if (cause == throwable) {
             return throwable;
         }
-        return getRootThowable(throwable.getCause());
+        return getRootThrowable(throwable.getCause());
     }
 }

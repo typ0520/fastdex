@@ -21,6 +21,8 @@ import fastdex.common.utils.FileUtils
  */
 class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     public static boolean skipReport = false
+    private static boolean alreadyAddToProject = false
+
     private Clock clock
     private times = []
     private final Project project
@@ -66,35 +68,22 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     printf "%7sms  %s\n", time
                 }
             }
-
-            long dMillis = System.currentTimeMillis() - startMillis
-
         }
         else {
             if (project == null || !project.plugins.hasPlugin("com.android.application") || skipReport) {
                 return
             }
 
-            Throwable cause = getRootThowable(result.failure)
+            Throwable cause = getRootThrowable(result.failure)
             if (cause == null) {
                 return
             }
 
-            if (cause instanceof FastdexRuntimeException) {
-                return
-            }
-
             StackTraceElement[] stackTrace = cause.getStackTrace()
-            if (stackTrace == null || stackTrace.length == 0) {
-                return
-            }
-
-            StackTraceElement stackTraceElement = stackTrace[0]
-            if (stackTraceElement == null) {
-                return
-            }
-
-            if (stackTraceElement.toString().contains(FastdexPlugin.class.getPackage().getName())) {
+            if (!(cause instanceof FastdexRuntimeException)
+                    && stackTrace != null && stackTrace.length > 0
+                    && stackTrace[0] != null
+                    && stackTrace[0].toString().contains(FastdexPlugin.class.getPackage().getName())) {
                 File errorLogFile = new File(FastdexUtils.getBuildDir(project),Constants.ERROR_REPORT_FILENAME)
 
                 Map<String,String> map = getStudioInfo()
@@ -148,7 +137,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                 } catch (Throwable e) {
                     e.printStackTrace()
                 }
-                
+
                 report.append("fastdex build exception, welcome to submit issue to us: https://github.com/typ0520/fastdex/issues")
                 System.err.println(report.toString())
                 System.err.println("${errorLogFile}")
@@ -160,6 +149,19 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                 }
                 FileUtils.write2file(content.getBytes(),errorLogFile)
                 println("\n===========================fastdex error report===========================")
+            }
+
+            if ("org.gradle.execution.TaskSelectionException".equals(cause.class.name)) {
+                String message = result.failure.getMessage()
+                String[] arr = message.split("'")
+                if (arr != null && arr.length > 1) {
+                    String taskName = arr[1]
+
+                    if (taskName.startsWith("fastdex")) {
+                        System.err.println("")
+                        System.err.println("If you modify buildTypes or productFlavors please synchronize build.gradle")
+                    }
+                }
             }
         }
     }
@@ -173,9 +175,20 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
         return ""
     }
 
-    Throwable getRootThowable(Throwable throwable) {
-        return throwable.cause != null ? getRootThowable(throwable.cause) : throwable
+    Throwable getRootThrowable(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+        Throwable cause = throwable.getCause();
+        if (cause == null) {
+            return throwable;
+        }
+        if (cause == throwable) {
+            return throwable;
+        }
+        return getRootThrowable(throwable.getCause());
     }
+
 
     public Map<String,String> getStudioInfo() {
         Map<String,String> map = new HashMap<>()
@@ -240,7 +253,12 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     }
 
     public static void addByProject(Project pro) {
+        if (alreadyAddToProject) {
+            return
+        }
         FastdexBuildListener listener = new FastdexBuildListener(pro)
         pro.gradle.addListener(listener)
+
+        alreadyAddToProject = true
     }
 }

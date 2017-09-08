@@ -23,12 +23,12 @@ public class FastdexInstantRunMarkTask extends DefaultTask {
             @Override
             void run() {
                 try {
-                    fastdexVariant.fastdexInstantRun.preparedDevice()
+                    fastdexVariant.fastdexInstantRun.preparedDevice(true)
                 } catch (Throwable e) {
 
                 }
                 try {
-                    fastdexVariant.fastdexInstantRun.startTransparentActivity()
+                    fastdexVariant.fastdexInstantRun.startTransparentActivity(true)
                 } catch (Throwable e) {
 
                 }

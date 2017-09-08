@@ -103,6 +103,15 @@ class FastdexPlugin implements Plugin<Project> {
                     project.logger.error("--------------------fastdex--------------------")
                 }
                 else {
+                    //禁用lint任务
+                    String taskName = "lintVital${variantName}"
+                    try {
+                        def lintTask = project.tasks.getByName(taskName)
+                        lintTask.enabled = false
+                    } catch (Throwable e) {
+
+                    }
+
                     //创建清理指定variantName缓存的任务(用户触发)
                     FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
                     cleanTask.fastdexVariant = fastdexVariant
