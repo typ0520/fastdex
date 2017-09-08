@@ -1,0 +1,22 @@
+plugins {
+    id "org.jetbrains.intellij" version "0.2.4"
+}
+
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'java'
+
+version = '1.0.0'
+
+compileJava {
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
+
+intellij {
+    version 'IC-2016.2.5'
+    pluginName 'Fastdex Plugin'
+    plugins = ['android', 'gradle', 'Groovy', 'terminal']
+
+    // Uncomment to test against Android Studio
+    // intellij.alternativeIdePath = '/Applications/Android Studio.app'
+}

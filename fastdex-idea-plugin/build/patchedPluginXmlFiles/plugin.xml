@@ -1,0 +1,62 @@
+<idea-plugin version="2">
+  <id>com.github.typ0520.plugin.fastdex</id>
+  <name>Fastdex Plugin</name>
+  <version>1.0.0</version>
+  <vendor email="" url="https://github.com/typ0520/fastdex">typ0520</vendor>
+  <description>
+      android studio plugin for &lt;a href='https://github.com/typ0520/fastdex'&gt;Fastdex&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;
+
+      &lt;br/&gt;&lt;b&gt;Contributors&lt;/b&gt;&lt;br/&gt;
+      &lt;a href='https://github.com/typ0520/fastdex'&gt;typ0520&lt;/a&gt;
+
+      &lt;br/&gt;&lt;br/&gt;
+      &lt;br/&gt;&lt;b&gt;ISSUES&lt;/b&gt;&lt;br/&gt;
+      &lt;a href='https://github.com/typ0520/fastdex/issues'&gt;Submit Suggestions or Bugs&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;
+    </description>
+  <change-notes>
+      &lt;ul&gt;
+      &lt;li&gt;
+          &lt;b&gt;1.0.0&lt;/b&gt;&lt;br/&gt;
+          first release
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    
+    </change-notes>
+  <idea-version since-build="162.2228" until-build="162.*"/>
+  <depends>org.jetbrains.android</depends>
+  <depends>org.jetbrains.plugins.terminal</depends>
+  <depends>org.jetbrains.plugins.gradle</depends>
+  <depends>org.intellij.groovy</depends>
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="Fastdex" anchor="bottom" icon="/icons/icon.png" factoryClass="fastdex.idea.views.FastdexToolWindowFactory" secondary="false"/>
+    <configurationType implementation="fastdex.idea.configuration.FreeConfigurationType" id="fastdex.plugin.config.FreeRunType"/>
+    <projectService serviceImplementation="fastdex.idea.utils.FreeUIManager" serviceInterface="fastdex.idea.utils.FreeUIManager" id="fastdex.plugin.service.FreeUIManager"/>
+    <applicationService serviceImplementation="fastdex.idea.models.FastdexConfiguration"/>
+  </extensions>
+  <actions>
+    <action id="Plugin_Fastdex_Run" class="fastdex.idea.actions.FastdexRunAction" text="Run Fastdex" description="Run Fastdex">
+      <add-to-group group-id="ToolbarRunGroup" anchor="after" relative-to-action="RunnerActions"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift F10"/>
+    </action>
+    <group>
+      <separator/>
+      <add-to-group group-id="BuildMenu" anchor="last"/>
+    </group>
+    <group id="Plugin_Fastdex_Tools" text="Fastdex" description="Fastdex" popup="true">
+      <action id="Plugin_Fastdex_Run_Debug" class="fastdex.idea.actions.DebugRunAction" text="Run Fastdex Debug" description="Run Fastdex Debug"/>
+      <action id="Plugin_Fastdex_Run_Update" class="fastdex.idea.actions.UpdateAction" text="Check Fastdex Update" description="Check Update"/>
+      <separator/>
+      <add-to-group group-id="BuildMenu" anchor="last"/>
+    </group>
+    <group>
+      <separator/>
+      <add-to-group group-id="BuildMenu" anchor="last"/>
+    </group>
+  </actions>
+  <project-components>
+    <component>
+      <interface-class>fastdex.idea.views.FastdexTerminal</interface-class>
+      <implementation-class>fastdex.idea.views.FastdexTerminal</implementation-class>
+    </component>
+  </project-components>
+</idea-plugin>
