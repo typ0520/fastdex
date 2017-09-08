@@ -15,8 +15,8 @@ compileJava {
 intellij {
     version 'IC-2016.2.5'
     pluginName 'Fastdex Plugin'
-    plugins = ['android', 'gradle', 'Groovy', 'terminal']
 
+    plugins = ['android', 'gradle', 'Groovy', 'terminal']
     // Uncomment to test against Android Studio
     // intellij.alternativeIdePath = '/Applications/Android Studio.app'
 }
