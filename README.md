@@ -1,34 +1,52 @@
 # fastdex
+
+[![license](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/typ0520/fastdex/master/LICENSE) [ ![Download](https://api.bintray.com/packages/typ0520/maven/com.github.typ0520%3Afastdex-gradle/images/download.svg) ](https://bintray.com/typ0520/maven/com.github.typ0520%3Agradle-plugin/_latestVersion)
+
 如果你忍受不了apk龟速的编译(尤其是项目中有多个dex)，fastdex可以帮助你加快apk生成过程
 
-[![license](https://img.shields.io/hexpm/l/plug.svg)](https://raw.githubusercontent.com/typ0520/fastdex/master/LICENSE)
-
-[ ![Download](https://api.bintray.com/packages/typ0520/maven/com.github.typ0520%3Afastdex-gradle/images/download.svg) ](https://bintray.com/typ0520/maven/com.github.typ0520%3Agradle-plugin/_latestVersion)
+![fastdex.png](fastdex-idea-plugin/src/main/resources/icons/bg_update.png)
 
 Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
 [版本记录](https://github.com/typ0520/fastdex/blob/master/CHANGELOG.md)
 
 ## 使用方式
+
+> idea 插件
+
+在 Android Studio 中，通过以下路径：
+
+- MacOS
+
+    Android Studio → Preferences... → Plugins → Browse repositories...
+
+- Windows 和 Linux
+
+    File → Settings... → Plugins → Browse repositories...
+    
+并搜索fastdex安装重启就可以了。
+
+> 手动配置
+
 - 1、关闭Instant Run功能
      点击左上角Android studio -> Preferences -> Build,Execution,Deployment -> Instant Run -> Enable Instant Run......(把对勾去掉)
 
 - 2、在root project下的build.gradle中添加依赖
 
-    ````
-    buildscript {
+  	````
+  	buildscript {
         repositories {
             jcenter()
         }
+        
         dependencies {
-            ......
-
             classpath 'com.github.typ0520:fastdex-gradle:0.4.1'
         }
-    }
-    ````
+   	}
+   	````
     
 - 3、在app的项目中的build.gradle添加插件
+
     ````
     apply plugin: 'fastdex.app'
     ````

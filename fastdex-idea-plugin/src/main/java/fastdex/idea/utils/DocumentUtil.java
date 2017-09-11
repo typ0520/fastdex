@@ -1,6 +1,5 @@
 package fastdex.idea.utils;
 
-import com.intellij.codeInsight.actions.OptimizeImportsProcessor;
 import com.intellij.codeInsight.actions.ReformatCodeAction;
 import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.openapi.application.ApplicationManager;
@@ -38,16 +37,5 @@ public class DocumentUtil {
                 }
             }
         });
-    }
-
-    /**
-     * 优化导入
-     *
-     * @param project
-     * @param virtualFiles
-     */
-    public static void optimizeImports(Project project, VirtualFile... virtualFiles) {
-        new OptimizeImportsProcessor(
-                project, ReformatCodeAction.convertToPsiFiles(virtualFiles, project), null).run();
     }
 }

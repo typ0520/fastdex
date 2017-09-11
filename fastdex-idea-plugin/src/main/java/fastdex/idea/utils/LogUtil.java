@@ -6,7 +6,6 @@ import fastdex.idea.models.Constant;
  * Created by pengwei on 2016/11/2.
  */
 public class LogUtil {
-
     public static void d(String info) {
         if (!Constant.DEBUG_MODE) {
             return;
@@ -27,5 +26,4 @@ public class LogUtil {
         }
         System.out.println(info);
     }
-
 }

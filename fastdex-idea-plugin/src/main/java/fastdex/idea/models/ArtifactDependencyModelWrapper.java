@@ -3,7 +3,6 @@ package fastdex.idea.models;
 import com.android.tools.idea.gradle.dsl.model.dependencies.ArtifactDependencyModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.lang.reflect.Method;
 
 /**
@@ -92,6 +91,4 @@ public class ArtifactDependencyModelWrapper {
         }
         return "";
     }
-
-
 }

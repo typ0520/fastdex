@@ -48,18 +48,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Fastdex" anchor="bottom" icon="/icons/icon.png"
                     factoryClass="fastdex.idea.views.FastdexToolWindowFactory" secondary="false"/>
-
-        <!-- Fastdex Run Configuration Type define -->
-        <configurationType implementation="fastdex.idea.configuration.FreeConfigurationType"
-                           id="fastdex.plugin.config.FreeRunType"/>
-
-        <!-- Fastdex project UI service -->
-        <projectService serviceImplementation="fastdex.idea.utils.FreeUIManager"
-                        serviceInterface="fastdex.idea.utils.FreeUIManager"
-                        id="fastdex.plugin.service.FreeUIManager"/>
-
-        <applicationService serviceImplementation="fastdex.idea.models.FastdexConfiguration" />
-
     </extensions>
 
     <actions>
@@ -77,9 +65,6 @@
 
         <!-- Fastdex tools -->
         <group id="Plugin_Fastdex_Tools" text="Fastdex" description="Fastdex" popup="true">
-            <action id="Plugin_Fastdex_Run_Debug" class="fastdex.idea.actions.DebugRunAction" text="Run Fastdex Debug"
-                    description="Run Fastdex Debug">
-            </action>
             <action id="Plugin_Fastdex_Run_Update" class="fastdex.idea.actions.UpdateAction" text="Check Fastdex Update"
                     description="Check Update">
             </action>
@@ -99,5 +84,4 @@
             <implementation-class>fastdex.idea.views.FastdexTerminal</implementation-class>
         </component>
     </project-components>
-
 </idea-plugin>

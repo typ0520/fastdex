@@ -54,8 +54,4 @@ common-group/common3/build/
 javalib/build/
 javalib-group/javalib2/build/
 javalib-group/javalib3/build/
-
-freeline.py
-freeline_project_description.json
 common4
-freeline/

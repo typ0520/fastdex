@@ -10,7 +10,6 @@ import com.android.ide.common.blame.ParsingProcessOutputHandler
 import com.android.ide.common.blame.parser.DexParser
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessOutputHandler
-import fastdex.build.util.FastdexRuntimeException
 
 /**
  * dex操作
@@ -37,7 +36,7 @@ public class DexOperation implements Opcodes {
         String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
         long start = System.currentTimeMillis()
 
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        if (Os.isFamily(Os.FAMILY_WINDOWS) || fastdexVariant.project.projectDir.absolutePath.contains(" ")) {
             if ("2.0.0".equals(androidGradlePluginVersion)) {
                 base.androidBuilder.convertByteCode(
                         inputFiles,

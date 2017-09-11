@@ -6,7 +6,6 @@ import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import fastdex.idea.utils.DocumentUtil;
-
 import javax.swing.*;
 import java.io.File;
 
@@ -14,7 +13,6 @@ import java.io.File;
  * Created by pengwei on 16/9/11.
  */
 public abstract class BaseAction extends AnAction {
-
     protected Project currentProject;
     protected File projectDir;
     protected AnActionEvent anActionEvent;
@@ -34,7 +32,6 @@ public abstract class BaseAction extends AnAction {
 
     public abstract void actionPerformed();
 
-
     /**
      * 异步执行
      *
@@ -47,6 +44,4 @@ public abstract class BaseAction extends AnAction {
     protected void invokeLater(Runnable runnable) {
         ApplicationManager.getApplication().invokeLater(runnable);
     }
-
-
 }

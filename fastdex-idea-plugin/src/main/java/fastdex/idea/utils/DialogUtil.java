@@ -2,7 +2,6 @@ package fastdex.idea.utils;
 
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.Messages;
-
 import javax.swing.*;
 
 /**

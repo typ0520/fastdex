@@ -2,15 +2,11 @@ package fastdex.idea.utils;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
-import org.jetbrains.android.actions.AndroidEnableAdbServiceAction;
 import org.jetbrains.android.facet.AndroidFacet;
-import org.jetbrains.android.sdk.AndroidSdkUtils;
 import org.jetbrains.jps.android.model.impl.JpsAndroidModuleProperties;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -70,24 +66,6 @@ public final class Utils {
         r.keyRelease(key);
         r.keyRelease(KeyEvent.VK_CONTROL);
         r.delay(100);
-    }
-
-    public static String[] getFastdexRunShell(Project project) {
-        return new String[]{"sh","gradlew", "fastdex"};
-    }
-
-    public static String getBuildVariantName(Project project) {
-        //see com.android.tools.idea.gradle.variant.view.BuildVariantView;  line:232
-        for (Module module : GradleUtil.getGradleModulesWithAndroidProjects(project)) {
-            AndroidFacet androidFacet = AndroidFacet.getInstance(module);
-            JpsAndroidModuleProperties facetProperties = androidFacet.getProperties();
-            String variantName = facetProperties.SELECTED_BUILD_VARIANT;
-            if (variantName != null && variantName.length() > 1) {
-                return String.valueOf(variantName.charAt(0)).toUpperCase() + variantName.substring(1);
-            }
-        }
-
-        return "Debug";
     }
 
     public static String getBuildVariantName(Module module) {

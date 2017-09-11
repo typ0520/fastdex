@@ -11,12 +11,8 @@ public class PluginIcons {
 
     public static final Icon FastdexIcon = load("/icons/icon.png");
     public static final Icon Suspend = intellijLoad("/actions/suspend.png");
-    public static final Icon StartDebugger = intellijLoad("/actions/startDebugger.png");
     public static final Icon GC = intellijLoad("/actions/gc.png");
     public static final Icon GradleSync = load("/icons/gradlesync.png");
-
-    /* Run action icon */
-    public static final Icon ICON_ACTION_RUN = FastdexIcon;
 
     private static Icon load(String path) {
         try {

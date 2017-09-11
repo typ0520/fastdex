@@ -3,7 +3,6 @@ package fastdex.idea.models;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import fastdex.idea.utils.Utils;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;

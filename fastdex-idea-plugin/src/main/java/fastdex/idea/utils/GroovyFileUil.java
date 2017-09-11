@@ -49,5 +49,4 @@ public class GroovyFileUil {
         GrExpression expression = gmc.getInvokedExpression();
         return expression.getText() != null ? expression.getText() : "";
     }
-
 }
