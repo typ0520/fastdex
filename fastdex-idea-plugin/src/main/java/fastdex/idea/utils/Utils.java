@@ -1,14 +1,18 @@
 package fastdex.idea.utils;
 
+import com.android.ddmlib.AndroidDebugBridge;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
+import org.jetbrains.android.actions.AndroidEnableAdbServiceAction;
 import org.jetbrains.android.facet.AndroidFacet;
+import org.jetbrains.android.sdk.AndroidSdkUtils;
 import org.jetbrains.jps.android.model.impl.JpsAndroidModuleProperties;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -93,5 +97,26 @@ public final class Utils {
         JpsAndroidModuleProperties facetProperties = androidFacet.getProperties();
         String variantName = facetProperties.SELECTED_BUILD_VARIANT;
         return variantName;
+    }
+
+    public static boolean hasInitAndroidDebugBridge() {
+        try {
+            Field field = AndroidDebugBridge.class.getDeclaredField("sInitialized");
+            field.setAccessible(true);
+            Boolean val = (Boolean) field.get(null);
+            if (val != null && val == Boolean.TRUE) {
+               return true;
+            }
+        } catch (Exception e) {
+
+        }
+        return false;
+    }
+
+    public static String formatPath(String path) {
+        if (!SystemInfo.isWindows) {
+            return path.replaceAll(" ","\\\\ ");
+        }
+        return path;
     }
 }

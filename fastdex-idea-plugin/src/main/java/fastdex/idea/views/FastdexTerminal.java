@@ -17,6 +17,7 @@ import com.intellij.ui.content.ContentFactory;
 import com.jediterm.terminal.Terminal;
 import com.jediterm.terminal.model.TerminalTextBuffer;
 import com.jediterm.terminal.ui.JediTermWidget;
+import fastdex.idea.actions.FastdexRunAction;
 import fastdex.idea.icons.PluginIcons;
 import fastdex.idea.models.FastdexStatus;
 import org.jetbrains.annotations.NotNull;
@@ -25,14 +26,12 @@ import org.jetbrains.plugins.terminal.AbstractTerminalRunner;
 import org.jetbrains.plugins.terminal.JBTabbedTerminalWidget;
 import org.jetbrains.plugins.terminal.LocalTerminalDirectRunner;
 import fastdex.idea.utils.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Created by pengwei on 16/9/15.
@@ -94,7 +93,7 @@ public class FastdexTerminal implements FocusListener, ProjectComponent {
         ToolWindow toolWindow = getToolWindow();
         if (toolWindow.isActive()) {
             if (workDir != null) {
-                executeShell("cd " + workDir);
+                executeShell("cd " + Utils.formatPath(workDir));
             }
             executeShell(shell);
         } else {
@@ -102,7 +101,7 @@ public class FastdexTerminal implements FocusListener, ProjectComponent {
                 @Override
                 public void run() {
                     if (workDir != null) {
-                        executeShell("cd " + workDir);
+                        executeShell("cd " + Utils.formatPath(workDir));
                     }
                     executeShell(shell);
                 }
@@ -311,12 +310,7 @@ public class FastdexTerminal implements FocusListener, ProjectComponent {
 
         @Override
         public void doAction(AnActionEvent anActionEvent) {
-            String[] shell = Utils.getFastdexRunShell(terminal.myProject);
-            if (shell == null) {
-                NotificationUtils.gradleWrapperNotFound();
-            } else {
-                FastdexTerminal.getInstance(terminal.myProject).initAndExecute(shell);
-            }
+            FastdexRunAction.run(terminal.myProject);
         }
 
         protected String args() {

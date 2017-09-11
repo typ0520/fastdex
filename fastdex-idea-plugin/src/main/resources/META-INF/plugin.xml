@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.github.typ0520.plugin.fastdex</id>
     <name>Fastdex Plugin</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor email="" url="https://github.com/typ0520/fastdex">typ0520</vendor>
 
     <description><![CDATA[
@@ -17,7 +17,12 @@
 
     <change-notes><![CDATA[
       <ul>
-      <li>
+        <li>
+          <b>1.0.1</b><br/>
+          支持多个设备连接(fastdex版本最低0.4.1)<br/>修改项目路径有空格会报错的问题
+        </li>
+        <br/>
+        <li>
           <b>1.0.0</b><br/>
           first release
         </li>

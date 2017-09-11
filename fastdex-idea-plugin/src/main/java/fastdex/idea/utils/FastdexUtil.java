@@ -70,6 +70,7 @@ public class FastdexUtil {
                         ArtifactDependencyModelWrapper wrapper = new ArtifactDependencyModelWrapper(classpath);
                         if (wrapper.group().equals(Constant.FASTDEX_CLASSPATH_GROUP)
                                 && wrapper.name().equals(Constant.FASTDEX_CLASSPATH_ARTIFACT)) {
+                            status.setFastdexVersion(wrapper.version());
                             status.setClasspathFile(file);
                             break;
                         }

@@ -24,6 +24,7 @@ public class FastdexStatus {
     private Module selectedModule;
     private GradleBuildFile moduleBuildFile;
     private List<Module> moduleList;
+    private String fastdexVersion;
 
     public FastdexStatus setClasspathFile(VirtualFile classpathFile) {
         this.classpathFile = classpathFile;
@@ -122,7 +123,7 @@ public class FastdexStatus {
                     shell.add("gradlew.bat");
                 }
                 else {
-                    shell.add(projectPath + "gradlew.bat");
+                    shell.add(Utils.formatPath(projectPath) + "gradlew.bat");
                 }
             }
             else {
@@ -132,7 +133,7 @@ public class FastdexStatus {
                     shell.add("gradlew");
                 }
                 else {
-                    shell.add(projectPath + "gradlew");
+                    shell.add(Utils.formatPath(projectPath) + "gradlew");
                 }
             }
         }
@@ -159,5 +160,20 @@ public class FastdexStatus {
 
     public List<Module> getModuleList() {
         return moduleList;
+    }
+
+    public void setFastdexVersion(String fastdexVersion) {
+        this.fastdexVersion = fastdexVersion;
+    }
+
+    public String getFastdexVersion() {
+        return fastdexVersion;
+    }
+
+    public boolean isSupportMultipleDevices() {
+        if (fastdexVersion != null && fastdexVersion.compareTo("0.4") >= 0) {
+            return true;
+        }
+        return false;
     }
 }

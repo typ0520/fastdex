@@ -1,3 +1,16 @@
+## 0.4.1  (2017-9-11)
+
+Features:
+
+  - 支持多个设备连接的场景(./gradlew fastdexDebug -PDEVICE_SN=adb设备序列号)
+  - 执行fastdex任务时先尝试拉起app
+  - 报IncompatibleClassChangeError错误时清除补丁
+
+Bugfixes:
+
+   - 解决全量打包时如果没有连接设备报空指针的问题
+   - 修复mac/linux下项目路径包含空格会报错的问题
+
 ## 0.3.3  (2017-8-31)
 
 Bugfixes:

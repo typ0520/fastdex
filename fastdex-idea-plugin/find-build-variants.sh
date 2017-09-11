@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#寻找包含Build Variants的idea 插件在那个jar包里
+#寻找包含Build Variants的idea插件在那个jar包里
 #https://android.googlesource.com/platform/tools/adt/idea
 
 cd /Applications/Android\ Studio.app/Contents

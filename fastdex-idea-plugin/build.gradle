@@ -5,7 +5,7 @@ plugins {
 apply plugin: 'org.jetbrains.intellij'
 apply plugin: 'java'
 
-version = '1.0.0'
+version = '1.0.1'
 
 compileJava {
     sourceCompatibility = 1.6
