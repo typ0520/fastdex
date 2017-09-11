@@ -57,11 +57,27 @@ public class FastdexInstantRun {
                 AndroidDebugBridge.createBridge(FastdexUtils.getAdbCmdPath(fastdexVariant.project), false)
         waitForDevice(bridge)
         IDevice[] devices = bridge.getDevices()
+
         if (devices != null && devices.length > 0) {
-            if (devices.length > 1 && !background) {
-                throw new FastdexRuntimeException("发现了多个Android设备，请拔掉数据线，只留一个设备 V_V ")
+            String serial = fastdexVariant.project.properties.get("DEVICE_SN")
+
+            if (fastdexVariant.project.hasProperty("DEVICE_SN")) {
+                for (IDevice d : devices) {
+                    if (d.getSerialNumber().equals(serial)) {
+                        device = d
+                        break
+                    }
+                }
+
+                if (device == null && !background) {
+                    throw new FastdexRuntimeException("找不到序列号是${serial}的adb设备")
+                }
             }
-            device = devices[0]
+            else {
+                if (devices.length > 1 && !background) {
+                    throw new FastdexRuntimeException("发现了多个Android设备，请使用 -PDEVICE_SN= 指定adb设备的序列号")
+                }
+            }
         }
 
         if (device == null && !background) {
@@ -222,8 +238,9 @@ public class FastdexInstantRun {
         //启动第一个activity
         String bootActivityName = GradleUtils.getBootActivity(fastdexVariant.manifestPath)
         if (bootActivityName) {
+
             //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
-            def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","am","start","-n","\"${packageName}/${bootActivityName}\"","-a","android.intent.action.MAIN","-c","android.intent.category.LAUNCHER").start()
+            def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",device.getSerialNumber(),"shell","am","start","-n","\"${packageName}/${bootActivityName}\"","-a","android.intent.action.MAIN","-c","android.intent.category.LAUNCHER").start()
             int status = process.waitFor()
             try {
                 process.destroy()
@@ -231,7 +248,7 @@ public class FastdexInstantRun {
 
             }
 
-            String cmd = "adb shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
+            String cmd = "adb -s ${device.getSerialNumber()} shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
             project.logger.error("${cmd}")
             if (status != 0) {
                 throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
@@ -247,7 +264,7 @@ public class FastdexInstantRun {
         def packageName = fastdexVariant.getMergedPackageName()
 
         //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
-        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","am","start","-n","\"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\"").start()
+        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",device.getSerialNumber(),"shell","am","start","-n","\"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\"").start()
         int status = process.waitFor()
         try {
             process.destroy()
@@ -255,7 +272,7 @@ public class FastdexInstantRun {
 
         }
 
-        String cmd = "adb shell am start -n \"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\""
+        String cmd = "adb shell -s ${device.getSerialNumber()} am start -n \"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\""
         if (!background && fastdexVariant.configuration.debug) {
             project.logger.error("${cmd}")
         }

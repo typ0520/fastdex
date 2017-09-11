@@ -212,10 +212,12 @@ public class FastdexPatchTask extends DefaultTask {
     }
 
     def killApp() {
+        FastdexInstantRun fastdexInstantRun = fastdexVariant.fastdexInstantRun
+
         //adb shell am force-stop 包名
         def packageName = fastdexVariant.getMergedPackageName()
         //$ adb shell kill {appPid}
-        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"shell","am","force-stop","${packageName}").start()
+        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",fastdexInstantRun.device.getSerialNumber(),"shell","am","force-stop","${packageName}").start()
         int status = process.waitFor()
         try {
             process.destroy()
@@ -223,7 +225,7 @@ public class FastdexPatchTask extends DefaultTask {
 
         }
 
-        String cmd = "adb shell am force-stop ${packageName}"
+        String cmd = "adb -s ${fastdexInstantRun.device.getSerialNumber()} shell am force-stop ${packageName}"
         project.logger.error("${cmd}")
         if (status != 0) {
             throw new RuntimeException("==fastdex kill app fail: \n${cmd}")
