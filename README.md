@@ -14,7 +14,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
 > idea 插件
 
-在 Android Studio 中，通过以下路径：
+在Android Studio中，打开搜索插件页面：
 
 - MacOS
 
@@ -24,7 +24,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
     File → Settings... → Plugins → Browse repositories...
     
-并搜索fastdex安装重启就可以了。
+搜索fastdex安装重启Android Studio就可以了。
 
 > 手动配置
 
