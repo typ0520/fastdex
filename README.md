@@ -18,11 +18,11 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
 
 - MacOS
 
-    Android Studio → Preferences... → Plugins → Browse repositories...
+    Android Studio → Preferences → Plugins → Browse repositories
 
 - Windows 和 Linux
 
-    File → Settings... → Plugins → Browse repositories...
+    File → Settings → Plugins → Browse repositories
     
 搜索fastdex安装重启Android Studio就可以了。
 
