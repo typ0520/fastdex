@@ -139,17 +139,27 @@ public class FastdexInstantRun {
 
         if (!installApk) {
             try {
+                project.tasks.getByName("transformNativeLibsWithMergeJniLibsFor${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
+                project.tasks.getByName("transformResourcesWithMergeJavaResFor${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
+                project.tasks.getByName("validateSigning${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
                 project.tasks.getByName("package${fastdexVariant.variantName}").enabled = false
             } catch (Throwable e) {
 
             }
             try {
                 project.tasks.getByName("assemble${fastdexVariant.variantName}").enabled = false
-            } catch (Throwable e) {
-
-            }
-            try {
-                project.tasks.getByName("validateSigning${fastdexVariant.variantName}").enabled = false
             } catch (Throwable e) {
 
             }
