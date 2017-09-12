@@ -65,7 +65,8 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         }
         else {
             for (File f : childPaths) {
-                if (f != null) {
+                //如果library工程没有res目录时不会生成R.java，会造成文件找不到的错误
+                if (f != null && f.exists() && f.isFile()) {
                     visitFile(f.toPath(),null,scanFilter);
                 }
             }

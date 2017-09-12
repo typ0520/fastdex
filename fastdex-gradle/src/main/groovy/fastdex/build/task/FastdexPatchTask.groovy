@@ -194,7 +194,7 @@ public class FastdexPatchTask extends DefaultTask {
             long end = System.currentTimeMillis();
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
-            if (sourceChanged || fastdexVariant.configuration.forceRebootApp) {
+            if (sendPatchDex || sendMergedDex || fastdexVariant.configuration.forceRebootApp) {
                 //kill app
                 killApp()
                 fastdexInstantRun.startBootActivity()
