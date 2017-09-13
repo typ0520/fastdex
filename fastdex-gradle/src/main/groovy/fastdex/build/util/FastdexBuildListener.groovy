@@ -253,12 +253,12 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     }
 
     public static void addByProject(Project pro) {
-        if (alreadyAddToProject) {
-            return
-        }
+//        if (alreadyAddToProject) {
+//            return
+//        }
         FastdexBuildListener listener = new FastdexBuildListener(pro)
         pro.gradle.addListener(listener)
 
-        alreadyAddToProject = true
+        //alreadyAddToProject = true
     }
 }
