@@ -31,6 +31,10 @@ public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffI
         super(directory,JAVA_SUFFIX_FILTER, useMd5);
     }
 
+    public JavaDirectorySnapshoot(File directory,FileSuffixFilter filter, boolean useMd5) throws IOException {
+        super(directory,filter, useMd5);
+    }
+
     public JavaDirectorySnapshoot(File directory,boolean useMd5, String ...childPath) throws IOException {
         super(directory, toFileList(childPath),JAVA_SUFFIX_FILTER,useMd5);
     }

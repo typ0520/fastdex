@@ -4,7 +4,11 @@ apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'fastdex.app'
 
 fastdex {
-    //default true
+    //default true (可以用来区分是开发机器调试，还是jenkins机器打包，如果是开发机器就在local.properties加fastdex.enabled=true)
+    //Properties localProperties = new Properties()
+    //localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+    //fastdexEnable = Boolean.valueOf(localProperties.getProperty("fastdex.enabled", "false"))
+
     //开启
     fastdexEnable = true
 
@@ -23,6 +27,10 @@ fastdex {
     //default false
     //目前当只有资源改变时不会重启app，如果这个字段设置为true那么每次补丁发过去都会重启app
     boolean forceRebootApp = false
+
+    //default false
+    //目前只有开启databinding是才会监控build/generated/source/apt目录java文件的变化，如果设置为true任何时候都会监控
+    boolean traceApt = false
 }
 
 android {
@@ -124,7 +132,6 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'info.hoang8f:android-segmented:1.0.6'
     compile 'com.squareup.okio:okio:1.0.1'
-//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 //    compile 'com.zhy:okhttputils:2.4.1'
 //    compile 'joda-time:joda-time:2.6'
 //    compile 'com.squareup.retrofit:retrofit:1.8.0'

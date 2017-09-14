@@ -582,6 +582,18 @@ public class Server {
                 String resources = file.getAbsolutePath();
 
                 MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
+
+                try {
+                    String[] infoArr = file.getName().split(ShareConstants.RES_SPLIT_STR);
+                    String version = infoArr[0];
+                    String path = infoArr[1];
+
+                    if (path.equals(Constants.RESOURCE_APK_FILE_NAME)) {
+                        Fastdex.get(context).getRuntimeMetaInfo().setResourcesVersion(Integer.parseInt(version));
+                    }
+                } catch (Throwable e) {
+
+                }
             } else {
                 Log.e(Logging.LOG_TAG, "No resource file found to apply");
                 updateMode = UPDATE_MODE_COLD_SWAP;

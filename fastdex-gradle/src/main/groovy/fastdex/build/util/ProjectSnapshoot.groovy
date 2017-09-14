@@ -110,7 +110,6 @@ public class ProjectSnapshoot {
             andManifestDirectorySnapshoot.addFile(it)
         }
 
-       // andManifestDirectorySnapshoot.addFile(fastdexVariant.project.android.sourceSets.main.manifest.srcFile)
         for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
             if (libDependency.androidLibrary) {
                 File file = libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile
@@ -229,10 +228,12 @@ public class ProjectSnapshoot {
             aidlDirectorySnapshoot.projectPath = project.projectDir.absolutePath
             snapshoot.addJavaDirectorySnapshoot(aidlDirectorySnapshoot)
 
-            //apt
-            JavaDirectorySnapshoot aptDirectorySnapshoot = new JavaDirectorySnapshoot(aptDir,true)
-            aptDirectorySnapshoot.projectPath = project.projectDir.absolutePath
-            snapshoot.addJavaDirectorySnapshoot(aptDirectorySnapshoot)
+            if (fastdexVariant.configuration.traceApt || FastdexUtils.isDataBindingEnabled(project)) {
+                //apt
+                JavaDirectorySnapshoot aptDirectorySnapshoot = new JavaDirectorySnapshoot(aptDir,new Exclude$SourceSuffixFilter(),true)
+                aptDirectorySnapshoot.projectPath = project.projectDir.absolutePath
+                snapshoot.addJavaDirectorySnapshoot(aptDirectorySnapshoot)
+            }
         }
     }
 
