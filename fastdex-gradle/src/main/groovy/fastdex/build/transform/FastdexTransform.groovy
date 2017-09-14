@@ -96,8 +96,9 @@ class FastdexTransform extends TransformProxy {
                         incrementDexDir(dexOutputDir,2)
                         //copy merged-patch.dex
                         FileUtils.copyFileUsingStream(mergedPatchDex,new File(dexOutputDir,"${Constants.CLASSES}2${Constants.DEX_SUFFIX}"))
+
                         //copy fastdex-runtime.dex
-                        FileUtils.copyResourceUsingStream(Constants.RUNTIME_DEX_FILENAME,new File(dexOutputDir,Constants.CLASSES_DEX))
+                        copyFastdexRuntimeDex(new File(dexOutputDir,Constants.CLASSES_DEX))
                     }
                     else {
                         //第一只执行dex merge,直接保存patchDex
@@ -112,8 +113,8 @@ class FastdexTransform extends TransformProxy {
                         FileUtils.ensumeDir(mergedPatchDexDir)
 
                         //copy 一份相同的，做冗余操作，如果直接移动文件，会丢失patch.dex造成免安装模块特别难处理
-                        //FileUtils.copyFileUsingStream(patchDex,new File(mergedPatchDexDir,Constants.CLASSES_DEX))
-                        patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+                        FileUtils.copyFileUsingStream(patchDex,new File(mergedPatchDexDir,Constants.CLASSES_DEX))
+                        //patchDex.renameTo(new File(mergedPatchDexDir,Constants.CLASSES_DEX))
                     }
 
                     fastdexVariant.metaInfo.mergedDexVersion += 1
@@ -193,6 +194,16 @@ class FastdexTransform extends TransformProxy {
         }
 
         fastdexVariant.executedDexTransform = true
+    }
+
+    public void copyFastdexRuntimeDex(File dist) {
+        File buildDir = FastdexUtils.getBuildDir(project)
+
+        File fastdexRuntimeDex = new File(buildDir, Constants.RUNTIME_DEX_FILENAME)
+        if (!FileUtils.isLegalFile(fastdexRuntimeDex)) {
+            FileUtils.copyResourceUsingStream(Constants.RUNTIME_DEX_FILENAME, fastdexRuntimeDex)
+        }
+        FileUtils.copyFileUsingStream(fastdexRuntimeDex, dist)
     }
 
     /**
@@ -314,7 +325,7 @@ class FastdexTransform extends TransformProxy {
         incrementDexDir(dexOutputDir)
 
         //fastdex-runtime.dex = > classes.dex
-        FileUtils.copyResourceUsingStream(Constants.RUNTIME_DEX_FILENAME,new File(dexOutputDir,Constants.CLASSES_DEX))
+        copyFastdexRuntimeDex(new File(dexOutputDir,Constants.CLASSES_DEX))
         printLogWhenDexGenerateComplete(dexOutputDir,true)
     }
 
@@ -336,7 +347,7 @@ class FastdexTransform extends TransformProxy {
         File cacheDexDir = FastdexUtils.getDexCacheDir(project,variantName)
 
         //copy fastdex-runtime.dex
-        FileUtils.copyResourceUsingStream(Constants.RUNTIME_DEX_FILENAME,new File(dexOutputDir,Constants.CLASSES_DEX))
+        copyFastdexRuntimeDex(new File(dexOutputDir,Constants.CLASSES_DEX))
         //copy patch.dex
         FileUtils.copyFileUsingStream(patchDex,new File(dexOutputDir,"classes2.dex"))
         if (FileUtils.fileExists(mergedPatchDex.absolutePath)) {

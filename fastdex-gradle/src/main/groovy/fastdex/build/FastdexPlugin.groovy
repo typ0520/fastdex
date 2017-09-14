@@ -15,6 +15,7 @@ import fastdex.build.transform.FastdexJarMergingTransform
 import fastdex.build.util.FastdexBuildListener
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexInstantRun
+import fastdex.build.util.FastdexUtils
 import fastdex.build.util.GradleUtils
 import fastdex.build.variant.FastdexVariant
 import org.gradle.api.GradleException
@@ -50,10 +51,19 @@ class FastdexPlugin implements Plugin<Project> {
                 throw new GradleException('generateTinkerApk: Android Application plugin required')
             }
 
-            //最低支持2.0.0
-            String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
-            if (androidGradlePluginVersion.compareTo(Constants.MIN_SUPPORT_ANDROID_GRADLE_VERSION) < 0) {
-                throw new GradleException("Your version too old 'com.android.tools.build:gradle:${androidGradlePluginVersion}', minimum support version 2.0.0")
+            if (FastdexUtils.isDataBindingEnabled(project)) {
+                //最低支持2.2.0
+                String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
+                if (androidGradlePluginVersion.compareTo("2.2") < 0) {
+                    throw new GradleException("DataBinding enabled, minimum support version 2.2.0")
+                }
+            }
+            else {
+                //最低支持2.0.0
+                String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
+                if (androidGradlePluginVersion.compareTo(Constants.MIN_SUPPORT_ANDROID_GRADLE_VERSION) < 0) {
+                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${androidGradlePluginVersion}', minimum support version 2.0.0")
+                }
             }
 
             def android = project.extensions.android
@@ -103,6 +113,11 @@ class FastdexPlugin implements Plugin<Project> {
                     project.logger.error("--------------------fastdex--------------------")
                 }
                 else {
+                    if (FastdexUtils.isDataBindingEnabled(project)) {
+                        configuration.useCustomCompile = false
+                        project.logger.error("==fastdex dataBinding is enabled, disable useCustomCompile...")
+                    }
+
                     //禁用lint任务
                     String taskName = "lintVital${variantName}"
                     try {
@@ -152,17 +167,24 @@ class FastdexPlugin implements Plugin<Project> {
                         prepareTask.mustRunAfter generateSourcesTask
                     }
 
-                    if (configuration.useCustomCompile) {
-                        Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
-                        customJavacTask.fastdexVariant = fastdexVariant
-                        customJavacTask.javaCompile = variant.javaCompile
-                        customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
-
-                        customJavacTask.dependsOn prepareTask
-                        variant.javaCompile.dependsOn customJavacTask
+                    Task transformClassesWithDex = getTransformClassesWithDex(project,variantName)
+                    if (FastdexUtils.isDataBindingEnabled(project)) {
+                        transformClassesWithDex.dependsOn prepareTask
+                        prepareTask.mustRunAfter variant.javaCompile
                     }
                     else {
-                        variant.javaCompile.dependsOn prepareTask
+                        if (configuration.useCustomCompile) {
+                            Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
+                            customJavacTask.fastdexVariant = fastdexVariant
+                            customJavacTask.javaCompile = variant.javaCompile
+                            customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
+
+                            customJavacTask.dependsOn prepareTask
+                            variant.javaCompile.dependsOn customJavacTask
+                        }
+                        else {
+                            variant.javaCompile.dependsOn prepareTask
+                        }
                     }
 
                     Task multidexlistTask = getTransformClassesWithMultidexlistTask(project,variantName)
@@ -193,7 +215,7 @@ class FastdexPlugin implements Plugin<Project> {
                     fastdexPatchTask.fastdexVariant = fastdexVariant
 
                     Task packageTask = getPackageTask(project, variantName)
-                    fastdexPatchTask.mustRunAfter getTransformClassesWithDex(project,variantName)
+                    fastdexPatchTask.mustRunAfter transformClassesWithDex
                     fastdexPatchTask.mustRunAfter mergeAssetsTask
                     packageTask.dependsOn fastdexPatchTask
 

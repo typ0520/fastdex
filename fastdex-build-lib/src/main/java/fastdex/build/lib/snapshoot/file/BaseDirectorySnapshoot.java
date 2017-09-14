@@ -38,6 +38,10 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
         this(directory, null, scanFilter,false);
     }
 
+    public BaseDirectorySnapshoot(File directory, ScanFilter scanFilter,boolean useMd5) throws IOException {
+        this(directory,null,scanFilter,useMd5);
+    }
+
     public BaseDirectorySnapshoot(File directory, String ...childPaths) throws IOException {
         this(directory, toFileList(childPaths));
     }
@@ -153,7 +157,7 @@ public class BaseDirectorySnapshoot<DIFF_INFO extends FileDiffInfo,NODE extends 
                 '}';
     }
 
-    private static Collection<File> toFileList(String[] childPaths) {
+    public static Collection<File> toFileList(String[] childPaths) {
         List<File> files = new ArrayList<>();
         if (childPaths != null) {
             for (String path : childPaths) {

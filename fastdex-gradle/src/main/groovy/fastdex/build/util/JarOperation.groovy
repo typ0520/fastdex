@@ -124,6 +124,10 @@ public class JarOperation implements Opcodes {
         try {
             outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
             for (File classpathFile : directoryInputFiles) {
+                //fix library databinding bug
+                if (!FileUtils.dirExists(classpathFile.absolutePath)) {
+                    continue
+                }
                 Path classpath = classpathFile.toPath()
 
                 boolean skip = (moudleDirectoryInputFiles != null && moudleDirectoryInputFiles.contains(classpathFile))
@@ -142,17 +146,15 @@ public class JarOperation implements Opcodes {
 
                         if (skip) {
                             ZipEntry e = new ZipEntry(entryName)
-
-                            if (project.fastdex.debug) {
-                                project.logger.error("==fastdex add entry1: ${e}")
-                            }
                             outputJarStream.putNextEntry(e)
-
                             byte[] bytes = FileUtils.readContents(file.toFile())
                             //如果需要触发dex merge,必须注入代码
                             if (willExeDexMerge) {
+                                project.logger.error("==fastdex prepare add injected class: ${e}")
                                 bytes = ClassInject.inject(bytes)
-                                project.logger.error("==fastdex inject: ${entryName}")
+                            }
+                            else {
+                                project.logger.error("==fastdex add class: ${e}")
                             }
                             outputJarStream.write(bytes,0,bytes.length)
                             outputJarStream.closeEntry()
@@ -167,17 +169,16 @@ public class JarOperation implements Opcodes {
                                         || className.startsWith("${cn}_ViewBinding")) {
 
                                     ZipEntry e = new ZipEntry(entryName)
-                                    if (project.fastdex.debug) {
-                                        project.logger.error("==fastdex add entry2: ${e}")
-                                    }
-
                                     outputJarStream.putNextEntry(e)
 
                                     byte[] bytes = FileUtils.readContents(file.toFile())
                                     //如果需要触发dex merge,必须注入代码
                                     if (willExeDexMerge) {
+                                        project.logger.error("==fastdex prepare add injected class: ${e}")
                                         bytes = ClassInject.inject(bytes)
-                                        project.logger.error("==fastdex inject: ${entryName}")
+                                    }
+                                    else {
+                                        project.logger.error("==fastdex add class: ${e}")
                                     }
                                     outputJarStream.write(bytes,0,bytes.length)
                                     outputJarStream.closeEntry()

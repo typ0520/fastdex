@@ -2,6 +2,7 @@ package fastdex.build.variant
 
 import com.github.typ0520.fastdex.Version
 import fastdex.build.extension.FastdexExtension
+import fastdex.build.lib.snapshoot.string.StringNode
 import fastdex.build.task.FastdexInstantRunTask
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexInstantRun
@@ -63,11 +64,10 @@ public class FastdexVariant {
 
     /*
     * 检查缓存是否过期，如果过期就删除
-    * 1、查看app/build/fastdex/${variantName}/dex_cache目录下是否存在dex
-    * 2、检查当前的依赖列表和全两打包时的依赖是否一致(app/build/fastdex/${variantName}/dependencies-mapping.txt)
-    * 3、检查当前的依赖列表和全量打包时的依赖列表是否一致
-    * 4、检查资源映射文件是否存在(app/build/fastdex/${variantName}/R.txt)
-    * 5、检查全量的代码jar包是否存在(app/build/fastdex/${variantName}/injected-combined.jar)
+    *
+    * 检查meta-info文件是否存在(app/build/fastdex/${variantName}/fastdex-meta-info.json)
+    * 检查当前的依赖列表和全两打包时的依赖是否一致(app/build/fastdex/${variantName}/dependencies.json)
+    * 检查资源映射文件是否存在(app/build/fastdex/${variantName}/r/r.txt)
     */
     void prepareEnv() {
         if (initialized) {
@@ -99,6 +99,14 @@ public class FastdexVariant {
                 }
 
                 if (metaInfo.fastdexVersion == null || !Version.FASTDEX_BUILD_VERSION.equals(metaInfo.fastdexVersion)) {
+                    File dxJarFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project),"fastdex-dx.jar")
+                    File dxCommandFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project),"fastdex-dx")
+                    File fastdexRuntimeDex = new File(buildDir, Constants.RUNTIME_DEX_FILENAME)
+
+                    FileUtils.deleteFile(dxJarFile)
+                    FileUtils.deleteFile(dxCommandFile)
+                    FileUtils.deleteFile(fastdexRuntimeDex)
+
                     throw new CheckException("cache fastdexVersion: ${metaInfo.fastdexVersion}, current fastdexVersion: ${Version.FASTDEX_BUILD_VERSION}")
                 }
 
@@ -130,29 +138,29 @@ public class FastdexVariant {
                 }
 
                 if (configuration.useCustomCompile) {
-//                    File injectedJarFile = FastdexUtils.getInjectedJarFile(project,variantName)
-//                    if (!FileUtils.isLegalFile(injectedJarFile)) {
-//                        throw new CheckException("miss injected jar file: ${injectedJarFile}")
-//                    }
-
                     File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
                     if (!FileUtils.isLegalFile(classpathFile)) {
                         throw new CheckException("miss classpath file: ${classpathFile}")
                     }
                 }
 
-                try {
-                    projectSnapshoot.loadSnapshoot()
-                } catch (Throwable e) {
-                    e.printStackTrace()
-                    throw new CheckException(e)
+                String oldRootProjectPath = metaInfo.rootProjectPath
+                String curRootProjectPath = project.rootProject.projectDir.absolutePath
+                boolean isRootProjectDirChanged = metaInfo.isRootProjectDirChanged(curRootProjectPath)
+                if (isRootProjectDirChanged) {
+                    throw new CheckException("project path changed old: ${oldRootProjectPath} now: ${curRootProjectPath}")
                 }
-
+                projectSnapshoot.loadSnapshoot()
                 if (projectSnapshoot.isDependenciesChanged()) {
                     throw new CheckException("dependencies changed")
                 }
-            } catch (CheckException e) {
+            } catch (Throwable e) {
                 hasDexCache = false
+
+                if (!(e instanceof CheckException) && configuration.debug) {
+                    e.printStackTrace()
+                }
+
                 project.logger.error("==fastdex ${e.getMessage()}")
                 project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
             }
@@ -173,7 +181,6 @@ public class FastdexVariant {
         }
 
         projectSnapshoot.prepareEnv()
-
         fastdexInstantRun.onFastdexPrepare()
     }
 
