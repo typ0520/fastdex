@@ -27,7 +27,7 @@ public class FastdexUncaughtExceptionHandler implements Thread.UncaughtException
                 if (runtimeMetaInfo != null && (runtimeMetaInfo.getPatchDexVersion() > 0 || runtimeMetaInfo.getMergedDexVersion() > 0)) {
                     Throwable root = getRootThrowable(ex);
                     if (root instanceof IncompatibleClassChangeError) {
-                        //重新出发安装
+                        //重新触发安装
                         runtimeMetaInfo.setBuildMillis(-1);
                         runtimeMetaInfo.save(fastdex);
 
