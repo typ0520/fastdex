@@ -354,4 +354,8 @@ public class FastdexUtils {
         }
         return null
     }
+
+    public static boolean isDataBindingEnabled(Project project) {
+        return project.android.dataBinding && project.android.dataBinding.enabled
+    }
 }

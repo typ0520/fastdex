@@ -1,3 +1,9 @@
+## 0.5.0  (2017-9-15)
+
+Features:
+
+  - 支持dataBinding
+
 ## 0.4.2  (2017-9-14)
 
 Bugfixes:

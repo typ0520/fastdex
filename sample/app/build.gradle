@@ -1,29 +1,37 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'me.tatarka.retrolambda'
-apply plugin: 'com.github.typ0520.fastdex'
 apply plugin: 'fastdex.app'
-//fastdex {
-//    //default true
-//    //开启
-//    fastdexEnable = true
-//
-//    //default false
-//    //debug模式输出的调试信息比较多
-//    debug = true
-//
-//    //default true
-//    //自定义的compile任务,用来代替compileXXXXJavaWithJavac
-//    useCustomCompile = true
-//
-//    //default 4
-//    //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
-//    dexMergeThreshold = 4
-//
-//    //default false
-//    //目前当只有资源改变时不会重启app，如果这个字段设置为true那么每次补丁发过去都会重启app
-//    boolean forceRebootApp = false
-//}
+
+fastdex {
+    //default true (可以用来区分是开发机器调试，还是jenkins机器打包，如果是开发机器就在local.properties加fastdex.enabled=true)
+    //Properties localProperties = new Properties()
+    //localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+    //fastdexEnable = Boolean.valueOf(localProperties.getProperty("fastdex.enabled", "false"))
+
+    //开启
+    fastdexEnable = true
+
+    //default false
+    //debug模式输出的调试信息比较多
+    debug = true
+
+    //default true
+    //自定义的compile任务,用来代替compileXXXXJavaWithJavac
+    useCustomCompile = true
+
+    //default 4
+    //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
+    dexMergeThreshold = 4
+
+    //default false
+    //目前当只有资源改变时不会重启app，如果这个字段设置为true那么每次补丁发过去都会重启app
+    boolean forceRebootApp = false
+
+    //default false
+    //目前只有开启databinding是才会监控build/generated/source/apt目录java文件的变化，如果设置为true任何时候都会监控
+    boolean traceApt = false
+}
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)

@@ -25,10 +25,13 @@ public class FastdexExtension {
      */
     int dexMergeThreshold = 4
 
-    boolean handleReflectR = true
-
     /**
      * 目前当只有资源改变时不会重启app，需要这个字段设置为true，那么每次补丁发过去都会重启app
      */
     boolean forceRebootApp = false
+
+    /**
+     * 目前只有开启databinding是才会监控build/generated/source/apt目录，如果设置为true任何时候都会监控
+     */
+    boolean traceApt = false
 }

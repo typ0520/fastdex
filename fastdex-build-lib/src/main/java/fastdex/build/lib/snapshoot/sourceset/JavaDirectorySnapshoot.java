@@ -4,11 +4,9 @@ import fastdex.build.lib.snapshoot.file.BaseDirectorySnapshoot;
 import fastdex.build.lib.snapshoot.file.FileNode;
 import fastdex.build.lib.snapshoot.api.DiffInfo;
 import fastdex.build.lib.snapshoot.file.FileSuffixFilter;
-import fastdex.build.lib.snapshoot.file.ScanFilter;
 import com.google.gson.annotations.Expose;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Created by tong on 17/3/30.
@@ -29,20 +27,16 @@ public class JavaDirectorySnapshoot extends BaseDirectorySnapshoot<JavaFileDiffI
         super(directory, JAVA_SUFFIX_FILTER);
     }
 
-    public JavaDirectorySnapshoot(File directory, ScanFilter scanFilter) throws IOException {
-        super(directory, scanFilter);
+    public JavaDirectorySnapshoot(File directory, boolean useMd5) throws IOException {
+        super(directory,JAVA_SUFFIX_FILTER, useMd5);
     }
 
-    public JavaDirectorySnapshoot(File directory, String ...childPath) throws IOException {
-        super(directory, childPath);
+    public JavaDirectorySnapshoot(File directory,FileSuffixFilter filter, boolean useMd5) throws IOException {
+        super(directory,filter, useMd5);
     }
 
     public JavaDirectorySnapshoot(File directory,boolean useMd5, String ...childPath) throws IOException {
-        super(directory, useMd5, childPath);
-    }
-
-    public JavaDirectorySnapshoot(File directory, Collection<File> childPath) throws IOException {
-        super(directory, childPath);
+        super(directory, toFileList(childPath),JAVA_SUFFIX_FILTER,useMd5);
     }
 
     @Override

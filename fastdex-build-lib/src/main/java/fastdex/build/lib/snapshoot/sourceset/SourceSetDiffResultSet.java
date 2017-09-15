@@ -46,12 +46,6 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
         return !addOrModifiedClasses.isEmpty();
     }
 
-//    public void addJavaFileDiffInfo(JavaFileDiffInfo diffInfo) {
-//        if (diffInfo.status != Status.NOCHANGED) {
-//            this.changedJavaFileDiffInfos.add(diffInfo);
-//        }
-//    }
-
     public void mergeJavaDirectoryResultSet(String path,JavaDirectoryDiffResultSet javaDirectoryResultSet) {
         List<String> addOrModifiedClassRelativePathList = addOrModifiedClassesMap.get(javaDirectoryResultSet.projectPath);
         if (addOrModifiedClassRelativePathList == null) {
