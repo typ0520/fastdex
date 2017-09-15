@@ -56,7 +56,7 @@ public class UpdateAction extends BaseAction implements GetServerCallback {
                             List<ArtifactDependencyModel> models = gradleBuildModels.get(file);
                             for (ArtifactDependencyModel dependencyModel1 : models) {
                                 ArtifactDependencyModelWrapper dependencyModel = new ArtifactDependencyModelWrapper(dependencyModel1);
-                                if (isClasspathLibrary(dependencyModel)) {
+                                if (FastdexUtil.isFastdexClasspathLibrary(dependencyModel)) {
                                     dependencyModel1.setVersion(newVersion);
                                 }
                             }
@@ -82,8 +82,8 @@ public class UpdateAction extends BaseAction implements GetServerCallback {
             List<ArtifactDependencyModel> models = gradleBuildModels.get(file);
             for (ArtifactDependencyModel dependencyModel1 : models) {
                 ArtifactDependencyModelWrapper dependencyModel = new ArtifactDependencyModelWrapper(dependencyModel1);
-                if (isClasspathLibrary(dependencyModel)) {
-                    if (isClasspathLibrary(dependencyModel)) {
+                if (FastdexUtil.isFastdexClasspathLibrary(dependencyModel)) {
+                    if (FastdexUtil.isFastdexClasspathLibrary(dependencyModel)) {
                         localVersion = dependencyModel.version();
                     }
                     builder.append(dependencyModel.configurationName()).append(" '")
@@ -112,11 +112,6 @@ public class UpdateAction extends BaseAction implements GetServerCallback {
         } else {
             NotificationUtils.infoNotification("please add fastdex dependency first");
         }
-    }
-
-    private boolean isClasspathLibrary(ArtifactDependencyModelWrapper model) {
-        return model.configurationName().equals("classpath") &&
-                model.group().equals("com.github.typ0520") && model.name().equals("fastdex-gradle");
     }
 
     @Override

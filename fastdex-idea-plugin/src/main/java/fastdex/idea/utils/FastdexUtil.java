@@ -34,13 +34,6 @@ import java.util.regex.Pattern;
  */
 public class FastdexUtil {
     /**
-     * if had init fastdex return true
-     */
-    public static boolean hadInitFastdex(Project project) {
-        return true;
-    }
-
-    /**
      * 获取fastdex安装状态
      *
      * @param project
@@ -200,7 +193,11 @@ public class FastdexUtil {
      * @param status
      * @param psiFile
      */
-    private static void installFastdex(final Project project, final FastdexStatus status, final PsiFile psiFile) {
+    public static void installFastdex(final Project project, final FastdexStatus status, final PsiFile psiFile) {
+        installFastdex(project,status,psiFile,Constant.MIN_FASTDEX_VERSION);
+    }
+
+    public static void installFastdex(final Project project, final FastdexStatus status, final PsiFile psiFile, final String minSupportVersion) {
         ApplicationManager.getApplication().executeOnPooledThread(new UpdateAction.GetServerVersion(new GetServerCallback() {
             @Override
             public void onSuccess(final GradleDependencyEntity entity) {
@@ -208,7 +205,7 @@ public class FastdexUtil {
                 ApplicationManager.getApplication().invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        installFastdex(project, status, psiFile, entity);
+                        installFastdex(project, status, psiFile, entity,minSupportVersion);
                     }
                 });
             }
@@ -224,7 +221,7 @@ public class FastdexUtil {
     private static boolean needReformatCode = false;
 
     private static void installFastdex(final Project project, final FastdexStatus status, final PsiFile psiFile,
-                                       final GradleDependencyEntity dependencyEntity) {
+                                       final GradleDependencyEntity dependencyEntity,final String minSupportVersion) {
         needReformatCode = false;
         CommandProcessor.getInstance().runUndoTransparentAction(new Runnable() {
             @Override
@@ -232,25 +229,39 @@ public class FastdexUtil {
                 ApplicationManager.getApplication().runWriteAction(new Runnable() {
                     @Override
                     public void run() {
-                        if (!status.isExistClasspath()) {
+                        if (!status.isExistClasspath() || !FastdexUtil.isSupportFastdexVersion(status.getFastdexVersion(),minSupportVersion)) {
                             Collection<VirtualFile> collection = status.getGradleBuildFiles();
+
                             if (dependencyEntity != null) {
                                 for (VirtualFile file : collection) {
                                     GradleBuildModel model = GradleBuildModel.parseBuildFile(file, project);
                                     List<ArtifactDependencyModel> artifactDependencyModels = model.buildscript().dependencies().artifacts();
+
                                     for (ArtifactDependencyModel model1 : artifactDependencyModels) {
                                         ArtifactDependencyModelWrapper wrapper = new ArtifactDependencyModelWrapper(model1);
                                         if (wrapper.group().equals(Constant.ANDROID_GRADLE_TOOL_GROUP_NAME)) {
+
+                                            for (ArtifactDependencyModel dependencyModel1 : artifactDependencyModels) {
+                                                ArtifactDependencyModelWrapper dependencyModel = new ArtifactDependencyModelWrapper(dependencyModel1);
+
+                                                if (FastdexUtil.isFastdexClasspathLibrary(dependencyModel)) {
+                                                    model.buildscript().dependencies().remove(dependencyModel1);
+                                                    break;
+                                                }
+                                            }
+
                                             ArtifactDependencySpec spec = new ArtifactDependencySpec(dependencyEntity.getArtifactId(),
                                                     dependencyEntity.getGroupId(), dependencyEntity.getNewestReleaseVersion());
                                             model.buildscript().dependencies().addArtifact("classpath", spec);
+
                                             model.applyChanges();
                                             needReformatCode = true;
                                             status.setClasspathFile(file);
+                                            status.setFastdexVersion(dependencyEntity.getNewestReleaseVersion());
                                             break;
                                         }
                                     }
-                                    if (status.isExistClasspath()) {
+                                    if (status.isExistClasspath() && FastdexUtil.isSupportFastdexVersion(status.getFastdexVersion(),minSupportVersion)) {
                                         break;
                                     }
                                 }
@@ -290,5 +301,18 @@ public class FastdexUtil {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static boolean isFastdexClasspathLibrary(ArtifactDependencyModelWrapper model) {
+        return model.configurationName().equals("classpath") &&
+                model.group().equals(Constant.FASTDEX_CLASSPATH_GROUP) && model.name().equals(Constant.FASTDEX_CLASSPATH_ARTIFACT);
+    }
+
+    public static boolean isSupportFastdexVersion(String fastdexVersion) {
+        return isSupportFastdexVersion(fastdexVersion,Constant.MIN_FASTDEX_VERSION);
+    }
+
+    public static boolean isSupportFastdexVersion(String fastdexVersion, String minSupportVersion) {
+        return fastdexVersion != null && minSupportVersion != null && fastdexVersion.compareTo(minSupportVersion) >= 0;
     }
 }

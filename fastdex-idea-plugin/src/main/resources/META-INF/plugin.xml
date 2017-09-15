@@ -1,11 +1,13 @@
 <idea-plugin version="2">
     <id>com.github.typ0520.plugin.fastdex</id>
     <name>Fastdex Plugin</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor email="" url="https://github.com/typ0520/fastdex">typ0520</vendor>
 
     <description><![CDATA[
       android studio plugin for <a href='https://github.com/typ0520/fastdex'>Fastdex</a><br/><br/>
+      <img src='https://github.com/typ0520/fastdex/raw/master/fastdex-idea-plugin/src/main/resources/icons/bg_update.png' width='600' height='122'/> <br/>
+      <img src='https://github.com/typ0520/fastdex-test-project/raw/master/assets/rocket_desc.png' width='198' height='45'/> <br/>
 
       <br/><b>Contributors</b><br/>
       <a href='https://github.com/typ0520/fastdex'>typ0520</a>
@@ -18,13 +20,24 @@
     <change-notes><![CDATA[
       <ul>
         <li>
+          <b>1.0.2</b><br/>
+          Detects the minimum supported fastdex version
+          <br />
+          Detects fastdex versions that support multiple device connections
+          <br />
+          Fixbug
+        </li>
+        <br/>
+        <li>
           <b>1.0.1</b><br/>
-          支持多个设备连接(fastdex版本最低0.4.1)<br/>修改项目路径有空格会报错的问题
+          Supports multiple devices(The minimum version of fastdex is 0.4.2)
+          <br />
+          Fix the problem that the project path can not contain spaces
         </li>
         <br/>
         <li>
           <b>1.0.0</b><br/>
-          first release
+          First release
         </li>
       </ul>
     ]]>

@@ -1,4 +1,4 @@
-package com.dx168.fastdex.sample.common;
+package fastdex.sample.common;
 
 /**
  * Created by tong on 17/4/13.

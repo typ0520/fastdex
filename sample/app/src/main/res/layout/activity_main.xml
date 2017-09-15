@@ -30,7 +30,7 @@
         android:layout_centerInParent="true"
         android:text="Fastdex sample"/>
 
-    <com.dx168.fastdex.sample.common.CommonView
+    <fastdex.sample.common.CommonView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

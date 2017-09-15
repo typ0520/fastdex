@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-import com.dx168.fastdex.sample.common.CommonUtils;
+import fastdex.sample.common.CommonUtils;
 import com.github.typ0520.fastdex.sample.R;
 import butterknife.ButterKnife;
 import fastdex.sample.common2.Common2Utils;

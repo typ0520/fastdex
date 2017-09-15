@@ -1,4 +1,4 @@
-package com.dx168.fastdex.sample.common;
+package fastdex.sample.common;
 
 import android.content.Context;
 import android.util.AttributeSet;

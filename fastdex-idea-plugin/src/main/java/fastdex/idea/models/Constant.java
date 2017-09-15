@@ -15,4 +15,10 @@ public interface Constant {
 
     // gradle tool
     String ANDROID_GRADLE_TOOL_GROUP_NAME = "com.android.tools.build";
+
+    //插件依赖的最低的fastdex版本
+    String MIN_FASTDEX_VERSION = "0.3";
+
+    //最低支持多个设备连接的fastdex版本
+    String MIN_SUPPORT_MULTIPLE_DEVICE_FASTDEX_VERSION = "0.4";
 }

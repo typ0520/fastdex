@@ -51,6 +51,7 @@ public final class GradleUtil {
         GroovyPsiElementFactory factory = GroovyPsiElementFactory.getInstance(project);
         GrStatement grStatement = factory.createExpressionFromText(String.format("apply plugin: \'%s\'",
                 new Object[]{pluginId}), null);
+
         GrExpression expression = GroovyFileUil.getLastPlugin(psiFile);
         if (expression != null && expression.getParent() != null) {
             psiFile.addAfter(grStatement, expression.getParent());

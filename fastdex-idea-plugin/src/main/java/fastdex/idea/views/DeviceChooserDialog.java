@@ -13,12 +13,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * Created by tong on 17/9/11.
  */
 public class DeviceChooserDialog extends DialogWrapper {
     private final DeviceChooser myDeviceChooser;
+    private DeviceChooserListener deviceChooserListener;
+    private boolean closed;
 
     public DeviceChooserDialog(@NotNull AndroidFacet facet,
                                @NotNull IAndroidTarget projectTarget,
@@ -36,6 +39,10 @@ public class DeviceChooserDialog extends DialogWrapper {
             @Override
             public void selectedDevicesChanged() {
                 updateOkButton();
+
+                if (deviceChooserListener != null) {
+                    deviceChooserListener.selectedDevicesChanged();
+                }
             }
         });
 
@@ -66,6 +73,14 @@ public class DeviceChooserDialog extends DialogWrapper {
     }
 
     @Override
+    public void doCancelAction() {
+        this.deviceChooserListener = null;
+
+        closed = true;
+        super.doCancelAction();
+    }
+
+    @Override
     protected String getDimensionServiceKey() {
         return "AndroidDeviceChooserDialog";
     }
@@ -81,5 +96,17 @@ public class DeviceChooserDialog extends DialogWrapper {
 
     public DeviceChooser getMyDeviceChooser() {
         return myDeviceChooser;
+    }
+
+    public void setDeviceChooserListener(DeviceChooserListener deviceChooserListener) {
+        this.deviceChooserListener = deviceChooserListener;
+    }
+
+    public DeviceChooserListener getDeviceChooserListener() {
+        return deviceChooserListener;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }
