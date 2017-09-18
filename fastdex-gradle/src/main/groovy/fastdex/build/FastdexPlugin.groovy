@@ -131,11 +131,6 @@ class FastdexPlugin implements Plugin<Project> {
                     FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
                     cleanTask.fastdexVariant = fastdexVariant
 
-                    //fix issue#8
-                    def tinkerPatchManifestTask = getTinkerPatchManifestTask(project, variantName)
-                    if (tinkerPatchManifestTask != null) {
-                        manifestTask.mustRunAfter tinkerPatchManifestTask
-                    }
 
                     //TODO change api
                     variantOutput.processManifest.dependsOn getMergeDebugResources(project,variantName)
@@ -145,6 +140,12 @@ class FastdexPlugin implements Plugin<Project> {
                     manifestTask.fastdexVariant = fastdexVariant
                     manifestTask.mustRunAfter variantOutput.processManifest
                     variantOutput.processResources.dependsOn manifestTask
+
+                    //fix issue#8
+                    def tinkerPatchManifestTask = getTinkerPatchManifestTask(project, variantName)
+                    if (tinkerPatchManifestTask != null) {
+                        manifestTask.mustRunAfter tinkerPatchManifestTask
+                    }
 
                     //保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
                     FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
