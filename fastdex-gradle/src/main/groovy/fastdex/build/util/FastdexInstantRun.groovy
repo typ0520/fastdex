@@ -243,6 +243,10 @@ public class FastdexInstantRun {
     }
 
     def startBootActivity() {
+        startBootActivity(false)
+    }
+
+    def startBootActivity(boolean background) {
         def packageName = fastdexVariant.getMergedPackageName()
 
         //启动第一个activity
@@ -259,8 +263,10 @@ public class FastdexInstantRun {
             }
 
             String cmd = "adb -s ${device.getSerialNumber()} shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
-            project.logger.error("${cmd}")
-            if (status != 0) {
+            if (!background && fastdexVariant.configuration.debug) {
+                project.logger.error("${cmd}")
+            }
+            if (status != 0 && !background) {
                 throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
             }
         }
