@@ -234,7 +234,7 @@ class FastdexPlugin implements Plugin<Project> {
 
                     FastdexInstantRunMarkTask fastdexInstantRunMarkTask = project.tasks.create("fastdexMarkFor${variantName}",FastdexInstantRunMarkTask)
                     fastdexInstantRunMarkTask.fastdexVariant = fastdexVariant
-                    fastdexInstantRunMarkTask.mustRunAfter variantOutput.processManifest
+                    //fastdexInstantRunMarkTask.mustRunAfter variantOutput.processManifest
 
                     prepareTask.mustRunAfter fastdexInstantRunMarkTask
 
