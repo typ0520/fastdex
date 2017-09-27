@@ -1,7 +1,6 @@
 <idea-plugin version="2">
     <id>com.github.typ0520.plugin.fastdex</id>
     <name>Fastdex Plugin</name>
-    <version>1.0.2</version>
     <vendor email="" url="https://github.com/typ0520/fastdex">typ0520</vendor>
 
     <description><![CDATA[
@@ -19,7 +18,21 @@
 
     <change-notes><![CDATA[
       <ul>
+       <li>
+          <b>1.0.4</b><br/>
+          Record the last selected device
+        </li>
+
+        <br/>
+
         <li>
+          <b>1.0.3</b><br/>
+          Optimize build cache
+        </li>
+
+        <br/>
+
+         <li>
           <b>1.0.2</b><br/>
           Detects the minimum supported fastdex version
           <br />
@@ -27,6 +40,7 @@
           <br />
           Fixbug
         </li>
+
         <br/>
         <li>
           <b>1.0.1</b><br/>

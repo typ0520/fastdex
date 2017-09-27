@@ -4,7 +4,7 @@ package fastdex.sample.common;
  * Created by tong on 17/4/13.
  */
 public class CommonUtils {
-    public static String str = CommonUtils.class.getSimpleName() + ".str1";
+    public static String str = CommonUtils.class.getSimpleName() + ".str0";
 
     public CommonUtils() {
 

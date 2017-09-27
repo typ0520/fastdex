@@ -38,6 +38,7 @@ public class MetaInfo {
 
     public boolean active
 
+    public int packageUsingPatchDexVersion
 
     /**
      * 是否移动了工程目录
@@ -55,11 +56,7 @@ public class MetaInfo {
 
     public static MetaInfo load(Project project,String variantName) {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
-        try {
-            return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),MetaInfo.class)
-        } catch (Throwable e) {
-            e.printStackTrace()
-        }
+        return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),MetaInfo.class)
     }
 
 

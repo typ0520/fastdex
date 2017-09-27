@@ -26,6 +26,7 @@ import java.util.ArrayList;
 public class FastdexRunAction extends BaseAction {
     private static final String ANDROID_TARGET_DEVICES_PROPERTY = "AndroidTargetDevices";
 
+    public static String lastSelectedDeviceSN = null;
 
     public FastdexRunAction() {
         super(PluginIcons.FastdexIcon);
@@ -37,7 +38,7 @@ public class FastdexRunAction extends BaseAction {
 
     @Override
     public void actionPerformed() {
-        run(currentProject);
+        run(currentProject,false);
     }
 
     /**
@@ -53,7 +54,7 @@ public class FastdexRunAction extends BaseAction {
         return s.split(" ");
     }
 
-    public static void run(Project currentProject) {
+    public static void run(Project currentProject, boolean fromFastdexTerminal) {
         FastdexStatus status = FastdexUtil.checkInstall(currentProject);
         if (status != null) {
             if (!FastdexUtil.isSupportFastdexVersion(status.getFastdexVersion())) {
@@ -89,26 +90,40 @@ public class FastdexRunAction extends BaseAction {
                     NotificationUtils.errorMsgDialog(e.getMessage());
                     return;
                 }
-                if (devices != null && devices.length > 1 && !status.isSupportMultipleDevices()) {
-                    if (DialogUtil.createDialog("The current fastdex version is " + status.getFastdexVersion() + " does not support multiple device connections, Update now？",
-                            "Of course", "Next time")) {
-                        FastdexUtil.installFastdex(currentProject, status, status.getModuleBuildFile().getPsiFile(), Constant.MIN_SUPPORT_MULTIPLE_DEVICE_FASTDEX_VERSION);
+                IDevice targetDevice = null;
+                if (fromFastdexTerminal && lastSelectedDeviceSN != null && devices != null && devices.length > 0) {
+                    for (IDevice iDevice : devices) {
+                        if (lastSelectedDeviceSN.equals(iDevice.getSerialNumber())) {
+                            targetDevice = iDevice;
+                            break;
+                        }
                     }
-                    return;
-                }
-                if (devices == null || devices.length != 1) {
-                    chooser.show();
                 }
 
-                if (chooser.isClosed()) {
-                    return;
-                }
-                devices = chooser.getSelectedDevices();
-                if (devices == null || devices.length == 0) {
-                    return;
-                }
-                shell.add("-PDEVICE_SN=" + devices[0]);
+                if (targetDevice == null) {
+                    if (devices != null && devices.length > 1 && !status.isSupportMultipleDevices()) {
+                        if (DialogUtil.createDialog("The current fastdex version is " + status.getFastdexVersion() + " does not support multiple device connections, Update now？",
+                                "Of course", "Next time")) {
+                            FastdexUtil.installFastdex(currentProject, status, status.getModuleBuildFile().getPsiFile(), Constant.MIN_SUPPORT_MULTIPLE_DEVICE_FASTDEX_VERSION);
+                        }
+                        return;
+                    }
+                    if (devices == null || devices.length != 1) {
+                        chooser.show();
+                    }
 
+                    if (chooser.isClosed()) {
+                        return;
+                    }
+                    devices = chooser.getSelectedDevices();
+                    if (devices == null || devices.length == 0) {
+                        return;
+                    }
+                    targetDevice = devices[0];
+                }
+
+                lastSelectedDeviceSN = targetDevice.getSerialNumber();
+                shell.add("-PDEVICE_SN=" + targetDevice.getSerialNumber());
                 if (status.hasOneAppplicationModule()) {
                     FastdexTerminal.getInstance(currentProject).initAndExecute(currentProject.getBasePath(),shell);
                 }

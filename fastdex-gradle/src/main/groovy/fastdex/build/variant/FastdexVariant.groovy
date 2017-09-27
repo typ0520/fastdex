@@ -1,11 +1,14 @@
 package fastdex.build.variant
 
+import com.android.build.api.transform.TransformInvocation
+import com.android.build.gradle.api.ApplicationVariant
 import com.github.typ0520.fastdex.Version
 import fastdex.build.extension.FastdexExtension
-import fastdex.build.lib.snapshoot.string.StringNode
 import fastdex.build.task.FastdexInstantRunTask
+import fastdex.build.transform.FastdexTransform
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexInstantRun
+import fastdex.build.util.FastdexRuntimeException
 import fastdex.common.utils.SerializeUtils
 import fastdex.build.util.LibDependency
 import fastdex.build.util.MetaInfo
@@ -14,7 +17,6 @@ import fastdex.build.util.FastdexUtils
 import fastdex.common.utils.FileUtils
 import fastdex.build.util.GradleUtils
 import fastdex.build.util.TagManager
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 
 /**
@@ -23,7 +25,7 @@ import org.gradle.api.Project
 public class FastdexVariant {
     final Project project
     final FastdexExtension configuration
-    final def androidVariant
+    final ApplicationVariant androidVariant
     final String variantName
     final String manifestPath
     final File rootBuildDir
@@ -36,12 +38,15 @@ public class FastdexVariant {
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
-    boolean hasJarMergingTask
     boolean executedJarMerge
     boolean executedDexTransform
+    boolean hasJarMergingTask
     MetaInfo metaInfo
+    FastdexTransform fastdexTransform
     FastdexInstantRun fastdexInstantRun
     FastdexInstantRunTask fastdexInstantRunTask
+
+    TransformInvocation transformInvocation
 
     FastdexVariant(Project project, Object androidVariant) {
         this.project = project
@@ -58,7 +63,7 @@ public class FastdexVariant {
         libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
 
         if (configuration.dexMergeThreshold <= 1) {
-            throw new GradleException("dexMergeThreshold Must be greater than 1!!")
+            throw new FastdexRuntimeException("DexMergeThreshold must be greater than 1!!")
         }
     }
 
@@ -75,6 +80,8 @@ public class FastdexVariant {
         }
         initialized = true
         hasDexCache = FastdexUtils.hasDexCache(project,variantName)
+
+        project.logger.error("==fastdex hasDexCache: ${hasDexCache}")
         if (hasDexCache) {
             File diffResultSetFile = FastdexUtils.getDiffResultSetFile(project,variantName)
             if (!FileUtils.isLegalFile(diffResultSetFile)) {
@@ -82,16 +89,13 @@ public class FastdexVariant {
             }
 
             try {
+                File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
+                if (!FileUtils.isLegalFile(metaInfoFile)) {
+                    throw new CheckException("miss file : ${metaInfoFile}")
+                }
                 metaInfo = MetaInfo.load(project,variantName)
                 if (metaInfo == null) {
-                    File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
-
-                    if (FileUtils.isLegalFile(metaInfoFile)) {
-                        throw new CheckException("parse json content fail: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
-                    }
-                    else {
-                        throw new CheckException("miss meta info file: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
-                    }
+                    throw new CheckException("parse json content fail: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
                 }
 
                 if (metaInfo.fastdexVersion == null) {
@@ -229,7 +233,7 @@ public class FastdexVariant {
                 copyRTxt()
             }
         }
-        copyMetaInfo2Assets()
+        //copyMetaInfo2Assets()
         projectSnapshoot.onDexGenerateSuccess(nornalBuild,dexMerge)
         fastdexInstantRun.onSourceChanged()
     }
@@ -246,12 +250,19 @@ public class FastdexVariant {
         File dest = new File(assetsPath,metaInfoFile.getName())
 
         project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
-        //TODO fixbug
-//        if (!FileUtils.isLegalFile(dest)) {
-//            FileUtils.copyFileUsingStream(metaInfoFile,dest)
-//        }
-
         FileUtils.copyFileUsingStream(metaInfoFile,dest)
+    }
+
+    def onPrePackage() {
+        copyMetaInfo2Assets()
+
+        if (hasDexCache) {
+            if (metaInfo.packageUsingPatchDexVersion >= metaInfo.patchDexVersion) {
+                project.logger.error("==fastdex skip copy dex")
+                return
+            }
+            fastdexTransform.hookPatchBuildDex(fastdexTransform.hookPatchBuildDexArgs)
+        }
     }
 
     /**
@@ -269,8 +280,12 @@ public class FastdexVariant {
      * 补丁打包是否需要执行dex merge
      * @return
      */
-    public boolean willExecDexMerge() {
+    def willExecDexMerge() {
         return hasDexCache && projectSnapshoot.diffResultSet.changedJavaFileDiffInfos.size() >= configuration.dexMergeThreshold
+    }
+
+    def getVariantConfiguration() {
+        return androidVariant.getVariantData().getVariantConfiguration()
     }
 
     private class CheckException extends Exception {

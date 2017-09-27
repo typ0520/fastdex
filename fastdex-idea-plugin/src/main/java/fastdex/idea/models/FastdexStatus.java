@@ -151,6 +151,7 @@ public class FastdexStatus {
 
         String variantName = Utils.getBuildVariantName(selectedModule);
         shell.add("fastdex" + String.valueOf(variantName.charAt(0)).toUpperCase() + variantName.substring(1));
+        shell.add("-Pfastdex.injected.invoked.from.ide=true");
         return shell;
     }
 
@@ -172,6 +173,13 @@ public class FastdexStatus {
 
     public boolean isSupportMultipleDevices() {
         if (fastdexVersion != null && fastdexVersion.compareTo("0.4") >= 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isSupportBuildCache() {
+        if (fastdexVersion != null && fastdexVersion.compareTo("0.6") >= 0) {
             return true;
         }
         return false;

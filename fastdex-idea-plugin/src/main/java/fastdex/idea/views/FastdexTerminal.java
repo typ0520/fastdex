@@ -310,7 +310,7 @@ public class FastdexTerminal implements FocusListener, ProjectComponent {
 
         @Override
         public void doAction(AnActionEvent anActionEvent) {
-            FastdexRunAction.run(terminal.myProject);
+            FastdexRunAction.run(terminal.myProject, true);
         }
 
         protected String args() {

@@ -14,7 +14,6 @@ import org.gradle.api.tasks.TaskAction
  * Created by tong on 17/3/11.
  */
 public class FastdexManifestTask extends DefaultTask {
-    static final String MANIFEST_XML = "AndroidManifest.xml"
     static final String FASTDEX_ORIGIN_APPLICATION_CLASSNAME = "FASTDEX_ORIGIN_APPLICATION_CLASSNAME"
     static final String TRANSPARENT_ACTIVITY = "fastdex.runtime.TransparentActivity"
 
@@ -59,18 +58,11 @@ public class FastdexManifestTask extends DefaultTask {
 
             application.appendNode('activity', [(ns.name): TRANSPARENT_ACTIVITY, (ns.theme): '@android:style/Theme.Translucent.NoTitleBar'])
 
-
             // Write the manifest file
             def printer = new XmlNodePrinter(new PrintWriter(fastdexVariant.manifestPath, "utf-8"))
             printer.preserveWhitespace = true
             printer.print(xml)
         }
-        File manifestFile = new File(fastdexVariant.manifestPath)
-//        if (manifestFile.exists()) {
-//            File buildDir = FastdexUtils.getBuildDir(project,fastdexVariant.variantName)
-//            FileUtils.copyFileUsingStream(manifestFile, new File(buildDir,MANIFEST_XML))
-//            project.logger.error("fastdex gen AndroidManifest.xml in ${MANIFEST_XML}")
-//        }
     }
 }
 

@@ -39,16 +39,17 @@ class FastdexPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.extensions.create('fastdex', FastdexExtension)
-
         FastdexBuildListener.addByProject(project)
+
+        if (!project.plugins.hasPlugin('com.android.application')) {
+            throw new GradleException('Android Application plugin required')
+        }
+
         project.afterEvaluate {
             def configuration = project.fastdex
             if (!configuration.fastdexEnable) {
                 project.logger.error("====fastdex tasks are disabled.====")
                 return
-            }
-            if (!project.plugins.hasPlugin('com.android.application')) {
-                throw new GradleException('generateTinkerApk: Android Application plugin required')
             }
 
             if (FastdexUtils.isDataBindingEnabled(project)) {
@@ -62,7 +63,7 @@ class FastdexPlugin implements Plugin<Project> {
                 //最低支持2.0.0
                 String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
                 if (androidGradlePluginVersion.compareTo(Constants.MIN_SUPPORT_ANDROID_GRADLE_VERSION) < 0) {
-                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${androidGradlePluginVersion}', minimum support version 2.0.0")
+                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${androidGradlePluginVersion}', minimum support version 2.1.0")
                 }
             }
 
@@ -135,9 +136,10 @@ class FastdexPlugin implements Plugin<Project> {
                     //TODO change api
                     variantOutput.processManifest.dependsOn getMergeDebugResources(project,variantName)
                     //variantOutput.processManifest.dependsOn variant.getVariantData().getScope().getMergeResourcesTask()
-                    //替换项目的Application为com.dx168.fastdex.runtime.FastdexApplication
+                    //替换项目的Application为fastdex.runtime.FastdexApplication
                     FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
                     manifestTask.fastdexVariant = fastdexVariant
+
                     manifestTask.mustRunAfter variantOutput.processManifest
                     variantOutput.processResources.dependsOn manifestTask
 
@@ -225,7 +227,7 @@ class FastdexPlugin implements Plugin<Project> {
                         project.logger.error("==fastdex find package task: " + packageTask.name)
 
                         packageTask.doFirst {
-                            fastdexVariant.copyMetaInfo2Assets()
+                            fastdexVariant.onPrePackage()
                         }
                     }
 
@@ -254,10 +256,10 @@ class FastdexPlugin implements Plugin<Project> {
                                     Transform transform = ((TransformTask) task).getTransform()
                                     //如果开启了multiDexEnabled true,存在transformClassesWithJarMergingFor${variantName}任务
                                     if ((((transform instanceof JarMergingTransform)) && !(transform instanceof FastdexJarMergingTransform))) {
-                                        fastdexVariant.hasJarMergingTask = true
                                         if (fastdexVariant.configuration.debug) {
                                             project.logger.error("==fastdex find jarmerging transform. transform class: " + task.transform.getClass() + " . task name: " + task.name)
                                         }
+                                        fastdexVariant.hasJarMergingTask = true
 
                                         FastdexJarMergingTransform jarMergingTransform = new FastdexJarMergingTransform(transform,fastdexVariant)
                                         Field field = getFieldByName(task.getClass(),'transform')
@@ -272,6 +274,7 @@ class FastdexPlugin implements Plugin<Project> {
 
                                         //代理DexTransform,实现自定义的转换
                                         FastdexTransform fastdexTransform = new FastdexTransform(transform,fastdexVariant)
+                                        fastdexVariant.fastdexTransform = fastdexTransform
                                         Field field = getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,fastdexTransform)

@@ -34,4 +34,9 @@ public class FastdexExtension {
      * 目前只有开启databinding是才会监控build/generated/source/apt目录，如果设置为true任何时候都会监控
      */
     boolean traceApt = false
+
+    /**
+     * 是否使用buildCache
+     */
+    boolean useBuildCache = true
 }

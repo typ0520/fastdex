@@ -8,6 +8,7 @@ import com.android.build.api.transform.TransformInvocation
 import fastdex.build.util.ClassInject
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexUtils
+import fastdex.build.util.GradleUtils
 import fastdex.build.util.JarOperation
 import fastdex.build.variant.FastdexVariant
 import com.android.build.api.transform.Format
@@ -55,10 +56,15 @@ class FastdexJarMergingTransform extends TransformProxy {
 
             //inject dir input
             ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
-            base.transform(transformInvocation)
-        }
 
-        fastdexVariant.executedJarMerge = true
+            if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.3") >= 0) {
+                //不做合并时为了使用build-cache
+                fastdexVariant.transformInvocation = transformInvocation
+            }
+            else {
+                base.transform(transformInvocation)
+            }
+        }
     }
 
     /**

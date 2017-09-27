@@ -78,80 +78,84 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
             if (cause == null) {
                 return
             }
+            try {
+                StackTraceElement[] stackTrace = cause.getStackTrace()
+                if (!(cause instanceof FastdexRuntimeException)
+                        && stackTrace != null && stackTrace.length > 0
+                        && stackTrace[0] != null
+                        && stackTrace[0].toString().contains(FastdexPlugin.class.getPackage().getName())) {
+                    File errorLogFile = new File(FastdexUtils.getBuildDir(project),Constants.ERROR_REPORT_FILENAME)
 
-            StackTraceElement[] stackTrace = cause.getStackTrace()
-            if (!(cause instanceof FastdexRuntimeException)
-                    && stackTrace != null && stackTrace.length > 0
-                    && stackTrace[0] != null
-                    && stackTrace[0].toString().contains(FastdexPlugin.class.getPackage().getName())) {
-                File errorLogFile = new File(FastdexUtils.getBuildDir(project),Constants.ERROR_REPORT_FILENAME)
+                    Map<String,String> map = getStudioInfo()
 
-                Map<String,String> map = getStudioInfo()
+                    println("\n===========================fastdex error report===========================")
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream()
+                    result.failure.printStackTrace(new PrintStream(bos))
 
-                println("\n===========================fastdex error report===========================")
-                ByteArrayOutputStream bos = new ByteArrayOutputStream()
-                result.failure.printStackTrace(new PrintStream(bos))
+                    String splitStr = "\n\n"
+                    StringBuilder report = new StringBuilder()
+                    //让android studio的Messages窗口显示打开Gradle Console的提示
+                    report.append("Caused by: ----------------------------------fastdex---------------------------------\n")
+                    report.append("Caused by: Open the Gradle Console in the lower right corner to view the build error report\n")
+                    report.append("Caused by: ${errorLogFile}\n")
+                    report.append("Caused by: ----------------------------------fastdex---------------------------------${splitStr}")
+                    report.append("${new String(bos.toByteArray())}\n")
 
-                String splitStr = "\n\n"
-                StringBuilder report = new StringBuilder()
-                //让android studio的Messages窗口显示打开Gradle Console的提示
-                report.append("Caused by: ----------------------------------fastdex---------------------------------\n")
-                report.append("Caused by: Open the Gradle Console in the lower right corner to view the build error report\n")
-                report.append("Caused by: ${errorLogFile}\n")
-                report.append("Caused by: ----------------------------------fastdex---------------------------------${splitStr}")
-                report.append("${new String(bos.toByteArray())}\n")
+                    String str =  "Fastdex build version     "
+                    report.append("Fastdex build version     : ${Version.FASTDEX_BUILD_VERSION}\n")
+                    report.append("OS                        : ${getOsName()}\n")
+                    report.append("android_build_version     : ${GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION}\n")
+                    report.append("gradle_version            : ${project.gradle.gradleVersion}\n")
 
-                String str =  "Fastdex build version     "
-                report.append("Fastdex build version     : ${Version.FASTDEX_BUILD_VERSION}\n")
-                report.append("OS                        : ${getOsName()}\n")
-                report.append("android_build_version     : ${GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION}\n")
-                report.append("gradle_version            : ${project.gradle.gradleVersion}\n")
-                report.append("buildToolsVersion         : ${project.android.buildToolsVersion.toString()}\n")
-                report.append("compileSdkVersion         : ${project.android.compileSdkVersion.toString()}\n")
-                report.append("default minSdkVersion     : ${project.android.defaultConfig.minSdkVersion.getApiString()}\n")
-                report.append("default targetSdkVersion  : ${project.android.defaultConfig.targetSdkVersion.getApiString()}\n")
-                report.append("default multiDexEnabled   : ${project.android.defaultConfig.multiDexEnabled}\n\n")
+                    report.append("buildToolsVersion         : ${project.android.buildToolsVersion.toString()}\n")
+                    report.append("compileSdkVersion         : ${project.android.compileSdkVersion.toString()}\n")
+                    report.append("default minSdkVersion     : ${project.android.defaultConfig.minSdkVersion.getApiString()}\n")
+                    report.append("default targetSdkVersion  : ${project.android.defaultConfig.targetSdkVersion.getApiString()}\n")
+                    report.append("default multiDexEnabled   : ${project.android.defaultConfig.multiDexEnabled}\n\n")
 
-                List<String> plugins = new ArrayList<>()
-                for (Plugin plugin : project.plugins.findAll()) {
-                    if (!plugin.getClass().getName().startsWith("org.gradle")) {
-                        plugins.add(plugin.getClass().getName())
-                    }
-                }
-                report.append("plugins                   : ${plugins}\n\n")
-                try {
-                    int keyLength = str.length();
-                    if (!map.isEmpty()) {
-                        for (String key : map.keySet()) {
-                            int dsize = keyLength - key.length();
-                            report.append(key + getSpaceString(dsize) + ": " + map.get(key) + "\n");
-                        }
-
-                        if (!"true".equals(map.get("instant_run_disabled"))) {
-                            report.append("Fastdex does not support instant run mode, please disable instant run in 'File->Settings...'.\n\n")
-                        }
-                        else {
-                            report.append("\n")
+                    List<String> plugins = new ArrayList<>()
+                    for (Plugin plugin : project.plugins.findAll()) {
+                        if (!plugin.getClass().getName().startsWith("org.gradle")) {
+                            plugins.add(plugin.getClass().getName())
                         }
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace()
-                }
+                    report.append("plugins                   : ${plugins}\n\n")
+                    try {
+                        int keyLength = str.length();
+                        if (!map.isEmpty()) {
+                            for (String key : map.keySet()) {
+                                int dsize = keyLength - key.length();
+                                report.append(key + getSpaceString(dsize) + ": " + map.get(key) + "\n");
+                            }
 
-                report.append("fastdex build exception, welcome to submit issue to us: https://github.com/typ0520/fastdex/issues")
-                System.err.println(report.toString())
-                System.err.println("${errorLogFile}")
+                            if (!"true".equals(map.get("instant_run_disabled"))) {
+                                report.append("Fastdex does not support instant run mode, please disable instant run in 'File->Settings...'.\n\n")
+                            }
+                            else {
+                                report.append("\n")
+                            }
+                        }
+                    } catch (Throwable e) {
+                        e.printStackTrace()
+                    }
 
-                int idx = report.indexOf(splitStr)
-                String content = report.toString()
-                if (idx != -1 && (idx + splitStr.length()) < content.length()) {
-                    content = content.substring(idx + splitStr.length())
+                    report.append("fastdex build exception, welcome to submit issue to us: https://github.com/typ0520/fastdex/issues")
+                    System.err.println(report.toString())
+                    System.err.println("${errorLogFile}")
+
+                    int idx = report.indexOf(splitStr)
+                    String content = report.toString()
+                    if (idx != -1 && (idx + splitStr.length()) < content.length()) {
+                        content = content.substring(idx + splitStr.length())
+                    }
+                    FileUtils.write2file(content.getBytes(),errorLogFile)
+                    println("\n===========================fastdex error report===========================")
                 }
-                FileUtils.write2file(content.getBytes(),errorLogFile)
-                println("\n===========================fastdex error report===========================")
+            } catch (Throwable e) {
+
             }
 
-            if ("org.gradle.execution.TaskSelectionException".equals(cause.class.name)) {
+            if (project.hasProperty("fastdex.injected.invoked.from.ide") && "org.gradle.execution.TaskSelectionException".equals(cause.class.name)) {
                 String message = result.failure.getMessage()
                 String[] arr = message.split("'")
                 if (arr != null && arr.length > 1) {

@@ -4,6 +4,11 @@ import fastdex.common.ShareConstants
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import fastdex.common.utils.FileUtils
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 /**
  * Created by tong on 17/3/14.
@@ -119,7 +124,13 @@ public class FastdexUtils {
      */
     public static boolean hasDexCache(Project project, String variantName) {
         File cacheDexDir = getDexCacheDir(project,variantName)
-        return FileUtils.hasDex(cacheDexDir)
+        if (!FileUtils.dirExists(cacheDexDir.absolutePath)) {
+            return false;
+        }
+
+        FindDexSimpleFileVisitor visitor = new FindDexSimpleFileVisitor();
+        Files.walkFileTree(cacheDexDir.toPath(),visitor);
+        return visitor.hasDex;
     }
 
     /**
@@ -180,6 +191,16 @@ public class FastdexUtils {
      */
     public static final File getMergedPatchDexDir(Project project,String variantName) {
         File file = new File(getDexDir(project,variantName),"merged-patch");
+        return file;
+    }
+
+    /**
+     * 获取指定variantName的已合并的补丁dex
+     * @param project
+     * @return
+     */
+    public static final File getMergedPatchDexFile(Project project,String variantName) {
+        File file = new File(getMergedPatchDexDir(project,variantName),Constants.CLASSES_DEX);
         return file;
     }
 
@@ -357,5 +378,168 @@ public class FastdexUtils {
 
     public static boolean isDataBindingEnabled(Project project) {
         return project.android.dataBinding && project.android.dataBinding.enabled
+    }
+
+    public static void incrementDexDir(File dexDir) {
+        incrementDexDir(dexDir,1)
+    }
+
+    /**
+     * 递增指定目录中的dex
+     *
+     * classes.dex   => classes2.dex
+     * classes2.dex  => classes3.dex
+     * classesN.dex  => classes(N + 1).dex
+     *
+     * @param dexDir
+     */
+    public static void incrementDexDir(File dexDir,int dsize) {
+        if (dsize <= 0) {
+            throw new RuntimeException("dsize must be greater than 0!")
+        }
+        //classes.dex  => classes2.dex.tmp
+        //classes2.dex => classes3.dex.tmp
+        //classesN.dex => classes(N + 1).dex.tmp
+
+        String tmpSuffix = ".tmp"
+        File classesDex = new File(dexDir,Constants.CLASSES_DEX)
+        if (FileUtils.isLegalFile(classesDex)) {
+            classesDex.renameTo(new File(dexDir,"classes${dsize + 1}.dex${tmpSuffix}"))
+        }
+        int point = 2
+        File dexFile = new File(dexDir,"${Constants.CLASSES}${point}${Constants.DEX_SUFFIX}")
+        while (FileUtils.isLegalFile(dexFile)) {
+            new File(dexDir,"classes${point}.dex").renameTo(new File(dexDir,"classes${point + dsize}.dex${tmpSuffix}"))
+            point++
+            dexFile = new File(dexDir,"classes${point}.dex")
+        }
+
+        //classes2.dex.tmp => classes2.dex
+        //classes3.dex.tmp => classes3.dex
+        //classesN.dex.tmp => classesN.dex
+        point = dsize + 1
+        dexFile = new File(dexDir,"classes${point}.dex${tmpSuffix}")
+        while (FileUtils.isLegalFile(dexFile)) {
+            dexFile.renameTo(new File(dexDir,"classes${point}.dex"))
+            point++
+            dexFile = new File(dexDir,"classes${point}.dex${tmpSuffix}")
+        }
+    }
+
+    /**
+     * 使用buildCache全量打包时hook dex输出目录
+     * @param dexOutputDir
+     */
+    public static File mergeDexOutputDir(File dexOutputDir, int dsize) {
+        final HashSet<File> dexDirSet = new HashSet<>()
+        Files.walkFileTree(dexOutputDir.toPath(),new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.toFile().getName().endsWith(Constants.DEX_SUFFIX)) {
+                    dexDirSet.add(file.getParent().toFile())
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        File result = null;
+        int maxClassesDexIndex = 0
+        for (File dir : dexDirSet) {
+            if (result == null) {
+                result = dir;
+                incrementDexDir(dir,dsize)
+                maxClassesDexIndex = FastdexUtils.getMaxClassesDexIndex(dir)
+
+                //println "${dir}, ${dsize}, ${maxClassesDexIndex}"
+            }
+            else {
+                //println "${dir}, ${maxClassesDexIndex}"
+
+                incrementDexDir(dir,maxClassesDexIndex)
+                maxClassesDexIndex += FileUtils.moveDir(dir,result,ShareConstants.DEX_SUFFIX)
+
+            }
+        }
+        return result
+    }
+
+    /**
+     * 使用buildCache全量打包时hook dex输出目录
+     * @param dexOutputDir
+     */
+    public static File mergeDexOutputDir(File dexOutputDir) {
+        mergeDexOutputDir(dexOutputDir,1)
+    }
+
+    /**
+     * 获取目录中所有classesN.dex中N的最大值
+     * @param dexDir
+     * @return
+     */
+    public static int getMaxClassesDexIndex(File dexDir) {
+        return getClassesDexBoundary(dexDir)[1]
+    }
+
+    /**
+     * 获取目录中所有classesN.dex中N的范围
+     * @param dexDir
+     * @return
+     */
+    public static int[] getClassesDexBoundary(File dexDir) {
+        int[] boundary = new int[2]
+
+        if (dexDir.listFiles() == null) {
+            return boundary
+        }
+        def prefix = ShareConstants.CLASSES
+        def suffix = ShareConstants.DEX_SUFFIX
+
+        dexDir.listFiles().each {
+            def filename = it.name
+            int index = 0
+
+            if (filename == ShareConstants.CLASSES_DEX) {
+                index = 1
+            }
+            else if (filename.startsWith(prefix) && filename.endsWith(suffix)) {
+                filename = filename.substring(prefix.length())
+                //println "filename: ${filename}"
+                filename = filename.substring(0,filename.length() - suffix.length())
+
+                //println "filename: ${filename}"
+                try {
+                    index = Integer.parseInt(filename)
+                } catch (Throwable e) {
+
+                }
+            }
+            if (index > boundary[1]) {
+                boundary[1] = index
+            }
+
+            if (boundary[0] == 0 || index < boundary[0]) {
+                boundary[0] = index
+            }
+        }
+        return boundary
+    }
+
+    public static void clearDexOutputDir(File dexOutputDir) {
+        if (dexOutputDir == null) {
+            return
+        }
+        dexOutputDir.listFiles().each {
+            //println("each: " + it.absolutePath)
+            if (it.isFile() && !(it.name.startsWith(ShareConstants.CLASSES) && it.name.endsWith(ShareConstants.DEX_SUFFIX))) {
+                //println("remove: " + it.absolutePath)
+                it.delete()
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] range = getClassesDexBoundary(new File("/Users/tong/Projects/zxgb-android/app/build/intermediates/transforms/dex/product/folders/1000/10/classes_48205e61603dd7982ebb6e11d328ee10e06d7585"));
+
+        System.out.println("[" + range[0] + " , " + range[1] + "]")
     }
 }

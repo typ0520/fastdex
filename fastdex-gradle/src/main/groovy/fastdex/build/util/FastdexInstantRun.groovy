@@ -156,13 +156,35 @@ public class FastdexInstantRun {
             } catch (Throwable e) {
 
             }
+
+            try {
+                project.tasks.getByName("merge${fastdexVariant.variantName}JniLibFolders").enabled = false
+            } catch (Throwable e) {
+
+            }
+
+            try {
+                project.tasks.getByName("process${fastdexVariant.variantName}JavaRes").enabled = false
+            } catch (Throwable e) {
+
+            }
             try {
                 project.tasks.getByName("validateSigning${fastdexVariant.variantName}").enabled = false
             } catch (Throwable e) {
 
             }
             try {
+                project.tasks.getByName("validate${fastdexVariant.variantName}Signing").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
                 project.tasks.getByName("package${fastdexVariant.variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
+            try {
+                project.tasks.getByName("zipalign${fastdexVariant.variantName}").enabled = false
             } catch (Throwable e) {
 
             }
@@ -186,52 +208,77 @@ public class FastdexInstantRun {
     }
 
     def generateResourceApk(File resourcesApk) {
-        long start = System.currentTimeMillis()
-        File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
-        FileUtils.cleanDir(tempDir)
+        if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.2") >= 0) {
+            long start = System.currentTimeMillis()
+            File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
+            FileUtils.cleanDir(tempDir)
 
-        File tempResourcesApk = new File(tempDir,resourcesApk.getName())
-        FileUtils.copyFileUsingStream(resourceApFile,tempResourcesApk)
+            File tempResourcesApk = new File(tempDir,resourcesApk.getName())
+            FileUtils.copyFileUsingStream(resourceApFile,tempResourcesApk)
 
-        File assetsPath = fastdexVariant.androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
-        List<String> assetFiles = getAssetFiles(assetsPath)
-        if (assetFiles.isEmpty()) {
-            return
+            project.logger.error("==fastdex copy resources.ap_ \ncopy : ${resourceApFile} \ninto: ${tempResourcesApk}")
+            File assetsPath = fastdexVariant.androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
+            List<String> assetFiles = getAssetFiles(assetsPath)
+            File tempAssetsPath = new File(tempDir,"assets")
+            FileUtils.copyDir(assetsPath,tempAssetsPath)
+
+            String[] cmds = new String[assetFiles.size() + 4]
+            cmds[0] = FastdexUtils.getAaptCmdPath(project)
+            cmds[1] = "add"
+            cmds[2] = "-f"
+            cmds[3] = tempResourcesApk.absolutePath
+
+
+            for (int i = 0; i < assetFiles.size(); i++) {
+                cmds[4 + i] = "assets/" + assetFiles.get(i).toString()
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder(cmds)
+            processBuilder.directory(tempDir)
+
+            def process = processBuilder.start()
+
+            InputStream is = process.getInputStream()
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is))
+            String line = null
+            while ((line = reader.readLine()) != null) {
+                println(line)
+            }
+            reader.close()
+
+            int status = process.waitFor()
+
+            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            reader.close();
+            try {
+                process.destroy()
+            } catch (Throwable e) {
+
+            }
+
+            def cmd = cmds.join(" ")
+            if (fastdexVariant.configuration.debug) {
+                project.logger.error("==fastdex add asset files into resources.apk. cmd:\n${cmd}")
+            }
+
+            if (status != 0) {
+                throw new RuntimeException("==fastdex add asset files into resources.apk fail. cmd:\n${cmd}")
+            }
+            else {
+                tempResourcesApk.renameTo(resourcesApk)
+                FileUtils.deleteDir(tempDir)
+            }
+
+            long end = System.currentTimeMillis();
+            fastdexVariant.project.logger.error("==fastdex generate resources.apk success, use: ${end - start}ms")
         }
-        File tempAssetsPath = new File(tempDir,"assets")
-        FileUtils.copyDir(assetsPath,tempAssetsPath)
-
-        String[] cmds = new String[assetFiles.size() + 4]
-        cmds[0] = FastdexUtils.getAaptCmdPath(project)
-        cmds[1] = "add"
-        cmds[2] = "-f"
-        cmds[3] = tempResourcesApk.absolutePath
-        for (int i = 0; i < assetFiles.size(); i++) {
-            cmds[4 + i] = "assets/${assetFiles.get(i)}";
+        else {
+            project.logger.error("==fastdex \ncopy : ${resourceApFile} \ninto: ${resourcesApk}")
+            FileUtils.copyFileUsingStream(resourceApFile,resourcesApk)
         }
-
-        ProcessBuilder aaptProcess = new ProcessBuilder(cmds)
-        aaptProcess.directory(tempDir)
-        def process = aaptProcess.start()
-        int status = process.waitFor()
-        try {
-            process.destroy()
-        } catch (Throwable e) {
-
-        }
-
-        tempResourcesApk.renameTo(resourcesApk)
-
-        FileUtils.deleteDir(tempDir)
-        def cmd = cmds.join(" ")
-        if (fastdexVariant.configuration.debug) {
-            project.logger.error("==fastdex add asset files into resources.apk. cmd:\n${cmd}")
-        }
-        if (status != 0) {
-            throw new RuntimeException("==fastdex add asset files into resources.apk fail. cmd:\n${cmd}")
-        }
-        long end = System.currentTimeMillis();
-        fastdexVariant.project.logger.error("==fastdex generate resources.apk success: \n==${resourcesApk} use: ${end - start}ms")
     }
 
     List<String> getAssetFiles(File dir) {
