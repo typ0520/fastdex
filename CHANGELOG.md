@@ -1,3 +1,9 @@
+## 0.6.1  (2017-9-28)
+
+Bugfixes:
+
+   - 解决eclipse转换过来的项目解析xml文件报Content is not allowed in prolog的错误
+
 ## 0.6.0  (2017-9-27)
 
 Features:

@@ -1,5 +1,6 @@
 package fastdex.build.task
 
+import fastdex.build.util.GradleUtils
 import fastdex.build.variant.FastdexVariant
 import groovy.xml.Namespace
 import groovy.xml.QName
@@ -27,7 +28,7 @@ public class FastdexManifestTask extends DefaultTask {
     def updateManifest() {
         def ns = new Namespace("http://schemas.android.com/apk/res/android", "android")
 
-        def xml = new XmlParser().parse(new InputStreamReader(new FileInputStream(fastdexVariant.manifestPath), "utf-8"))
+        def xml = GradleUtils.parseXml(fastdexVariant.manifestPath)
 
         def application = xml.application[0]
         if (application) {

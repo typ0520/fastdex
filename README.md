@@ -40,7 +40,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.1.0+
         }
         
         dependencies {
-            classpath 'com.github.typ0520:fastdex-gradle:0.6.0'
+            classpath 'com.github.typ0520:fastdex-gradle:0.6.1'
         }
     }
    	````

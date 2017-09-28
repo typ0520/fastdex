@@ -23,6 +23,8 @@ import com.android.build.api.transform.QualifiedContent.ContentType
  * Created by tong on 17/3/14.
  */
 public class GradleUtils {
+    public static final String UTF8_BOM = "\uFEFF";
+
     public static final String ANDROID_GRADLE_PLUGIN_VERSION = Version.ANDROID_GRADLE_PLUGIN_VERSION
 
     /**
@@ -81,16 +83,54 @@ public class GradleUtils {
         return String.format("%x", value);
     }
 
+    public static Object parseXml(String xmlPath) {
+        byte[] bytes = FileUtils.readContents(new File(xmlPath))
+        try {
+            def xml = new XmlParser().parse(new InputStreamReader(new ByteArrayInputStream(bytes), "utf-8"))
+            return xml
+        } catch (org.xml.sax.SAXParseException e) {
+            String msg = e.getMessage();
+            //从eclipse转过来的项目可能会有这个问题
+            if (msg != null && msg.contains("Content is not allowed in prolog.")) {
+                BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), "UTF8"));
+
+                ByteArrayOutputStream fos = new ByteArrayOutputStream();
+                Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"));
+                boolean firstLine = true
+                for (String s = ""; (s = r.readLine()) != null;) {
+                    if (firstLine) {
+                        s = removeUTF8BOM(s);
+                        firstLine = false;
+                    }
+                    w.write(s + System.getProperty("line.separator"));
+                    w.flush();
+                }
+
+                def xml = new XmlParser().parse(new InputStreamReader(new ByteArrayInputStream(fos.toByteArray()), "utf-8"))
+                return xml
+            }
+            else {
+                throw new RuntimeException(e)
+            }
+        }
+    }
+
     /**
      * 获取AndroidManifest.xml文件package属性值
      * @param manifestPath
      * @return
      */
     public static String getPackageName(String manifestPath) {
-        def xml = new XmlParser().parse(new InputStreamReader(new FileInputStream(manifestPath), "utf-8"))
+        def xml = parseXml(manifestPath)
         String packageName = xml.attribute('package')
-
         return packageName
+    }
+
+    private static String removeUTF8BOM(String s) {
+        if (s.startsWith(UTF8_BOM)) {
+            s = s.substring(1);
+        }
+        return s;
     }
 
     /**
@@ -100,7 +140,7 @@ public class GradleUtils {
      */
     public static String getBootActivity(String manifestPath) {
         def bootActivityName = ""
-        def xml = new XmlParser().parse(new InputStreamReader(new FileInputStream(manifestPath), "utf-8"))
+        def xml = parseXml(manifestPath)
         def application = xml.application[0]
 
         if (application) {
