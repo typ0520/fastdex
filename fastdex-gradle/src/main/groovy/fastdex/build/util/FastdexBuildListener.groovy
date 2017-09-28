@@ -3,6 +3,7 @@ package fastdex.build.util
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.BuildListener;
 import org.gradle.BuildResult
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -81,6 +82,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
             try {
                 StackTraceElement[] stackTrace = cause.getStackTrace()
                 if (!(cause instanceof FastdexRuntimeException)
+                        && !(cause instanceof GradleException)
                         && stackTrace != null && stackTrace.length > 0
                         && stackTrace[0] != null
                         && stackTrace[0].toString().contains(FastdexPlugin.class.getPackage().getName())) {
