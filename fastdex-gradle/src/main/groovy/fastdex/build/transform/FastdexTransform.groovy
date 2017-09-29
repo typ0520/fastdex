@@ -127,21 +127,21 @@ class FastdexTransform extends TransformProxy {
                 hookPatchBuildDexArgs.willExecDexMerge = willExecDexMerge
 
                 //复制补丁打包的dex到输出路径，为了触发package任务
-                //hookPatchBuildDex(dexOutputDir, useBuildCache,willExecDexMerge)
+                hookPatchBuildDex(dexOutputDir,willExecDexMerge)
 
                 //删掉dex输出目录
-                try {
-                    dexOutputDir.deleteDir()
-                } catch (Throwable e) {
-
-                }
-
-                try {
-                    File packageIncrementalDir = fastdexVariant.androidVariant.getVariantData().getScope().getIncrementalDir("package${fastdexVariant.variantName}")
-                    packageIncrementalDir.deleteDir()
-                } catch (Throwable e) {
-
-                }
+//                try {
+//                    dexOutputDir.deleteDir()
+//                } catch (Throwable e) {
+//
+//                }
+//
+//                try {
+//                    File packageIncrementalDir = fastdexVariant.androidVariant.getVariantData().getScope().getIncrementalDir("package${fastdexVariant.variantName}")
+//                    packageIncrementalDir.deleteDir()
+//                } catch (Throwable e) {
+//
+//                }
 
                 fastdexVariant.onDexGenerateSuccess(false,willExecDexMerge)
             }

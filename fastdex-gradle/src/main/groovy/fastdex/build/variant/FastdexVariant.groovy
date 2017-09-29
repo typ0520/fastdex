@@ -233,7 +233,6 @@ public class FastdexVariant {
                 copyRTxt()
             }
         }
-        //copyMetaInfo2Assets()
         projectSnapshoot.onDexGenerateSuccess(nornalBuild,dexMerge)
         fastdexInstantRun.onSourceChanged()
     }
@@ -256,13 +255,13 @@ public class FastdexVariant {
     def onPrePackage() {
         copyMetaInfo2Assets()
 
-        if (hasDexCache) {
-            if (metaInfo.packageUsingPatchDexVersion >= metaInfo.patchDexVersion) {
-                project.logger.error("==fastdex skip copy dex")
-                return
-            }
-            fastdexTransform.hookPatchBuildDex(fastdexTransform.hookPatchBuildDexArgs)
-        }
+//        if (hasDexCache) {
+//            if (metaInfo.packageUsingPatchDexVersion >= metaInfo.patchDexVersion) {
+//                project.logger.error("==fastdex skip copy dex")
+//                return
+//            }
+//            fastdexTransform.hookPatchBuildDex(fastdexTransform.hookPatchBuildDexArgs)
+//        }
     }
 
     /**
