@@ -11,7 +11,6 @@ import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.TaskState
-import org.gradle.util.Clock;
 import fastdex.build.FastdexPlugin
 import com.github.typ0520.fastdex.Version
 import java.lang.management.ManagementFactory
@@ -22,9 +21,7 @@ import fastdex.common.utils.FileUtils
  */
 class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     public static boolean skipReport = false
-    private static boolean alreadyAddToProject = false
 
-    private Clock clock
     private times = []
     private final Project project
     private long startMillis
@@ -35,20 +32,18 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
 
     @Override
     void beforeExecute(Task task) {
-        clock = new org.gradle.util.Clock()
+        startMillis = System.currentTimeMillis()
     }
 
     @Override
     void afterExecute(Task task, TaskState taskState) {
-        def ms = clock.timeInMs
-        times.add([ms, task.path])
+        times.add([System.currentTimeMillis() - startMillis, task.path])
 
         //task.project.logger.warn "${task.path} spend ${ms}ms"
     }
 
     @Override
     void buildStarted(Gradle gradle) {
-        startMillis = System.currentTimeMillis()
     }
 
     @Override
@@ -106,7 +101,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     String str =  "Fastdex build version     "
                     report.append("Fastdex build version     : ${Version.FASTDEX_BUILD_VERSION}\n")
                     report.append("OS                        : ${getOsName()}\n")
-                    report.append("android_build_version     : ${GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION}\n")
+                    report.append("android_build_version     : ${GradleUtils.getAndroidGradlePluginVersion()}\n")
                     report.append("gradle_version            : ${project.gradle.gradleVersion}\n")
 
                     report.append("buildToolsVersion         : ${project.android.buildToolsVersion.toString()}\n")
@@ -114,6 +109,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     report.append("default minSdkVersion     : ${project.android.defaultConfig.minSdkVersion.getApiString()}\n")
                     report.append("default targetSdkVersion  : ${project.android.defaultConfig.targetSdkVersion.getApiString()}\n")
                     report.append("default multiDexEnabled   : ${project.android.defaultConfig.multiDexEnabled}\n\n")
+                    report.append("projectProperties         : ${project.gradle.startParameter.projectProperties}\n\n")
 
                     List<String> plugins = new ArrayList<>()
                     for (Plugin plugin : project.plugins.findAll()) {
@@ -259,12 +255,7 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
     }
 
     public static void addByProject(Project pro) {
-//        if (alreadyAddToProject) {
-//            return
-//        }
         FastdexBuildListener listener = new FastdexBuildListener(pro)
         pro.gradle.addListener(listener)
-
-        //alreadyAddToProject = true
     }
 }

@@ -25,8 +25,6 @@ import com.android.build.api.transform.QualifiedContent.ContentType
 public class GradleUtils {
     public static final String UTF8_BOM = "\uFEFF";
 
-    public static final String ANDROID_GRADLE_PLUGIN_VERSION = Version.ANDROID_GRADLE_PLUGIN_VERSION
-
     /**
      * 获取指定variant的依赖列表
      * @param project
@@ -251,5 +249,9 @@ public class GradleUtils {
         jarMerger.setFilter(proxy);
 
         return jarMerger
+    }
+
+    public static String getAndroidGradlePluginVersion() {
+        return Version.ANDROID_GRADLE_PLUGIN_VERSION
     }
 }

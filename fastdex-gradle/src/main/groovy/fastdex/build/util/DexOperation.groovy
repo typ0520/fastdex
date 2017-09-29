@@ -33,7 +33,7 @@ public class DexOperation implements Opcodes {
         inputFiles.add(patchJar)
 
         FileUtils.ensumeDir(patchDex.parentFile)
-        String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
+        String androidGradlePluginVersion = GradleUtils.getAndroidGradlePluginVersion()
         long start = System.currentTimeMillis()
 
         if (Os.isFamily(Os.FAMILY_WINDOWS) || fastdexVariant.project.projectDir.absolutePath.contains(" ")) {

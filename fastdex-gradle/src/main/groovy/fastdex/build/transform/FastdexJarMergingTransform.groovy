@@ -57,7 +57,7 @@ class FastdexJarMergingTransform extends TransformProxy {
             //inject dir input
             ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
 
-            if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.3") >= 0) {
+            if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3") >= 0) {
                 //不做合并时为了使用build-cache
                 fastdexVariant.transformInvocation = transformInvocation
             }

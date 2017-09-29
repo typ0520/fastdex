@@ -1,3 +1,9 @@
+## 0.6.2  (2017-9-29)
+
+Bugfixes:
+
+   - fix [issues#59](https://github.com/typ0520/fastdex/issues/59)
+
 ## 0.6.1  (2017-9-28)
 
 Bugfixes:

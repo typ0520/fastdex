@@ -6,10 +6,6 @@ import fastdex.common.ShareConstants;
  * Created by tong on 17/3/14.
  */
 public interface Constants extends ShareConstants {
-    /**
-     * 最低支持的android gradle build版本
-     */
-    String MIN_SUPPORT_ANDROID_GRADLE_VERSION = "2.1.0"
     String BUILD_DIR = "fastdex"
     String INJECTED_JAR_FILENAME = "injected-combined.jar"
     String R_TXT = "r.txt"
@@ -23,9 +19,6 @@ public interface Constants extends ShareConstants {
     String ANDROID_MANIFEST_FILENAME = "android_manifest.json"
     String ERROR_REPORT_FILENAME = "last-build-error-report.txt"
     String DEFAULT_LIBRARY_VARIANT_DIR_NAME = "release"
-
     String DEX_MERGE_JAR_FILENAME = "fastdex-dex-merge.jar"
     String STUDIO_INFO_SCRIPT_MACOS = "fastdex-studio-info-macos-%s.sh"
-
-    String FASTDEX_RUNTIMNE_BUILD_CACHE_FILE_NAME = "0_1"
 }

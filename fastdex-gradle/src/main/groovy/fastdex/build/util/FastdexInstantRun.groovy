@@ -208,7 +208,7 @@ public class FastdexInstantRun {
     }
 
     def generateResourceApk(File resourcesApk) {
-        if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.2") >= 0) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
             long start = System.currentTimeMillis()
             File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
             FileUtils.cleanDir(tempDir)

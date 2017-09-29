@@ -23,15 +23,6 @@ fastdex {
     //default 4
     //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
     dexMergeThreshold = 2
-
-    //default false
-    //目前当只有资源改变时不会重启app，如果这个字段设置为true那么每次补丁发过去都会重启app
-    boolean forceRebootApp = false
-
-    //default false
-    //目前只有开启databinding是才会监控build/generated/source/apt目录java文件的变化，如果设置为true任何时候都会监控
-    boolean traceApt = false
-
 }
 
 android {
@@ -117,22 +108,22 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.jakewharton:butterknife:8.0.1'
     apt 'com.jakewharton:butterknife-compiler:8.0.1'
-//    compile 'com.squareup:otto:1.3.5'
-//    compile 'com.squareup.okio:okio:1.0.1'
-//    compile "io.reactivex:rxandroid:1.2.0"
-//    compile "io.reactivex:rxjava:1.1.5"
-//    compile 'com.google.code.gson:gson:2.3.1'
-//    compile 'com.bigkoo:alertview:1.0.2'
-//    compile 'com.bigkoo:pickerview:2.0.8'
-//
-//
-//    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
-//    compile 'org.xutils:xutils:3.3.36'
-//    compile 'de.hdodenhof:circleimageview:2.0.0'
-//    compile 'de.hdodenhof:circleimageview:2.0.0'
-//    compile 'com.squareup.retrofit:retrofit:1.9.0'
-//    compile 'info.hoang8f:android-segmented:1.0.6'
-//    compile 'com.squareup.okio:okio:1.0.1'
+    compile 'com.squareup:otto:1.3.5'
+    compile 'com.squareup.okio:okio:1.0.1'
+    compile "io.reactivex:rxandroid:1.2.0"
+    compile "io.reactivex:rxjava:1.1.5"
+    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.bigkoo:alertview:1.0.2'
+    compile 'com.bigkoo:pickerview:2.0.8'
+
+
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+    compile 'org.xutils:xutils:3.3.36'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'info.hoang8f:android-segmented:1.0.6'
+    compile 'com.squareup.okio:okio:1.0.1'
 
 //    compile 'com.zhy:okhttputils:2.4.1'
 //    compile 'joda-time:joda-time:2.6'
@@ -154,59 +145,13 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-class MyPackageApplication extends com.android.build.gradle.tasks.PackageApplication {
-
-    MyPackageApplication() {
-        println ("MyPackageApplication 哈哈哈")
-    }
-
-    @Override
-    protected void doFullTaskAction() throws IOException {
-        println ("MyPackageApplication 哈哈哈2")
-        super.doFullTaskAction()
-    }
-}
-
 project.afterEvaluate {
-
     android.applicationVariants.all { variant ->
         def variantName = variant.name.capitalize()
         def variantOutput = variant.outputs.first()
 
-
-
         if ("Debug".equals(variantName)) {
-            //taskManager
 
-            //taskManager
-            def taskManager = variant.getVariantData().taskManager
-
-            println ("#taskManager : ${taskManager.getAndroidTasks()}")
-
-            def map = taskManager.getAndroidTasks().tasks
-            def packageTask = map.get("packageDebug")
-            def newPackageTask = new com.android.build.gradle.internal.scope.AndroidTask(packageTask.getName(), MyPackageApplication.class)
-            map.put("packageDebug", newPackageTask)
-
-
-
-            def task = tasks['packageDebug']
-            task.doFirst {
-                com.android.build.gradle.internal.scope.DefaultGradlePackagingScope packagingScope = new com.android.build.gradle.internal.scope.DefaultGradlePackagingScope(variant.getVariantData().getOutputs().get(0).getScope());
-
-                println packagingScope.getDexFolders()
-
-                for (File file : packagingScope.getDexFolders()) {
-                    println file
-                }
-
-                println "==============="
-                Map updatedDex = com.android.builder.files.IncrementalRelativeFileSets.fromZipsAndDirectories(packagingScope.getDexFolders())
-
-                for (Object obj : updatedDex.keySet()) {
-                    println ("${obj.file}")
-                }
-            }
         }
     }
 }

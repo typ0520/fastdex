@@ -54,16 +54,16 @@ class FastdexPlugin implements Plugin<Project> {
 
             if (FastdexUtils.isDataBindingEnabled(project)) {
                 //最低支持2.2.0
-                String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
-                if (androidGradlePluginVersion.compareTo("2.2") < 0) {
-                    throw new GradleException("DataBinding enabled, minimum support version 2.2.0")
+                String minSupportVersion = "2.2.0"
+                if (GradleUtils.getAndroidGradlePluginVersion().compareTo(minSupportVersion) < 0) {
+                    throw new GradleException("DataBinding enabled, minimum support version ${minSupportVersion}")
                 }
             }
             else {
                 //最低支持2.0.0
-                String androidGradlePluginVersion = GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION
-                if (androidGradlePluginVersion.compareTo(Constants.MIN_SUPPORT_ANDROID_GRADLE_VERSION) < 0) {
-                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${androidGradlePluginVersion}', minimum support version 2.1.0")
+                String minSupportVersion = "2.0.0"
+                if (GradleUtils.getAndroidGradlePluginVersion().compareTo(minSupportVersion) < 0) {
+                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${GradleUtils.getAndroidGradlePluginVersion()}', minimum support version ${minSupportVersion}")
                 }
             }
 

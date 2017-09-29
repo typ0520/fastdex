@@ -129,7 +129,7 @@ public class LibDependency {
     public static final Set<LibDependency> resolveProjectDependency(Project project, ApplicationVariant apkVariant) {
         Set<LibDependency> libraryDependencySet = new HashSet<>()
         VariantDependencies variantDeps = apkVariant.getVariantData().getVariantDependency();
-        if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.3.0") >= 0) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3.0") >= 0) {
             def allDependencies = new HashSet<>()
             allDependencies.addAll(variantDeps.getCompileDependencies().getAllJavaDependencies())
             allDependencies.addAll(variantDeps.getCompileDependencies().getAllAndroidDependencies())
@@ -150,7 +150,7 @@ public class LibDependency {
                 }
             }
         }
-        else if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.2.0") >= 0) {
+        else if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2.0") >= 0) {
             Set<Library> librarySet = new HashSet<>()
             for (Object jarLibrary : variantDeps.getCompileDependencies().getJarDependencies()) {
                 scanDependency(jarLibrary,librarySet)

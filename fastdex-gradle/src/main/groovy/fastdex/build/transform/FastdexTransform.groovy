@@ -63,7 +63,7 @@ class FastdexTransform extends TransformProxy {
 
     FastdexTransform(Transform base, FastdexVariant fastdexVariant) {
         super(base)
-        if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.3") >= 0) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3") >= 0) {
             //在所有的build-type上触发2.3的build-cache
             //boolean needMerge = !multiDex || mainDexListFile != null;// || !debugMode;
 
@@ -170,7 +170,7 @@ class FastdexTransform extends TransformProxy {
 
             }
 
-            if (fastdexVariant.hasJarMergingTask && GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.3") >= 0) {
+            if (fastdexVariant.hasJarMergingTask && GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3") >= 0) {
                 TransformInvocationBuilder builder = new TransformInvocationBuilder(transformInvocation.context)
                 builder.addInputs(fastdexVariant.transformInvocation.inputs)
                 builder.addReferencedInputs(fastdexVariant.transformInvocation.referencedInputs)

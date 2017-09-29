@@ -187,7 +187,7 @@ public class ProjectSnapshoot {
                 rDir = fastdexVariant.androidVariant.getVariantData().getScope().getRClassSourceOutputDir()
                 rsDir = fastdexVariant.androidVariant.getVariantData().getScope().getRenderscriptSourceOutputDir()
                 aidlDir = fastdexVariant.androidVariant.getVariantData().getScope().getAidlSourceOutputDir()
-                if (GradleUtils.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("2.2") >= 0) {
+                if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
                     //2.2.0以后才有getAnnotationProcessorOutputDir()这个api
                     aptDir = fastdexVariant.androidVariant.getVariantData().getScope().getAnnotationProcessorOutputDir()
                 }
