@@ -82,29 +82,26 @@ public class FastdexCustomJavacTask extends DefaultTask {
             return
         }
 
-        Set<PathInfo> addOrModifiedPathInfos = sourceSetDiffResultSet.addOrModifiedPathInfosMap.get(project.projectDir.absolutePath)
+        Set<PathInfo> addOrModifiedPathInfos = new HashSet<>()
 
-//        File patchJavaFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind")
-//        File patchClassesFileDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"custom-combind-classes")
-//        FileUtils.deleteDir(patchJavaFileDir)
-//        FileUtils.ensumeDir(patchClassesFileDir)
-//
-//        for (PathInfo pathInfo : addOrModifiedPathInfos) {
-//            if (pathInfo.nodePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
-//                project.logger.error("==fastdex changed java file: ${pathInfo.nodePath}")
-//                FileUtils.copyFileUsingStream(pathInfo.absoluteFile,new File(patchJavaFileDir,pathInfo.nodePath))
-//            }
-//            else {
-//                project.logger.error("==fastdex skip kotlin file: ${pathInfo.nodePath}")
-//            }
-//        }
+        for (PathInfo pathInfo : sourceSetDiffResultSet.addOrModifiedPathInfosMap.get(project.projectDir.absolutePath)) {
+            if (pathInfo.relativePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
+                addOrModifiedPathInfos.add(pathInfo)
+            }
+            else {
+                project.logger.error("==fastdex skip kotlin file: ${pathInfo.relativePath}")
+            }
+        }
+
+        if (addOrModifiedPathInfos.isEmpty()) {
+            project.logger.error("==fastdex no java files changed, just ignore")
+            disableJavaCompile(true)
+            return
+        }
 
         //compile java
         File androidJar = new File("${FastdexUtils.getSdkDirectory(project)}${File.separator}platforms${File.separator}${project.android.getCompileSdkVersion()}${File.separator}android.jar")
-        //File classpathJar = FastdexUtils.getInjectedJarFile(project,fastdexVariant.variantName)
 
-        //def classpath = project.files(classpathJar.absolutePath) + javaCompile.classpath +
-        //def classpath = project.files(classpathJar.absolutePath)
         def classpath = new ArrayList()
         classpath.add(classesDir.absolutePath)
         classpath.add(androidJar.absolutePath)
@@ -128,20 +125,6 @@ public class FastdexCustomJavacTask extends DefaultTask {
                 executable = "${executable}.exe"
             }
         }
-
-        //https://ant.apache.org/manual/Tasks/javac.html
-        //最好检测下项目根目录的gradle.properties文件,是否有这个配置org.gradle.jvmargs=-Dfile.encoding=UTF-8
-//        project.ant.javac(
-//                srcdir: patchJavaFileDir,
-//                destdir: patchClassesFileDir,
-//                source: javaCompile.sourceCompatibility,
-//                target: javaCompile.targetCompatibility,
-//                encoding: 'UTF-8',
-//                bootclasspath: androidJar,
-//                classpath: joinClasspath(classpath),
-//                fork: fork,
-//                executable: executable
-//        )
 
         List<String> cmdArgs = new ArrayList<>()
         cmdArgs.add(executable)
@@ -272,21 +255,6 @@ public class FastdexCustomJavacTask extends DefaultTask {
             }
             project.logger.error("==fastdex javac success, use: ${end - start}ms")
         }
-
-        //project.logger.error("==fastdex compile success: ${patchClassesFileDir}")
-
-        //覆盖app/build/intermediates/classes内容
-//        Files.walkFileTree(patchClassesFileDir.toPath(),new SimpleFileVisitor<Path>(){
-//            @Override
-//            FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-//                Path nodePath = patchClassesFileDir.toPath().relativize(file)
-//                File destFile = new File(classesDir,nodePath.toString())
-//                FileUtils.copyFileUsingStream(file.toFile(),destFile)
-//
-//                project.logger.error("==fastdex apply class to ${destFile}")
-//                return FileVisitResult.CONTINUE
-//            }
-//        })
         disableJavaCompile(true)
         //保存对比信息
         fastdexVariant.projectSnapshoot.saveDiffResultSet()

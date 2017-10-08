@@ -67,7 +67,7 @@ class FastdexTransform extends TransformProxy {
             //在所有的build-type上触发2.3的build-cache
             //boolean needMerge = !multiDex || mainDexListFile != null;// || !debugMode;
 
-            fastdexVariant.project.logger.error("==fastdex android gradle >= 2.3.0 ,hook dex transform")
+            fastdexVariant.project.logger.error("==fastdex android gradle >= 2.3.0 ,replace dex transform")
             this.base = new DexTransform(
                     base.dexOptions,
                     base.debugMode,
