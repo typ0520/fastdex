@@ -204,7 +204,7 @@ public class Fastdex {
         if (resFiles != null) {
             for (File f : resFiles) {
                 if (Server.isResourcePath(f.getName())) {
-                    String[] infoArr = f.getName().split(ShareConstants.RES_SPLIT_STR);
+                    String[] infoArr = Server.splitPatchPath(f.getName());
 
                     String version = infoArr[0];
                     String path = infoArr[1];
@@ -227,7 +227,7 @@ public class Fastdex {
         if (dexFiles != null) {
             for (File f : dexFiles) {
                 if (Server.isDexPath(f.getName())) {
-                    String[] infoArr = f.getName().split(ShareConstants.RES_SPLIT_STR);
+                    String[] infoArr = Server.splitPatchPath(f.getName());
 
                     String version = infoArr[0];
                     String path = infoArr[1];

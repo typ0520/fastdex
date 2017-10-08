@@ -194,16 +194,10 @@ public class FastdexPatchTask extends DefaultTask {
             long end = System.currentTimeMillis();
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
-            if (sendPatchDex || sendMergedDex || fastdexVariant.configuration.forceRebootApp) {
-                //kill app
+            //app不在后台、补丁发送失败、补丁中包含dex并且有设置使用命令轻质重启
+            if (!runtimeMetaInfo.active || !result || ((sendPatchDex || sendMergedDex) && (fastdexVariant.configuration.restartAppByCmd))) {
                 killApp()
                 fastdexInstantRun.startBootActivity()
-            }
-            else {
-                if (!runtimeMetaInfo.active || !result) {
-                    killApp()
-                    fastdexInstantRun.startBootActivity()
-                }
             }
             fastdexInstantRun.setInstallApk(false)
         } catch (Throwable e) {

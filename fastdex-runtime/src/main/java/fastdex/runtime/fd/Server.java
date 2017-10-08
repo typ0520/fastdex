@@ -26,20 +26,24 @@ import static fastdex.common.fd.ProtocolConstants.MESSAGE_SHOW_TOAST;
 import static fastdex.common.fd.ProtocolConstants.PROTOCOL_IDENTIFIER;
 import static fastdex.common.fd.ProtocolConstants.PROTOCOL_VERSION;
 import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_COLD_SWAP;
-import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_HOT_SWAP;
 import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_NONE;
 import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
+
 import fastdex.common.ShareConstants;
 import fastdex.common.utils.FileUtils;
 import fastdex.runtime.Constants;
+import fastdex.runtime.MiddlewareActivity;
 import fastdex.runtime.fastdex.Fastdex;
 import fastdex.runtime.fastdex.RuntimeMetaInfo;
 
@@ -47,7 +51,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -286,11 +289,6 @@ public class Server {
                             return;
                         }
 
-                        try {
-                            showToast("fastdex, receiving patch info...",context);
-                        } catch (Throwable e) {
-
-                        }
                         List<ApplicationPatch> changes = ApplicationPatch.read(input);
                         if (changes == null) {
                             continue;
@@ -318,12 +316,6 @@ public class Server {
                         output.writeBoolean(true);
 
                         restart(updateMode,hasDex, hasResources,resourcesApkPath, showToast);
-
-//                        try {
-//                            Thread.sleep(300);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
 
                         output.writeBoolean(true);
                         continue;
@@ -395,21 +387,8 @@ public class Server {
     }
 
     public static boolean isResourcePath(String path) {
-        return path.endsWith(Constants.RES_SPLIT_STR + Constants.RESOURCE_APK_FILE_NAME);
+        return path.endsWith(Constants.RES_SPLIT_STR + Constants.RESOURCE_APK_FILE_NAME) || path.startsWith("res/");
         //return path.equals(Constants.RESOURCE_APK_FILE_NAME) || path.equals(Paths.RESOURCE_FILE_NAME) || path.startsWith("res/");
-    }
-
-    private static boolean hasResources(List<ApplicationPatch> changes) {
-        // Any non-code patch is a resource patch (normally resources.ap_ but could
-        // also be individual resource files such as res/layout/activity_main.xml)
-        for (ApplicationPatch change : changes) {
-            String path = change.getPath();
-            if (isResourcePath(path)) {
-                return true;
-            }
-
-        }
-        return false;
     }
 
     public static boolean isDexPath(String path) {
@@ -424,33 +403,12 @@ public class Server {
             if (isDexPath(path)) {
                 return true;
             }
-
         }
         return false;
     }
 
     private int handlePatches(List<ApplicationPatch> changes, boolean hasResources,
             int updateMode) {
-//        if (hasResources) {
-//            FileManager.startUpdate();
-//        }
-//
-//        for (ApplicationPatch change : changes) {
-//            String path = change.getPath();
-//            if (path.equals(Paths.RELOAD_DEX_FILE_NAME)) {
-//                updateMode = handleHotSwapPatch(updateMode, change);
-//            } else if (isResourcePath(path)) {
-//                updateMode = handleResourcePatch(updateMode, change, path);
-//            }
-//        }
-//
-//        if (hasResources) {
-//            FileManager.finishUpdate(true);
-//        }
-//
-//        return updateMode;
-
-
         final Fastdex fastdex = Fastdex.get(context);
         final RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
 
@@ -537,7 +495,6 @@ public class Server {
             }
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG, "Couldn't apply code changes", e);
-            updateMode = UPDATE_MODE_COLD_SWAP;
         }
         return UPDATE_MODE_COLD_SWAP;
     }
@@ -551,71 +508,28 @@ public class Server {
             Log.v(Logging.LOG_TAG, "Finished loading changes; update mode =" + updateMode);
         }
 
-        if (updateMode == UPDATE_MODE_NONE || updateMode == UPDATE_MODE_HOT_SWAP) {
-            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                Log.v(Logging.LOG_TAG, "Applying incremental code without restart");
-            }
-
-            if (toast) {
-                Activity foreground = Restarter.getForegroundActivity(context);
-                if (foreground != null) {
-                    Restarter.showToast(foreground, "Applied code changes without activity restart");
-                } else if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "Couldn't show toast: no activity found");
-                }
-            }
-            return;
-        }
-
-       // android.os.Process.killProcess(android.os.Process.myPid());
         final List<Activity> activities = Restarter.getActivities(context, false);
 
         if (!hasDex && incrementalResources && updateMode == UPDATE_MODE_WARM_SWAP) {
             // Try to just replace the resources on the fly!
-
             File resDir = new File(Fastdex.get(context).getRuntimeMetaInfo().getPreparedPatchPath(),Constants.RES_DIR);
             File file = new File(resDir, resourcesApkPath);
-            Log.v(Logging.LOG_TAG, "About to update resource file=" + file +
-                    ", activities=" + activities);
+            Log.v(Logging.LOG_TAG, "About to update resource file=" + file + ", activities=" + activities);
 
             if (FileUtils.isLegalFile(file)) {
                 String resources = file.getAbsolutePath();
-
                 MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
-
-                try {
-                    String[] infoArr = file.getName().split(ShareConstants.RES_SPLIT_STR);
-                    String version = infoArr[0];
-                    String path = infoArr[1];
-
-                    if (path.equals(Constants.RESOURCE_APK_FILE_NAME)) {
-                        Fastdex.get(context).getRuntimeMetaInfo().setResourcesVersion(Integer.parseInt(version));
-                    }
-                } catch (Throwable e) {
-
+                String[] infoArr = splitPatchPath(file.getName());
+                String version = infoArr[0];
+                String path = infoArr[1];
+                if (path.equals(Constants.RESOURCE_APK_FILE_NAME)) {
+                    Fastdex.get(context).getRuntimeMetaInfo().setResourcesVersion(Integer.parseInt(version));
                 }
             } else {
                 Log.e(Logging.LOG_TAG, "No resource file found to apply");
                 updateMode = UPDATE_MODE_COLD_SWAP;
             }
         }
-//        else {
-//            handler.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    for (Activity activity : activities) {
-//                        try {
-//                            activity.finish();
-//                        } catch (Throwable e) {
-//
-//                        }
-//                    }
-//
-//                    android.os.Process.killProcess(android.os.Process.myPid());
-//                    System.exit(0);
-//                }
-//            });
-//        }
 
         Activity activity = Restarter.getForegroundActivity(context);
         if (updateMode == UPDATE_MODE_WARM_SWAP) {
@@ -624,32 +538,10 @@ public class Server {
                     Log.v(Logging.LOG_TAG, "Restarting activity only!");
                 }
 
-                boolean handledRestart = false;
-                try {
-                    // Allow methods to handle their own restart by implementing
-                    //     public boolean onHandleCodeChange(long flags) { .... }
-                    // and returning true if the change was handled manually
-                    Method method = activity.getClass().getMethod("onHandleCodeChange", Long.TYPE);
-                    Object result = method.invoke(activity, 0L);
-                    if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                        Log.v(Logging.LOG_TAG, "Activity " + activity
-                                + " provided manual restart method; return " + result);
-                    }
-                    if (Boolean.TRUE.equals(result)) {
-                        handledRestart = true;
-                        if (toast) {
-                            Restarter.showToast(activity, "Applied changes");
-                        }
-                    }
-                } catch (Throwable ignore) {
+                if (toast) {
+                    Restarter.showToast(activity, "Applied changes, restarted activity");
                 }
-
-                if (!handledRestart) {
-                    if (toast) {
-                        Restarter.showToast(activity, "Applied changes, restarted activity");
-                    }
-                    Restarter.restartActivityOnUiThread(activity);
-                }
+                Restarter.restartActivityOnUiThread(activity);
                 return;
             }
 
@@ -659,15 +551,30 @@ public class Server {
             updateMode = UPDATE_MODE_COLD_SWAP;
         }
 
-        if (updateMode != UPDATE_MODE_COLD_SWAP) {
-            if (Log.isLoggable(Logging.LOG_TAG, Log.ERROR)) {
-                Log.e(Logging.LOG_TAG, "Unexpected update mode: " + updateMode);
-            }
-            return;
-        }
+        if (updateMode == UPDATE_MODE_COLD_SWAP) {
+            //restart app
+            if (activity instanceof MiddlewareActivity) {
+                ((MiddlewareActivity)activity).reset();
+            } else {
+                try {
+                    Intent e = new Intent(context, MiddlewareActivity.class);
+                    e.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    e.putExtra("reset", true);
+                    context.startActivity(e);
+                } catch (Exception exception) {
+                    final String str = "Fail to increment build, make sure you have <Activity android:name=\"" + MiddlewareActivity.class.getName() + "\"/> registered in AndroidManifest.xml";
 
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "Waiting for app to be killed and restarted by the IDE...");
+                    if (Log.isLoggable(Logging.LOG_TAG, Log.ERROR)) {
+                        Log.e(Logging.LOG_TAG, str);
+                    }
+
+                    (new Handler(Looper.getMainLooper())).post(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, str, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
         }
     }
 }

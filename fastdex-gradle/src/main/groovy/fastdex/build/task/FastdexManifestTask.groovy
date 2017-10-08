@@ -17,6 +17,7 @@ import org.gradle.api.tasks.TaskAction
 public class FastdexManifestTask extends DefaultTask {
     static final String FASTDEX_ORIGIN_APPLICATION_CLASSNAME = "FASTDEX_ORIGIN_APPLICATION_CLASSNAME"
     static final String TRANSPARENT_ACTIVITY = "fastdex.runtime.TransparentActivity"
+    static final String MIDDLEWARE_ACTIVITY = "fastdex.runtime.MiddlewareActivity"
 
     FastdexVariant fastdexVariant
 
@@ -58,6 +59,14 @@ public class FastdexManifestTask extends DefaultTask {
             }
 
             application.appendNode('activity', [(ns.name): TRANSPARENT_ACTIVITY, (ns.theme): '@android:style/Theme.Translucent.NoTitleBar'])
+
+            application['activity'].findAll {
+                it.attributes()[ns.name].equals(MIDDLEWARE_ACTIVITY)
+            }.each {
+                it.parent().remove(it)
+            }
+
+            application.appendNode('activity', [(ns.name): MIDDLEWARE_ACTIVITY])
 
             // Write the manifest file
             def printer = new XmlNodePrinter(new PrintWriter(fastdexVariant.manifestPath, "utf-8"))
