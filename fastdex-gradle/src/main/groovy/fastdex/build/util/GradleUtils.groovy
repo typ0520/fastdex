@@ -4,17 +4,9 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.pipeline.IntermediateFolderUtils
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.builder.model.Version
-import com.google.common.collect.Lists
-import com.android.build.gradle.internal.transforms.JarMerger
 import fastdex.common.utils.FileUtils
 import groovy.xml.QName
-import org.gradle.api.GradleException
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
-import com.android.build.api.transform.DirectoryInput
-import com.android.build.api.transform.JarInput
-import com.android.build.api.transform.TransformInput
+import java.lang.reflect.Field
 import com.android.build.api.transform.TransformInvocation
 import org.gradle.api.Project
 import com.android.build.api.transform.QualifiedContent.ContentType
@@ -81,6 +73,11 @@ public class GradleUtils {
         return String.format("%x", value);
     }
 
+    /**
+     * 解析xml
+     * @param xmlPath
+     * @return
+     */
     public static Object parseXml(String xmlPath) {
         byte[] bytes = FileUtils.readContents(new File(xmlPath))
         try {
@@ -113,6 +110,13 @@ public class GradleUtils {
         }
     }
 
+    private static String removeUTF8BOM(String s) {
+        if (s.startsWith(UTF8_BOM)) {
+            s = s.substring(1);
+        }
+        return s;
+    }
+
     /**
      * 获取AndroidManifest.xml文件package属性值
      * @param manifestPath
@@ -124,21 +128,23 @@ public class GradleUtils {
         return packageName
     }
 
-    private static String removeUTF8BOM(String s) {
-        if (s.startsWith(UTF8_BOM)) {
-            s = s.substring(1);
-        }
-        return s;
-    }
-
     /**
      * 获取启动的activity
      * @param manifestPath
      * @return
      */
     public static String getBootActivity(String manifestPath) {
-        def bootActivityName = ""
         def xml = parseXml(manifestPath)
+        return getBootActivityByXmlNode(xml)
+    }
+
+    /**
+     * 获取启动的activity
+     * @param xml
+     * @return
+     */
+    public static String getBootActivityByXmlNode(Node xml) {
+        def bootActivityName = ""
         def application = xml.application[0]
 
         if (application) {
@@ -193,65 +199,63 @@ public class GradleUtils {
     }
 
     /**
-     * 合并所有的代码到一个jar钟
-     * @param project
-     * @param transformInvocation
-     * @param outputJar             输出路径
+     * 获取android gradle插件版本
+     * @return
      */
-    public static void executeMerge(Project project,TransformInvocation transformInvocation, File outputJar) {
-        List<JarInput> jarInputs = Lists.newArrayList();
-        List<DirectoryInput> dirInputs = Lists.newArrayList();
-
-        for (TransformInput input : transformInvocation.getInputs()) {
-            jarInputs.addAll(input.getJarInputs());
-        }
-
-        for (TransformInput input : transformInvocation.getInputs()) {
-            dirInputs.addAll(input.getDirectoryInputs());
-        }
-
-        JarMerger jarMerger = getClassJarMerger(outputJar)
-        jarInputs.each { jar ->
-            project.logger.error("==fastdex merge jar " + jar.getFile())
-            jarMerger.addJar(jar.getFile())
-        }
-        dirInputs.each { dir ->
-            project.logger.error("==fastdex merge dir " + dir)
-            jarMerger.addFolder(dir.getFile())
-        }
-        jarMerger.close()
-        if (!FileUtils.isLegalFile(outputJar)) {
-            throw new GradleException("merge jar fail: \n jarInputs: ${jarInputs}\n dirInputs: ${dirInputs}\n mergedJar: ${outputJar}")
-        }
-        project.logger.error("==fastdex merge jar success: ${outputJar}")
-    }
-
-    private static JarMerger getClassJarMerger(File jarFile) {
-        JarMerger jarMerger = new JarMerger(jarFile)
-
-        Class<?> zipEntryFilterClazz
-        try {
-            zipEntryFilterClazz = Class.forName("com.android.builder.packaging.ZipEntryFilter")
-        } catch (Throwable t) {
-            zipEntryFilterClazz = Class.forName("com.android.builder.signing.SignedJarBuilder\$IZipEntryFilter")
-        }
-
-        Class<?>[] classArr = new Class[1];
-        classArr[0] = zipEntryFilterClazz
-        InvocationHandler handler = new InvocationHandler(){
-            public Object invoke(Object proxy, Method method, Object[] args)
-                    throws Throwable {
-                return args[0].endsWith(Constants.CLASS_SUFFIX);
-            }
-        };
-        Object proxy = Proxy.newProxyInstance(zipEntryFilterClazz.getClassLoader(), classArr, handler);
-
-        jarMerger.setFilter(proxy);
-
-        return jarMerger
-    }
-
     public static String getAndroidGradlePluginVersion() {
         return Version.ANDROID_GRADLE_PLUGIN_VERSION
+    }
+
+    /**
+     * 获取application工程apt输出目录
+     * @param variant
+     * @return
+     */
+    public static File getAptOutputDir(ApplicationVariant variant) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
+            //2.2.0以后才有getAnnotationProcessorOutputDir()这个api
+            return variant.getVariantData().getScope().getAnnotationProcessorOutputDir()
+        }
+        else {
+            return new File(variant.getVariantData().getScope().getGlobalScope().getGeneratedDir(), "/source/apt/${variant.dirName}")
+        }
+    }
+
+    /**
+     * 动态添加属性
+     * @param project
+     * @param key
+     * @param value
+     */
+    public static void addDynamicProperty(Project project,Object key, Object value) {
+        Class defaultConventionClass = null
+        try {
+            defaultConventionClass = Class.forName("org.gradle.api.internal.plugins.DefaultConvention")
+        } catch (ClassNotFoundException e) {
+
+        }
+
+        if (defaultConventionClass != null) {
+            Field extensionsStorageField = null
+            try {
+                extensionsStorageField = defaultConventionClass.getDeclaredField("extensionsStorage")
+                extensionsStorageField.setAccessible(true)
+            } catch (Throwable e) {
+
+            }
+
+            if (extensionsStorageField != null) {
+                try {
+                    project.rootProject.allprojects.each {
+                        Object extensionsStorage = extensionsStorageField.get(it.getAsDynamicObject().getConvention())
+                        extensionsStorage.add(key,value)
+                        it.getAsDynamicObject().getDynamicProperties().set(key,value)
+                    }
+                    project.gradle.startParameter.projectProperties.put(key,value)
+                } catch (Throwable e) {
+
+                }
+            }
+        }
     }
 }

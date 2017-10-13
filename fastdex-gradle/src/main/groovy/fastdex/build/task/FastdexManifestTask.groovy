@@ -16,6 +16,7 @@ import org.gradle.api.tasks.TaskAction
  */
 public class FastdexManifestTask extends DefaultTask {
     static final String FASTDEX_ORIGIN_APPLICATION_CLASSNAME = "FASTDEX_ORIGIN_APPLICATION_CLASSNAME"
+    static final String FASTDEX_BOOT_ACTIVITY_CLASSNAME = "FASTDEX_BOOT_ACTIVITY_CLASSNAME"
     static final String TRANSPARENT_ACTIVITY = "fastdex.runtime.TransparentActivity"
     static final String MIDDLEWARE_ACTIVITY = "fastdex.runtime.MiddlewareActivity"
 
@@ -39,7 +40,6 @@ public class FastdexManifestTask extends DefaultTask {
                 applicationName = "android.app.Application"
             }
             application.attributes().put(nameAttr, "fastdex.runtime.FastdexApplication")
-
             def metaDataTags = application['meta-data']
 
             // remove any old FASTDEX_ORIGIN_APPLICATION_CLASSNAME elements
@@ -48,9 +48,19 @@ public class FastdexManifestTask extends DefaultTask {
             }.each {
                 it.parent().remove(it)
             }
-
             // Add the new FASTDEX_ORIGIN_APPLICATION_CLASSNAME element
             application.appendNode('meta-data', [(ns.name): FASTDEX_ORIGIN_APPLICATION_CLASSNAME, (ns.value): applicationName])
+
+
+            String bootActivityName = GradleUtils.getBootActivityByXmlNode(xml)
+            // remove any old FASTDEX_BOOT_ACTIVITY_CLASSNAME elements
+            metaDataTags.findAll {
+                it.attributes()[ns.name].equals(FASTDEX_BOOT_ACTIVITY_CLASSNAME)
+            }.each {
+                it.parent().remove(it)
+            }
+            // Add the new FASTDEX_BOOT_ACTIVITY_CLASSNAME element
+            application.appendNode('meta-data', [(ns.name): FASTDEX_BOOT_ACTIVITY_CLASSNAME, (ns.value): bootActivityName])
 
             application['activity'].findAll {
                 it.attributes()[ns.name].equals(TRANSPARENT_ACTIVITY)

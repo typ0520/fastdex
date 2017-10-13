@@ -22,13 +22,13 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
     public Set<String> addOrModifiedClasses = new HashSet<>();
 
     @Expose
+    public Map<String,List<String>> addOrModifiedClassesMap = new HashMap<>();
+
+    @Expose
     public Set<PathInfo> addOrModifiedPathInfos = new HashSet<>();
 
     @Expose
     public Map<String,Set<PathInfo>> addOrModifiedPathInfosMap = new HashMap<>();
-
-    @Expose
-    public Map<String,List<String>> addOrModifiedClassesMap = new HashMap<>();
 
     public SourceSetDiffResultSet() {
 
@@ -63,17 +63,13 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
             switch (javaFileDiffInfo.status) {
                 case ADDED:
                 case MODIFIED:
-                    PathInfo pathInfo = new PathInfo(new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey);
+                    PathInfo pathInfo = new PathInfo(path,new File(path,javaFileDiffInfo.uniqueKey),javaFileDiffInfo.uniqueKey);
                     addOrModifiedPathInfos.add(pathInfo);
                     pathInfoSet.add(pathInfo);
 
                     String classRelativePath = javaFileDiffInfo.getClassRelativePath();
                     addOrModifiedClassRelativePathList.add(classRelativePath + ".class");
                     addOrModifiedClassRelativePathList.add(classRelativePath + "$*.class");
-
-                    //butterknife 8.2.0 以后生成的类MainActivity_ViewBinding.class、MainActivity_ViewBinding$1.class
-                    addOrModifiedClassRelativePathList.add(classRelativePath + "_ViewBinding.class");
-                    addOrModifiedClassRelativePathList.add(classRelativePath + "_ViewBinding$*.class");
 
                     classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.");
                     addOrModifiedClasses.add(classRelativePath);

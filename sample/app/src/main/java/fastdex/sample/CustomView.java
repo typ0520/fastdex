@@ -14,12 +14,13 @@ import butterknife.ButterKnife;
 public class CustomView extends RelativeLayout {
     @BindView(R.id.tv)  TextView tv;
 
+
     public CustomView(Context context, AttributeSet attrs) {
         super(context, attrs);
         inflate(context, R.layout.view_custom,this);
         ButterKnife.bind(this);
 
-        tv.setText(getResources().getString(R.string.s3) + " -11");
+        tv.setText(getResources().getString(R.string.s3) + " -00");
         MainActivity.aa();
     }
 }

@@ -36,8 +36,7 @@ public class FastdexApplication extends Application {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        String msg = appInfo.metaData.getString("FASTDEX_ORIGIN_APPLICATION_CLASSNAME");
-        return msg;
+        return appInfo.metaData.getString("FASTDEX_ORIGIN_APPLICATION_CLASSNAME");
     }
 
     private void createRealApplication(Context context) {

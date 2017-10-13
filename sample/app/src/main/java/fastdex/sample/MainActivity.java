@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import fastdex.sample.common.CommonUtils;
 import com.github.typ0520.fastdex.sample.R;
@@ -24,6 +25,9 @@ public class MainActivity extends Activity {
     @BindView(R.id.tv)
     View view2;
 
+    @BindView(R.id.tv2)
+    TextView tv2;
+
     public static void aa() {
 
     }
@@ -37,6 +41,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        tv2.setText("t3");
         new CustomView(this,null);
         //new CustomView2(this,null);
         view2.setOnClickListener(new View.OnClickListener() {

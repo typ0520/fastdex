@@ -1,6 +1,7 @@
 package fastdex.build
 
 import com.android.build.api.transform.Transform
+import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.transforms.DexTransform
 import com.android.build.gradle.internal.transforms.JarMergingTransform
@@ -11,9 +12,10 @@ import fastdex.build.task.FastdexInstantRunTask
 import fastdex.build.task.FastdexManifestTask
 import fastdex.build.task.FastdexPatchTask
 import fastdex.build.task.FastdexResourceIdTask
+import fastdex.build.task.FastdexScanAptOutputTask
 import fastdex.build.transform.FastdexJarMergingTransform
-import fastdex.build.util.FastdexBuildListener
 import fastdex.build.util.Constants
+import fastdex.build.util.FastdexBuildListener
 import fastdex.build.util.FastdexInstantRun
 import fastdex.build.util.FastdexUtils
 import fastdex.build.util.GradleUtils
@@ -30,6 +32,7 @@ import fastdex.build.transform.FastdexTransform
 import fastdex.build.extension.FastdexExtension
 import fastdex.build.task.FastdexPrepareTask
 import fastdex.build.task.FastdexCustomJavacTask
+import fastdex.common.utils.FileUtils
 
 /**
  * 注册相应节点的任务
@@ -45,39 +48,44 @@ class FastdexPlugin implements Plugin<Project> {
             throw new GradleException('Android Application plugin required')
         }
 
+        //https://developer.android.com/studio/build/build-cache.html
+        //2.2.2 build-cache默认是关闭的，通过动态设置android.enableBuildCache=true打开这个功能
+        //2.2.2以后引入了build-cache机制，能大幅度提高全量打包速度
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
+            GradleUtils.addDynamicProperty(project,"android.enableBuildCache","true")
+            project.logger.error("====fastdex add dynamic property: 'android.enableBuildCache=true'")
+        }
+        else {
+            project.logger.error("It is recommended to use versions larger than 2.3")
+        }
+
+        GradleUtils.addDynamicProperty(project,"kotlin.incremental","true")
         project.afterEvaluate {
             def configuration = project.fastdex
+
+            //如果是fastdex的插件触发的打包，开启hook
+            if (hasProperty("fastdex.injected.invoked.from.ide")) {
+                configuration.fastdexEnable = true
+            }
             if (!configuration.fastdexEnable) {
                 project.logger.error("====fastdex tasks are disabled.====")
                 return
             }
 
-            if (FastdexUtils.isDataBindingEnabled(project)) {
-                //最低支持2.2.0
-                String minSupportVersion = "2.2.0"
-                if (GradleUtils.getAndroidGradlePluginVersion().compareTo(minSupportVersion) < 0) {
-                    throw new GradleException("DataBinding enabled, minimum support version ${minSupportVersion}")
-                }
-            }
-            else {
-                //最低支持2.0.0
-                String minSupportVersion = "2.0.0"
-                if (GradleUtils.getAndroidGradlePluginVersion().compareTo(minSupportVersion) < 0) {
-                    throw new GradleException("Your version too old 'com.android.tools.build:gradle:${GradleUtils.getAndroidGradlePluginVersion()}', minimum support version ${minSupportVersion}")
-                }
+            //最低支持2.0.0
+            String minSupportVersion = "2.0.0"
+            if (GradleUtils.getAndroidGradlePluginVersion().compareTo(minSupportVersion) < 0) {
+                throw new GradleException("Android gradle version too old 'com.android.tools.build:gradle:${GradleUtils.getAndroidGradlePluginVersion()}', minimum support version ${minSupportVersion}")
             }
 
             def android = project.extensions.android
             //open jumboMode
             android.dexOptions.jumboMode = true
-            //close preDexLibraries
-            try {
-                android.dexOptions.preDexLibraries = false
-            } catch (Throwable e) {
-                //no preDexLibraries field, just continue
-            }
 
             project.tasks.create("fastdexCleanAll", FastdexCleanTask)
+
+            def aptConfiguration = project.configurations.findByName("apt")
+            def isAptEnabled = (project.plugins.hasPlugin("android-apt") || project.plugins.hasPlugin("com.neenbedankt.android-apt")) && aptConfiguration != null && !aptConfiguration.empty
 
             android.applicationVariants.each { variant ->
                 def variantOutput = variant.outputs.first()
@@ -97,15 +105,7 @@ class FastdexPlugin implements Plugin<Project> {
                     // Not in instant run mode, continue.
                 }
 
-                FastdexVariant fastdexVariant = new FastdexVariant(project,variant)
-                fastdexVariant.fastdexInstantRun = new FastdexInstantRun(fastdexVariant)
-
-                FastdexInstantRun fastdexInstantRun = fastdexVariant.fastdexInstantRun
-                fastdexInstantRun.resourceApFile = variantOutput.processResources.packageOutputFile
-                fastdexInstantRun.resDir = variantOutput.processResources.resDir
-
-
-                boolean proguardEnable = variant.getBuildType().buildType.minifyEnabled
+                boolean proguardEnable = variant.getVariantData().getVariantConfiguration().isMinifyEnabled()
                 //TODO 暂时忽略开启混淆的buildType(目前的快照对比方案 无法映射java文件的类名和混淆后的class的类名)
                 if (proguardEnable) {
                     String buildTypeName = variant.getBuildType().buildType.getName()
@@ -114,6 +114,19 @@ class FastdexPlugin implements Plugin<Project> {
                     project.logger.error("--------------------fastdex--------------------")
                 }
                 else {
+                    def javaCompile = variant.hasProperty('javaCompiler') ? variant.javaCompiler : variant.javaCompile
+                    ensumeAptOutputDir(isAptEnabled, javaCompile, variant)
+
+                    FastdexVariant fastdexVariant = new FastdexVariant(project,variant)
+                    fastdexVariant.fastdexInstantRun = new FastdexInstantRun(fastdexVariant)
+                    FastdexInstantRun fastdexInstantRun = fastdexVariant.fastdexInstantRun
+                    fastdexInstantRun.resourceApFile = variantOutput.processResources.packageOutputFile
+                    fastdexInstantRun.resDir = variantOutput.processResources.resDir
+
+                    javaCompile.doLast {
+                        fastdexVariant.compiledByOriginJavac = true
+                    }
+
                     if (FastdexUtils.isDataBindingEnabled(project)) {
                         configuration.useCustomCompile = false
                         project.logger.error("==fastdex dataBinding is enabled, disable useCustomCompile...")
@@ -171,24 +184,32 @@ class FastdexPlugin implements Plugin<Project> {
                     }
 
                     Task transformClassesWithDex = getTransformClassesWithDex(project,variantName)
-                    if (FastdexUtils.isDataBindingEnabled(project)) {
-                        transformClassesWithDex.dependsOn prepareTask
-                        prepareTask.mustRunAfter variant.javaCompile
+                    File classesDir = variant.getVariantData().getScope().getJavaOutputDir()
+
+                    boolean hasDexCache = FastdexUtils.hasDexCache(project,variantName)
+
+                    FastdexScanAptOutputTask scanAptOutputTask = project.tasks.create("fastdexScanAptOutputFor${variantName}", FastdexScanAptOutputTask)
+                    scanAptOutputTask.fastdexVariant = fastdexVariant
+
+                    if (configuration.useCustomCompile && hasDexCache && FileUtils.dirExists(classesDir.absolutePath)) {
+                        Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
+                        customJavacTask.fastdexVariant = fastdexVariant
+                        customJavacTask.javaCompile = javaCompile
+                        customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
+                        customJavacTask.dependsOn prepareTask
+
+                        if (customJavacTask.javacIncrementalSafeguard != null) {
+                            customJavacTask.javacIncrementalSafeguard.mustRunAfter customJavacTask
+                        }
+                        javaCompile.dependsOn customJavacTask
+                        scanAptOutputTask.mustRunAfter customJavacTask
                     }
                     else {
-                        if (configuration.useCustomCompile) {
-                            Task customJavacTask = project.tasks.create("fastdexCustomCompile${variantName}JavaWithJavac", FastdexCustomJavacTask)
-                            customJavacTask.fastdexVariant = fastdexVariant
-                            customJavacTask.javaCompile = variant.javaCompile
-                            customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
-
-                            customJavacTask.dependsOn prepareTask
-                            variant.javaCompile.dependsOn customJavacTask
-                        }
-                        else {
-                            variant.javaCompile.dependsOn prepareTask
-                        }
+                        javaCompile.dependsOn prepareTask
                     }
+
+                    scanAptOutputTask.mustRunAfter javaCompile
+                    transformClassesWithDex.dependsOn scanAptOutputTask
 
                     Task multidexlistTask = getTransformClassesWithMultidexlistTask(project,variantName)
                     if (multidexlistTask != null) {
@@ -222,10 +243,7 @@ class FastdexPlugin implements Plugin<Project> {
                     fastdexPatchTask.mustRunAfter mergeAssetsTask
                     packageTask.dependsOn fastdexPatchTask
 
-
                     if (packageTask != null) {
-                        project.logger.error("==fastdex find package task: " + packageTask.name)
-
                         packageTask.doFirst {
                             fastdexVariant.onPrePackage()
                         }
@@ -287,6 +305,59 @@ class FastdexPlugin implements Plugin<Project> {
                 }
             }
         }
+    }
+
+    def ensumeAptOutputDir(boolean isAptEnabled, Object javaCompile, ApplicationVariant variant) {
+        //2.2.0之前的版本java编译任务没有指定-s参数，需要自己指定到apt目录
+        if (isAptEnabled) {
+            return
+        }
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
+            return
+        }
+
+        def aptOutputDir = new File(variant.getVariantData().getScope().getGlobalScope().getGeneratedDir(), "/source/apt")
+        def aptOutput = new File(aptOutputDir, variant.dirName)
+
+        if (variant.variantData.extraGeneratedSourceFolders == null || !variant.variantData.extraGeneratedSourceFolders.contains(aptOutput)) {
+            variant.addJavaSourceFoldersToModel(aptOutput);
+        }
+
+        javaCompile.doFirst {
+            if (!aptOutput.exists()) {
+                aptOutput.mkdirs()
+            }
+        }
+
+        if (javaCompile.options.compilerArgs == null) {
+            javaCompile.options.compilerArgs = new ArrayList<>()
+        }
+
+        def compilerArgs = new ArrayList<>()
+        compilerArgs.addAll(javaCompile.options.compilerArgs)
+
+        boolean discoveryAptOutput = false
+        def originAptOutput = null
+
+        for (Object obj : compilerArgs) {
+            if (discoveryAptOutput) {
+                originAptOutput = obj
+                break
+            }
+            if ("-s".equals(obj)) {
+                discoveryAptOutput = true
+            }
+        }
+
+        if (discoveryAptOutput) {
+            compilerArgs.remove("-s")
+            compilerArgs.remove(originAptOutput)
+        }
+        compilerArgs.add(0,"-s")
+        compilerArgs.add(1,aptOutput)
+
+        javaCompile.options.compilerArgs.clear()
+        javaCompile.options.compilerArgs.addAll(compilerArgs)
     }
 
     Task getMergeAssetsTask(Project project, String variantName) {

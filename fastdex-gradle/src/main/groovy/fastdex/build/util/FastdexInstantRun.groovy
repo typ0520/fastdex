@@ -126,20 +126,11 @@ public class FastdexInstantRun {
     }
 
     def isInstantRunBuild() {
-//        String launchTaskName = project.gradle.startParameter.taskRequests.get(0).args.get(0).toString()
-//        boolean result = launchTaskName.endsWith("fastdex${fastdexVariant.variantName}")
-//        return result
-
         return fromFastdexInstantRun
     }
 
     def nothingChanged() {
         return !sourceChanged && !manifestChanged && !resourceChanged && !assetsChanged
-    }
-
-    def isInstantRunEnable() {
-        //启动的任务是fastdexXXX  补丁构建  设备不为空
-        return isInstantRunBuild() && fastdexVariant.hasDexCache
     }
 
     def setInstallApk(boolean installApk) {
@@ -318,7 +309,7 @@ public class FastdexInstantRun {
             }
 
             String cmd = "adb -s ${device.getSerialNumber()} shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
-            if (!background && fastdexVariant.configuration.debug) {
+            if (!background) {
                 project.logger.error("${cmd}")
             }
             if (status != 0 && !background) {

@@ -7,5 +7,17 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="哈2"/>
+        android:text="哈123"/>
+
+    <TextView
+        android:id="@+id/tv2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="哈22"/>
+
+    <!--<TextView-->
+        <!--android:id="@+id/tv3"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="哈4"/>-->
 </LinearLayout>

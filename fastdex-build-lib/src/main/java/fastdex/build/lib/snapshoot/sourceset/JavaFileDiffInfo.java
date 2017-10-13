@@ -10,6 +10,8 @@ import fastdex.common.ShareConstants;
  * Created by tong on 17/3/29.
  */
 public class JavaFileDiffInfo extends FileDiffInfo {
+    public String path;
+
     public JavaFileDiffInfo() {
     }
 

@@ -128,7 +128,7 @@ public class FastdexUtils {
             return false;
         }
 
-        FindDexSimpleFileVisitor visitor = new FindDexSimpleFileVisitor();
+        FindDexFileVisitor visitor = new FindDexFileVisitor();
         Files.walkFileTree(cacheDexDir.toPath(),visitor);
         return visitor.hasDex;
     }
@@ -349,16 +349,11 @@ public class FastdexUtils {
     }
 
     /**
-     * 获取全量打包时的包括所有代码的jar包
+     * 获取源码目录集合
      * @param project
-     * @param variantName
+     * @param sourceSetKey
      * @return
      */
-    public static File getInjectedJarFile(Project project,String variantName) {
-        File injectedJarFile = new File(getBuildDir(project,variantName),Constants.INJECTED_JAR_FILENAME)
-        return injectedJarFile
-    }
-
     public static LinkedHashSet<File> getSrcDirs(Project project,String sourceSetKey) {
         def srcDirs = new LinkedHashSet()
         def sourceSetsValue = project.android.sourceSets.findByName(sourceSetKey)
@@ -378,10 +373,6 @@ public class FastdexUtils {
 
     public static boolean isDataBindingEnabled(Project project) {
         return project.android.dataBinding && project.android.dataBinding.enabled
-    }
-
-    public static void incrementDexDir(File dexDir) {
-        incrementDexDir(dexDir,1)
     }
 
     /**
@@ -449,12 +440,8 @@ public class FastdexUtils {
                 result = dir;
                 incrementDexDir(dir,dsize)
                 maxClassesDexIndex = FastdexUtils.getMaxClassesDexIndex(dir)
-
-                //println "${dir}, ${dsize}, ${maxClassesDexIndex}"
             }
             else {
-                //println "${dir}, ${maxClassesDexIndex}"
-
                 incrementDexDir(dir,maxClassesDexIndex)
                 maxClassesDexIndex += FileUtils.moveDir(dir,result,ShareConstants.DEX_SUFFIX)
 
@@ -524,22 +511,19 @@ public class FastdexUtils {
         return boundary
     }
 
+    /**
+     * 清理dex输出目录，除了classes*.dex其它的文件全删掉，防止package任务把别的文件当成dex打进aak里面
+     * @param dexOutputDir
+     */
     public static void clearDexOutputDir(File dexOutputDir) {
         if (dexOutputDir == null) {
             return
         }
         dexOutputDir.listFiles().each {
-            //println("each: " + it.absolutePath)
             if (it.isFile() && !(it.name.startsWith(ShareConstants.CLASSES) && it.name.endsWith(ShareConstants.DEX_SUFFIX))) {
                 //println("remove: " + it.absolutePath)
                 it.delete()
             }
         }
-    }
-
-    public static void main(String[] args) {
-        int[] range = getClassesDexBoundary(new File("/Users/tong/Projects/zxgb-android/app/build/intermediates/transforms/dex/product/folders/1000/10/classes_48205e61603dd7982ebb6e11d328ee10e06d7585"));
-
-        System.out.println("[" + range[0] + " , " + range[1] + "]")
     }
 }

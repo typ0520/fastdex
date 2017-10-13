@@ -9,6 +9,7 @@ import fastdex.build.transform.FastdexTransform
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexInstantRun
 import fastdex.build.util.FastdexRuntimeException
+import fastdex.build.util.JumpException
 import fastdex.common.utils.SerializeUtils
 import fastdex.build.util.LibDependency
 import fastdex.build.util.MetaInfo
@@ -16,7 +17,6 @@ import fastdex.build.util.ProjectSnapshoot
 import fastdex.build.util.FastdexUtils
 import fastdex.common.utils.FileUtils
 import fastdex.build.util.GradleUtils
-import fastdex.build.util.TagManager
 import org.gradle.api.Project
 
 /**
@@ -31,16 +31,17 @@ public class FastdexVariant {
     final File rootBuildDir
     final File buildDir
     final ProjectSnapshoot projectSnapshoot
-    final TagManager tagManager
     final Set<LibDependency> libraryDependencies
+
     String originPackageName
     String mergedPackageName
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
-    boolean executedJarMerge
-    boolean executedDexTransform
+    boolean needExecDexMerge
     boolean hasJarMergingTask
+    boolean compiledByCustomJavac
+    boolean compiledByOriginJavac
     MetaInfo metaInfo
     FastdexTransform fastdexTransform
     FastdexInstantRun fastdexInstantRun
@@ -59,7 +60,6 @@ public class FastdexVariant {
         this.buildDir = FastdexUtils.getBuildDir(project,variantName)
 
         projectSnapshoot = new ProjectSnapshoot(this)
-        tagManager = new TagManager(this.project,this.variantName)
         libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
 
         if (configuration.dexMergeThreshold <= 1) {
@@ -69,10 +69,6 @@ public class FastdexVariant {
 
     /*
     * 检查缓存是否过期，如果过期就删除
-    *
-    * 检查meta-info文件是否存在(app/build/fastdex/${variantName}/fastdex-meta-info.json)
-    * 检查当前的依赖列表和全两打包时的依赖是否一致(app/build/fastdex/${variantName}/dependencies.json)
-    * 检查资源映射文件是否存在(app/build/fastdex/${variantName}/r/r.txt)
     */
     void prepareEnv() {
         if (initialized) {
@@ -89,19 +85,21 @@ public class FastdexVariant {
             }
 
             try {
+                //检查meta-info文件是否存在(app/build/fastdex/${variantName}/fastdex-meta-info.json)
                 File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
                 if (!FileUtils.isLegalFile(metaInfoFile)) {
-                    throw new CheckException("miss file : ${metaInfoFile}")
+                    throw new JumpException("miss file : ${metaInfoFile}")
                 }
                 metaInfo = MetaInfo.load(project,variantName)
                 if (metaInfo == null) {
-                    throw new CheckException("parse json content fail: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
+                    throw new JumpException("parse json content fail: ${FastdexUtils.getMetaInfoFile(project,variantName)}")
                 }
 
                 if (metaInfo.fastdexVersion == null) {
-                    throw new CheckException("cache already expired")
+                    throw new JumpException("cache already expired")
                 }
 
+                //检查当前的fastdexVersion和缓存对应的fastdexVersion是否一致
                 if (metaInfo.fastdexVersion == null || !Version.FASTDEX_BUILD_VERSION.equals(metaInfo.fastdexVersion)) {
                     File dxJarFile = new File(FastdexUtils.getBuildDir(project),"fastdex-dx.jar")
                     File dxCommandFile = new File(FastdexUtils.getBuildDir(project),"fastdex-dx")
@@ -111,57 +109,65 @@ public class FastdexVariant {
                     FileUtils.deleteFile(dxCommandFile)
                     FileUtils.deleteFile(fastdexRuntimeDex)
 
-                    throw new CheckException("cache fastdexVersion: ${metaInfo.fastdexVersion}, current fastdexVersion: ${Version.FASTDEX_BUILD_VERSION}")
+                    throw new JumpException("cache fastdexVersion: ${metaInfo.fastdexVersion}, current fastdexVersion: ${Version.FASTDEX_BUILD_VERSION}")
                 }
 
+                //检查当前的依赖列表和全两打包时的依赖是否一致(app/build/fastdex/${variantName}/dependencies.json)
                 File cachedDependListFile = FastdexUtils.getCachedDependListFile(project,variantName)
                 if (!FileUtils.isLegalFile(cachedDependListFile)) {
-                    throw new CheckException("miss depend list file: ${cachedDependListFile}")
+                    throw new JumpException("miss depend list file: ${cachedDependListFile}")
                 }
 
+                //检查源码快照
                 File sourceSetSnapshootFile = FastdexUtils.getSourceSetSnapshootFile(project,variantName)
                 if (!FileUtils.isLegalFile(sourceSetSnapshootFile)) {
-                    throw new CheckException("miss sourceSet snapshoot file: ${sourceSetSnapshootFile}")
+                    throw new JumpException("miss sourceSet snapshoot file: ${sourceSetSnapshootFile}")
                 }
 
+                //检查资源映射文件是否存在(app/build/fastdex/${variantName}/r/r.txt)
                 File resourceMappingFile = FastdexUtils.getResourceMappingFile(project,variantName)
                 if (!FileUtils.isLegalFile(resourceMappingFile)) {
-                    throw new CheckException("miss resource mapping file: ${resourceMappingFile}")
+                    throw new JumpException("miss resource mapping file: ${resourceMappingFile}")
                 }
 
+                //检查manifest快照
                 File androidManifestStatFile = FastdexUtils.getAndroidManifestStatFile(project,variantName)
                 if (!FileUtils.isLegalFile(androidManifestStatFile)) {
-                    throw new CheckException("miss android manifest stat file: ${androidManifestStatFile}")
+                    throw new JumpException("miss android manifest stat file: ${androidManifestStatFile}")
                 }
 
+                //如果执行过dex merge，检查merged-patch.dex是否存在
                 if (metaInfo.mergedDexVersion > 0) {
                     File mergedPatchDex = FastdexUtils.getMergedPatchDex(project,variantName)
                     if (!FileUtils.isLegalFile(androidManifestStatFile)) {
-                        throw new CheckException("miss merged dex file: ${mergedPatchDex}")
+                        throw new JumpException("miss merged dex file: ${mergedPatchDex}")
                     }
                 }
 
+                //如果开启了自定义的java编译任务，检查classpath文件
                 if (configuration.useCustomCompile) {
                     File classpathFile = new File(FastdexUtils.getBuildDir(project,variantName),Constants.CLASSPATH_FILENAME)
                     if (!FileUtils.isLegalFile(classpathFile)) {
-                        throw new CheckException("miss classpath file: ${classpathFile}")
+                        throw new JumpException("miss classpath file: ${classpathFile}")
                     }
                 }
 
+                //判断当前的工程目录和生成缓存时的工程目录是否一致
                 String oldRootProjectPath = metaInfo.rootProjectPath
                 String curRootProjectPath = project.rootProject.projectDir.absolutePath
                 boolean isRootProjectDirChanged = metaInfo.isRootProjectDirChanged(curRootProjectPath)
                 if (isRootProjectDirChanged) {
-                    throw new CheckException("project path changed old: ${oldRootProjectPath} now: ${curRootProjectPath}")
+                    throw new JumpException("project path changed old: ${oldRootProjectPath} now: ${curRootProjectPath}")
                 }
                 projectSnapshoot.loadSnapshoot()
+                //检查依赖是否发生变化
                 if (projectSnapshoot.isDependenciesChanged()) {
-                    throw new CheckException("dependencies changed")
+                    throw new JumpException("dependencies changed")
                 }
             } catch (Throwable e) {
                 hasDexCache = false
 
-                if (!(e instanceof CheckException) && configuration.debug) {
+                if (!(e instanceof JumpException) && configuration.debug) {
                     e.printStackTrace()
                 }
 
@@ -185,6 +191,11 @@ public class FastdexVariant {
         }
 
         projectSnapshoot.prepareEnv()
+
+        if (hasDexCache) {
+            //判断下当前有多少个源文件发生变化，如果超过了阈值将会执行dex merge操作
+            needExecDexMerge = projectSnapshoot.diffResultSet.addOrModifiedPathInfos.size() >= configuration.dexMergeThreshold
+        }
         fastdexInstantRun.onFastdexPrepare()
     }
 
@@ -237,11 +248,19 @@ public class FastdexVariant {
         fastdexInstantRun.onSourceChanged()
     }
 
+    /**
+     * 保存fastdex-meta-info文件
+     * @return
+     */
     def saveMetaInfo() {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
         SerializeUtils.serializeTo(new FileOutputStream(metaInfoFile),metaInfo)
     }
 
+    /**
+     * 把fastdex-meta-info文件复制到合并以后的assets目录下
+     * @return
+     */
     def copyMetaInfo2Assets() {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
         File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
@@ -252,16 +271,12 @@ public class FastdexVariant {
         FileUtils.copyFileUsingStream(metaInfoFile,dest)
     }
 
+    /**
+     * 执行package任务之前
+     * @return
+     */
     def onPrePackage() {
         copyMetaInfo2Assets()
-
-//        if (hasDexCache) {
-//            if (metaInfo.packageUsingPatchDexVersion >= metaInfo.patchDexVersion) {
-//                project.logger.error("==fastdex skip copy dex")
-//                return
-//            }
-//            fastdexTransform.hookPatchBuildDex(fastdexTransform.hookPatchBuildDexArgs)
-//        }
     }
 
     /**
@@ -280,20 +295,6 @@ public class FastdexVariant {
      * @return
      */
     def willExecDexMerge() {
-        return hasDexCache && projectSnapshoot.diffResultSet.changedJavaFileDiffInfos.size() >= configuration.dexMergeThreshold
-    }
-
-    def getVariantConfiguration() {
-        return androidVariant.getVariantData().getVariantConfiguration()
-    }
-
-    private class CheckException extends Exception {
-        CheckException(String var1) {
-            super(var1)
-        }
-
-        CheckException(Throwable var1) {
-            super(var1)
-        }
+        return needExecDexMerge
     }
 }

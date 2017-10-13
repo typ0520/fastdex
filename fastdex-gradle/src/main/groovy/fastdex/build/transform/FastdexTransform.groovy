@@ -59,15 +59,13 @@ class FastdexTransform extends TransformProxy {
     Project project
     String variantName
 
-    HookPatchBuildDexArgs hookPatchBuildDexArgs
-
     FastdexTransform(Transform base, FastdexVariant fastdexVariant) {
         super(base)
-        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3") >= 0) {
-            //在所有的build-type上触发2.3的build-cache
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
+            //在所有的build-type上触发2.2以后的build-cache
             //boolean needMerge = !multiDex || mainDexListFile != null;// || !debugMode;
 
-            fastdexVariant.project.logger.error("==fastdex android gradle >= 2.3.0 ,replace dex transform")
+            fastdexVariant.project.logger.error("==fastdex android gradle >= ${Constants.MIN_BUILD_CACHE_ENABLED_VERSION} ,replace dex transform")
             this.base = new DexTransform(
                     base.dexOptions,
                     base.debugMode,
@@ -88,7 +86,7 @@ class FastdexTransform extends TransformProxy {
     @Override
     void transform(TransformInvocation transformInvocation) throws TransformException, IOException, InterruptedException {
         if (fastdexVariant.hasDexCache) {
-            project.logger.error("==fastdex patch transform start,we will generate dex file")
+            project.logger.error("\n==fastdex patch transform start,we will generate dex file")
             if (fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
                 //生成补丁jar包
                 File patchJar = generatePatchJar(transformInvocation)
@@ -121,28 +119,8 @@ class FastdexTransform extends TransformProxy {
                     fastdexVariant.metaInfo.mergedDexVersion += 1
                 }
                 fastdexVariant.metaInfo.save(fastdexVariant)
-
-                hookPatchBuildDexArgs = new HookPatchBuildDexArgs()
-                hookPatchBuildDexArgs.dexOutputDir = dexOutputDir
-                hookPatchBuildDexArgs.willExecDexMerge = willExecDexMerge
-
                 //复制补丁打包的dex到输出路径，为了触发package任务
                 hookPatchBuildDex(dexOutputDir,willExecDexMerge)
-
-                //删掉dex输出目录
-//                try {
-//                    dexOutputDir.deleteDir()
-//                } catch (Throwable e) {
-//
-//                }
-//
-//                try {
-//                    File packageIncrementalDir = fastdexVariant.androidVariant.getVariantData().getScope().getIncrementalDir("package${fastdexVariant.variantName}")
-//                    packageIncrementalDir.deleteDir()
-//                } catch (Throwable e) {
-//
-//                }
-
                 fastdexVariant.onDexGenerateSuccess(false,willExecDexMerge)
             }
             else {
@@ -170,7 +148,7 @@ class FastdexTransform extends TransformProxy {
 
             }
 
-            if (fastdexVariant.hasJarMergingTask && GradleUtils.getAndroidGradlePluginVersion().compareTo("2.3") >= 0) {
+            if (fastdexVariant.hasJarMergingTask && GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
                 TransformInvocationBuilder builder = new TransformInvocationBuilder(transformInvocation.context)
                 builder.addInputs(fastdexVariant.transformInvocation.inputs)
                 builder.addReferencedInputs(fastdexVariant.transformInvocation.referencedInputs)
@@ -198,10 +176,8 @@ class FastdexTransform extends TransformProxy {
             fastdexVariant.metaInfo.buildMillis = System.currentTimeMillis()
 
             fastdexVariant.onDexGenerateSuccess(true,false)
-            project.logger.error("==fastdex normal transform end")
+            project.logger.error("==fastdex normal transform end\n")
         }
-
-        fastdexVariant.executedDexTransform = true
     }
 
     public void copyFastdexRuntimeDex(File dist) {
@@ -289,18 +265,6 @@ class FastdexTransform extends TransformProxy {
         return dexOutputDir
     }
 
-    def hookPatchBuildDex(HookPatchBuildDexArgs args) {
-        if (args == null) {
-            args = new HookPatchBuildDexArgs()
-            args.dexOutputDir = GradleUtils.getDexOutputDir(fastdexVariant.androidVariant)
-            args.willExecDexMerge = false
-
-            println "args.dexOutputDir: " + args.dexOutputDir
-        }
-        hookPatchBuildDex(args.dexOutputDir,args.willExecDexMerge)
-        fastdexVariant.metaInfo.packageUsingPatchDexVersion = fastdexVariant.metaInfo.patchDexVersion
-        fastdexVariant.metaInfo.save(fastdexVariant)
-    }
     /**
      * 补丁打包时复制dex到指定位置
      * @param dexOutputDir dex输出路径
@@ -408,10 +372,5 @@ class FastdexTransform extends TransformProxy {
         else {
             project.logger.error("==fastdex patch build ${sb}")
         }
-    }
-
-    public static class HookPatchBuildDexArgs {
-        File dexOutputDir
-        boolean willExecDexMerge
     }
 }

@@ -35,7 +35,7 @@ public class JarOperation implements Opcodes {
 
         //所有的class目录
         Set<File> directoryInputFiles = new HashSet<>();
-        //所有输入的jar
+        //所有library工程输出的jar
         Set<File> jarInputFiles = new HashSet<>();
         for (TransformInput input : transformInvocation.getInputs()) {
             Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs()
@@ -123,15 +123,17 @@ public class JarOperation implements Opcodes {
         ZipOutputStream outputJarStream = null
         try {
             outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
-            for (File classpathFile : directoryInputFiles) {
+            for (File classesDir : directoryInputFiles) {
                 //fix library databinding bug
-                if (!FileUtils.dirExists(classpathFile.absolutePath)) {
+                if (!FileUtils.dirExists(classesDir.absolutePath)) {
                     continue
                 }
-                Path classpath = classpathFile.toPath()
+                Path classpath = classesDir.toPath()
 
-                boolean skip = (moudleDirectoryInputFiles != null && moudleDirectoryInputFiles.contains(classpathFile))
+                //是否属于library工程的classes目录
+                boolean libraryClassesDirectory = (moudleDirectoryInputFiles != null && moudleDirectoryInputFiles.contains(classesDir))
 
+                //如果当前目录是主工程classes输出目录，并且是使用customJavac编译的
                 Files.walkFileTree(classpath,new SimpleFileVisitor<Path>(){
                     @Override
                     FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -144,7 +146,7 @@ public class JarOperation implements Opcodes {
                             entryName = entryName.replace("\\", "/");
                         }
 
-                        if (skip) {
+                        if (libraryClassesDirectory) {
                             ZipEntry e = new ZipEntry(entryName)
                             outputJarStream.putNextEntry(e)
                             byte[] bytes = FileUtils.readContents(file.toFile())
@@ -163,27 +165,26 @@ public class JarOperation implements Opcodes {
                             String className = relativePath.toString().substring(0,relativePath.toString().length() - Constants.CLASS_SUFFIX.length());
                             className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
 
-                            for (String cn : changedClasses) {
-                                if (cn.equals(className) || className.startsWith("${cn}\$")
-                                        ////butterknife 8.2.0 以后生成的类MainActivity_ViewBinding.class、MainActivity_ViewBinding$1.class
-                                        || className.startsWith("${cn}_ViewBinding")) {
+                            //假如发生变化的java文件是fastdex/sample/MainActivity.java， fastdex/sample/MainActivity.class和以fastdex/sample/MainActivity$开头的class会被加进去
+                            int index = className.indexOf("\$")
+                            if (index != -1) {
+                                className = className.substring(0,index)
+                            }
+                            if (changedClasses.contains(className)) {
+                                ZipEntry e = new ZipEntry(entryName)
+                                outputJarStream.putNextEntry(e)
 
-                                    ZipEntry e = new ZipEntry(entryName)
-                                    outputJarStream.putNextEntry(e)
-
-                                    byte[] bytes = FileUtils.readContents(file.toFile())
-                                    //如果需要触发dex merge,必须注入代码
-                                    if (willExeDexMerge) {
-                                        project.logger.error("==fastdex prepare add injected class: ${e}")
-                                        bytes = ClassInject.inject(bytes)
-                                    }
-                                    else {
-                                        project.logger.error("==fastdex add class: ${e}")
-                                    }
-                                    outputJarStream.write(bytes,0,bytes.length)
-                                    outputJarStream.closeEntry()
-                                    break;
+                                byte[] bytes = FileUtils.readContents(file.toFile())
+                                //如果需要触发dex merge,必须注入代码
+                                if (willExeDexMerge) {
+                                    project.logger.error("==fastdex prepare add injected class: ${e}")
+                                    bytes = ClassInject.inject(bytes)
                                 }
+                                else {
+                                    project.logger.error("==fastdex add class: ${e}")
+                                }
+                                outputJarStream.write(bytes,0,bytes.length)
+                                outputJarStream.closeEntry()
                             }
                         }
                         return FileVisitResult.CONTINUE

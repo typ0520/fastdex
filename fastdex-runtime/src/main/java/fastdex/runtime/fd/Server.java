@@ -32,6 +32,8 @@ import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Handler;
@@ -260,11 +262,11 @@ public class Server {
                         // Send an "ack" back to the IDE.
                         // The value of the boolean is true only when the app is in the
                         // foreground.
-                        boolean active = Restarter.getForegroundActivity(context) != null;
-                        output.writeBoolean(active);
-
+                        Activity activity = Restarter.getForegroundActivity(context);
+                        boolean active = activity != null;
                         RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
 
+                        output.writeBoolean(active);
                         output.writeLong(runtimeMetaInfo.getBuildMillis());
                         output.writeUTF(runtimeMetaInfo.getVariantName());
 
@@ -311,11 +313,8 @@ public class Server {
                         updateMode = handlePatches(changes, hasResources, updateMode);
 
                         boolean showToast = input.readBoolean();
-
-                        // Send an "ack" back to the IDE; this is used for timing purposes only
-                        output.writeBoolean(true);
-
-                        restart(updateMode,hasDex, hasResources,resourcesApkPath, showToast);
+                        boolean restartAppByCmd = input.readBoolean();
+                        restart(updateMode,hasDex, hasResources,resourcesApkPath, showToast, restartAppByCmd);
 
                         output.writeBoolean(true);
                         continue;
@@ -422,7 +421,6 @@ public class Server {
         final File workResourceDirectory = new File(workDir,Constants.RES_DIR);
 
         try {
-
             boolean hasResourcesApk = false;
             boolean hasMergedDex = false;
             boolean hasPatchDex = false;
@@ -435,10 +433,16 @@ public class Server {
                     if (path.endsWith(ShareConstants.RES_SPLIT_STR + ShareConstants.PATCH_DEX)) {
                         hasPatchDex = true;
                     }
-                    updateMode = handleHotSwapPatch(updateMode, change,workDir);
+                    int localUpdateMode = handleHotSwapPatch(updateMode, change,workDir);
+                    if (localUpdateMode > updateMode) {
+                        updateMode = localUpdateMode;
+                    }
                 } else if (isResourcePath(path)) {
                     hasResourcesApk = true;
-                    updateMode = handleResourcePatch(updateMode, change, path,workDir);
+                    int localUpdateMode = handleResourcePatch(updateMode, change, path,workDir);
+                    if (localUpdateMode > updateMode) {
+                        updateMode = localUpdateMode;
+                    }
                 }
             }
 
@@ -503,14 +507,15 @@ public class Server {
         return path.split(Constants.RES_SPLIT_STR);
     }
 
-    private void restart(int updateMode, boolean hasDex, boolean incrementalResources, String resourcesApkPath, boolean toast) {
+    public void restart(int updateMode, boolean hasDex, boolean hasResources, String resourcesApkPath, boolean toast, boolean restartAppByCmd) {
         if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
             Log.v(Logging.LOG_TAG, "Finished loading changes; update mode =" + updateMode);
         }
 
         final List<Activity> activities = Restarter.getActivities(context, false);
+        Activity activity = Restarter.getForegroundActivity(context);
 
-        if (!hasDex && incrementalResources && updateMode == UPDATE_MODE_WARM_SWAP) {
+        if (!hasDex && hasResources && updateMode == UPDATE_MODE_WARM_SWAP) {
             // Try to just replace the resources on the fly!
             File resDir = new File(Fastdex.get(context).getRuntimeMetaInfo().getPreparedPatchPath(),Constants.RES_DIR);
             File file = new File(resDir, resourcesApkPath);
@@ -530,8 +535,6 @@ public class Server {
                 updateMode = UPDATE_MODE_COLD_SWAP;
             }
         }
-
-        Activity activity = Restarter.getForegroundActivity(context);
         if (updateMode == UPDATE_MODE_WARM_SWAP) {
             if (activity != null) {
                 if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
@@ -551,7 +554,7 @@ public class Server {
             updateMode = UPDATE_MODE_COLD_SWAP;
         }
 
-        if (updateMode == UPDATE_MODE_COLD_SWAP) {
+        if (!restartAppByCmd && updateMode == UPDATE_MODE_COLD_SWAP) {
             //restart app
             if (activity instanceof MiddlewareActivity) {
                 ((MiddlewareActivity)activity).reset();
@@ -576,5 +579,15 @@ public class Server {
                 }
             }
         }
+    }
+
+    public static String getBootActivityName(Context context) {
+        ApplicationInfo appInfo = null;
+        try {
+            appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return appInfo == null ? "" : appInfo.metaData.getString("FASTDEX_BOOT_ACTIVITY_CLASSNAME");
     }
 }

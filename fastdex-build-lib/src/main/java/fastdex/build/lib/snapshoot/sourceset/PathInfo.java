@@ -6,10 +6,17 @@ import java.io.File;
  * Created by tong on 17/4/6.
  */
 public class PathInfo {
+    public String path;
     public File absoluteFile;
     public String relativePath;
 
     public PathInfo(File absoluteFile, String relativePath) {
+        this.absoluteFile = absoluteFile;
+        this.relativePath = relativePath;
+    }
+
+    public PathInfo(String path, File absoluteFile, String relativePath) {
+        this.path = path;
         this.absoluteFile = absoluteFile;
         this.relativePath = relativePath;
     }

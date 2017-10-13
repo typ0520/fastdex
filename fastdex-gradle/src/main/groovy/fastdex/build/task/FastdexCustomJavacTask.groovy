@@ -5,13 +5,20 @@ import fastdex.build.lib.snapshoot.sourceset.SourceSetDiffResultSet
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexRuntimeException
 import fastdex.build.util.FastdexUtils
+import fastdex.build.util.GradleUtils
 import fastdex.common.ShareConstants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.SerializeUtils
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
+import org.gradle.api.Task
 import org.gradle.api.tasks.TaskAction
+import java.nio.file.FileVisitResult
+import java.nio.file.Path
+import java.nio.file.Files
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 /**
  * 每次SourceSet下的某个java文件变化时，默认的compile${variantName}JavaWithJavac任务会扫描所有的java文件
@@ -25,43 +32,34 @@ import org.gradle.api.tasks.TaskAction
  */
 public class FastdexCustomJavacTask extends DefaultTask {
     FastdexVariant fastdexVariant
-    Object javaCompile
-    Object javacIncrementalSafeguard
+    Task javaCompile
+    Task javacIncrementalSafeguard
 
     FastdexCustomJavacTask() {
         group = 'fastdex'
     }
 
-    def disableJavaCompile(boolean disable) {
-        javaCompile.enabled = !disable
+    def disableJavaCompile() {
+        javaCompile.enabled = false
 
         if (javacIncrementalSafeguard != null) {
-            try {
-                javacIncrementalSafeguard.enabled = !disable
-            } catch (Throwable e) {
-
-            }
+            javacIncrementalSafeguard.enabled = false
         }
     }
 
     @TaskAction
     void compile() {
+        if (!fastdexVariant.hasDexCache) {
+            project.logger.error("==fastdex miss dex cache, just ignore")
+            return
+        }
         def project = fastdexVariant.project
         def projectSnapshoot = fastdexVariant.projectSnapshoot
 
         File classesDir = fastdexVariant.androidVariant.getVariantData().getScope().getJavaOutputDir()
+
         if (!FileUtils.dirExists(classesDir.absolutePath)) {
-            project.logger.error("==fastdex classes dir not exists, just ignore")
-            return
-        }
-
-        if (!fastdexVariant.configuration.useCustomCompile) {
-            project.logger.error("==fastdex useCustomCompile is false, just ignore")
-            return
-        }
-
-        if (!fastdexVariant.hasDexCache) {
-            project.logger.error("==fastdex dex cache not exists, just ignore")
+            project.logger.error("==fastdex miss classes dir, just ignore")
             return
         }
 
@@ -69,7 +67,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
         //java文件是否发生变化
         if (!sourceSetDiffResultSet.isJavaFileChanged()) {
             project.logger.error("==fastdex no java files changed, just ignore")
-            disableJavaCompile(true)
+            disableJavaCompile()
             return
         }
 
@@ -78,15 +76,25 @@ public class FastdexCustomJavacTask extends DefaultTask {
                 && projectSnapshoot.oldDiffResultSet != null
                 && projectSnapshoot.diffResultSet.equals(projectSnapshoot.oldDiffResultSet)) {
             project.logger.error("==fastdex java files not changed, just ignore")
-            disableJavaCompile(true)
+            disableJavaCompile()
             return
         }
 
+        boolean onlyROrBuildConfig = true
         Set<PathInfo> addOrModifiedPathInfos = new HashSet<>()
 
+        String packageNamePath = fastdexVariant.getOriginPackageName().split("\\.").join(File.separator)
+        String rRelativePath = packageNamePath + File.separator + "R.java"
+        String buildConfigRelativePath = packageNamePath + File.separator + "BuildConfig.java"
+
         for (PathInfo pathInfo : sourceSetDiffResultSet.addOrModifiedPathInfosMap.get(project.projectDir.absolutePath)) {
+            //忽略掉kotlin文件
             if (pathInfo.relativePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
                 addOrModifiedPathInfos.add(pathInfo)
+
+                if (onlyROrBuildConfig && !pathInfo.relativePath.equals(rRelativePath) && !pathInfo.relativePath.equals(buildConfigRelativePath)) {
+                    onlyROrBuildConfig = false
+                }
             }
             else {
                 project.logger.error("==fastdex skip kotlin file: ${pathInfo.relativePath}")
@@ -95,12 +103,17 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
         if (addOrModifiedPathInfos.isEmpty()) {
             project.logger.error("==fastdex no java files changed, just ignore")
-            disableJavaCompile(true)
+            disableJavaCompile()
             return
         }
 
         //compile java
         File androidJar = new File("${FastdexUtils.getSdkDirectory(project)}${File.separator}platforms${File.separator}${project.android.getCompileSdkVersion()}${File.separator}android.jar")
+
+        //class输出目录
+        File patchClassesDir = new File(FastdexUtils.getWorkDir(project,fastdexVariant.variantName),"patch-classes")
+        FileUtils.deleteDir(patchClassesDir)
+        FileUtils.ensumeDir(patchClassesDir)
 
         def classpath = new ArrayList()
         classpath.add(classesDir.absolutePath)
@@ -111,16 +124,12 @@ public class FastdexCustomJavacTask extends DefaultTask {
         classpath.addAll(list)
 
         def executable = FastdexUtils.getJavacCmdPath()
-        project.logger.error("==fastdex executable ${executable}")
         //处理retrolambda
         if (project.plugins.hasPlugin("me.tatarka.retrolambda")) {
-            //def retrolambda = project.extensions.getByType(RetrolambdaExtension)
             def retrolambda = project.retrolambda
             def rt = "${retrolambda.jdk}${File.separator}jre${File.separator}lib${File.separator}rt.jar"
             classpath.add(rt)
-
             executable = "${retrolambda.tryGetJdk()}${File.separator}bin${File.separator}javac"
-
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 executable = "${executable}.exe"
             }
@@ -135,8 +144,70 @@ public class FastdexCustomJavacTask extends DefaultTask {
         cmdArgs.add(javaCompile.targetCompatibility)
         cmdArgs.add("-source")
         cmdArgs.add(javaCompile.sourceCompatibility)
-        cmdArgs.add("-cp")
-        cmdArgs.add(joinClasspath(classpath))
+
+        if (!onlyROrBuildConfig) {
+            cmdArgs.add("-cp")
+            cmdArgs.add(joinClasspath(classpath))
+        }
+
+        def aptOutputDir = GradleUtils.getAptOutputDir(fastdexVariant.androidVariant)
+        //R.java 或者 BuildConfig.java不用依赖classpath ，不加-cp、-processor会快一些
+        if (!onlyROrBuildConfig) {
+            def aptConfiguration = project.configurations.findByName("apt")
+            def isAptEnabled = (project.plugins.hasPlugin("android-apt") || project.plugins.hasPlugin("com.neenbedankt.android-apt")) && aptConfiguration != null && !aptConfiguration.empty
+
+            def annotationProcessorConfig = project.configurations.findByName("annotationProcessor")
+            def isAnnotationProcessor = annotationProcessorConfig != null && !annotationProcessorConfig.empty
+
+            if ((isAptEnabled || isAnnotationProcessor) && javaCompile) {
+                project.logger.error("==fastdex found ${project.name} apt plugin enabled.")
+
+                def configurations = javaCompile.classpath
+
+                if (isAptEnabled) {
+                    configurations += aptConfiguration
+                }
+                if (isAnnotationProcessor) {
+                    configurations += annotationProcessorConfig
+                }
+
+                def processorPath = configurations.asPath
+
+                boolean disableDiscovery = javaCompile.options.compilerArgs.indexOf('-processorpath') == -1
+
+                int processorIndex = javaCompile.options.compilerArgs.indexOf('-processor')
+                def processor = null
+                if (processorIndex != -1) {
+                    processor = javaCompile.options.compilerArgs.get(processorIndex + 1)
+                }
+
+                def aptArgs = []
+                javaCompile.options.compilerArgs.each { arg ->
+                    if (arg.toString().startsWith('-A')) {
+                        aptArgs.add(arg)
+                    }
+                }
+
+                if (processor) {
+                    cmdArgs.add("-processor")
+                    cmdArgs.add(processor)
+                }
+
+                if (!disableDiscovery) {
+                    cmdArgs.add("-processorpath")
+                    cmdArgs.add(processorPath)
+                }
+
+                cmdArgs.addAll(aptArgs)
+            } else {
+                project.logger.error("==fastdex doesn't found apt plugin for $project.name")
+            }
+        }
+
+        cmdArgs.add("-s")
+        cmdArgs.add(aptOutputDir)
+        cmdArgs.add("-d")
+        cmdArgs.add(onlyROrBuildConfig ? classesDir.absolutePath : patchClassesDir.absolutePath)
 
         for (PathInfo pathInfo : addOrModifiedPathInfos) {
             if (pathInfo.relativePath.endsWith(ShareConstants.JAVA_SUFFIX)) {
@@ -148,79 +219,19 @@ public class FastdexCustomJavacTask extends DefaultTask {
             }
         }
 
-        def aptConfiguration = project.configurations.findByName("apt")
-        def isAptEnabled = project.plugins.hasPlugin("android-apt") && aptConfiguration != null && !aptConfiguration.empty
-
-        def annotationProcessorConfig = project.configurations.findByName("annotationProcessor")
-        def isAnnotationProcessor = annotationProcessorConfig != null && !annotationProcessorConfig.empty
-
-        if ((isAptEnabled || isAnnotationProcessor) && javaCompile) {
-            project.logger.error("==fastdex found ${project.name} apt plugin enabled.")
-
-            def aptOutputDir
-            if (project.plugins.hasPlugin("com.android.application")) {
-                aptOutputDir = new File(project.buildDir, "generated/source/apt/${fastdexVariant.androidVariant.dirName}").absolutePath
-            } else {
-                aptOutputDir = new File(project.buildDir, "generated/source/apt/release").absolutePath
-            }
-
-            def configurations = javaCompile.classpath
-
-            if (isAptEnabled) {
-                configurations += aptConfiguration
-            }
-            if (isAnnotationProcessor) {
-                configurations += annotationProcessorConfig
-            }
-
-            def processorPath = configurations.asPath
-
-            boolean disableDiscovery = javaCompile.options.compilerArgs.indexOf('-processorpath') == -1
-
-            int processorIndex = javaCompile.options.compilerArgs.indexOf('-processor')
-            def processor = null
-            if (processorIndex != -1) {
-                processor = javaCompile.options.compilerArgs.get(processorIndex + 1)
-            }
-
-            def aptArgs = []
-            javaCompile.options.compilerArgs.each { arg ->
-                if (arg.toString().startsWith('-A')) {
-                    aptArgs.add(arg)
-                }
-            }
-
-            cmdArgs.add("-s")
-            cmdArgs.add(aptOutputDir)
-
-            if (processor) {
-                cmdArgs.add("-processor")
-                cmdArgs.add(processor)
-            }
-
-            if (!disableDiscovery) {
-                cmdArgs.add("-processorpath")
-                cmdArgs.add(processorPath)
-            }
-
-            cmdArgs.addAll(aptArgs)
-        } else {
-            project.logger.error("==fastdex doesn't found apt plugin for $project.name")
-        }
-
-        cmdArgs.add("-d")
-        cmdArgs.add(classesDir.absolutePath)
-
         StringBuilder cmd = new StringBuilder()
-        String[] cmdArr = new String[cmdArgs.size()]
         for (int i = 0; i < cmdArgs.size(); i++) {
-            cmdArr[i] = cmdArgs.get(i)
-            cmd.append(" " + cmdArgs.get(i))
+            if (i != 0) {
+                cmd.append(" ");
+            }
+            cmd.append(cmdArgs.get(i))
         }
 
         long start = System.currentTimeMillis()
 
-        ProcessBuilder processBuilder = new ProcessBuilder(cmdArr)
+        project.logger.error("\n${cmd}\n")
+
+        ProcessBuilder processBuilder = new ProcessBuilder((String[])cmdArgs.toArray())
         def process = processBuilder.start()
 
         InputStream is = process.getInputStream()
@@ -246,18 +257,43 @@ public class FastdexCustomJavacTask extends DefaultTask {
         }
 
         if (status != 0) {
-            throw new FastdexRuntimeException("==fastdex javac fail: \n${cmd}")
+            throw new FastdexRuntimeException("javac exec fail....")
         }
-        else {
-            long end = System.currentTimeMillis()
-            if (project.fastdex.debug) {
-                project.logger.error("${cmd}")
-            }
-            project.logger.error("==fastdex javac success, use: ${end - start}ms")
+
+        if (!onlyROrBuildConfig) {
+            //覆盖app/build/intermediates/classes内容
+            Files.walkFileTree(patchClassesDir.toPath(),new SimpleFileVisitor<Path>(){
+                @Override
+                FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Path relativePath = patchClassesDir.toPath().relativize(file)
+
+                    File destFile = new File(classesDir,relativePath.toString())
+                    FileUtils.copyFileUsingStream(file.toFile(),destFile)
+
+                    project.logger.error("==fastdex apply class to ${destFile}")
+
+                    String classRelativePath = relativePath.toString()
+                    classRelativePath = classRelativePath.substring(0, classRelativePath.length() - ShareConstants.CLASS_SUFFIX.length());
+                    classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.");
+
+                    int index = classRelativePath.indexOf("\$")
+                    if (index != -1) {
+                        sourceSetDiffResultSet.addOrModifiedClasses.add(classRelativePath.substring(0,index))
+                    }
+                    else {
+                        sourceSetDiffResultSet.addOrModifiedClasses.add(classRelativePath)
+                    }
+                    return FileVisitResult.CONTINUE
+                }
+            })
         }
-        disableJavaCompile(true)
+
+        disableJavaCompile()
         //保存对比信息
         fastdexVariant.projectSnapshoot.saveDiffResultSet()
+        fastdexVariant.compiledByCustomJavac = true
+        long end = System.currentTimeMillis()
+        project.logger.error("==fastdex javac success, use: ${end - start}ms")
     }
 
     def joinClasspath(List<String> collection) {

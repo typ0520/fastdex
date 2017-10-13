@@ -72,7 +72,7 @@ public class ClassInject implements Opcodes {
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
         for (File classpathFile : directoryInputFiles) {
-            project.logger.error("====fastdex ==inject dir: ${classpathFile.getAbsolutePath()}====")
+            project.logger.error("====fastdex inject dir: ${classpathFile.getAbsolutePath()}====")
             ClassInject.injectDirectory(fastdexVariant,classpathFile,true)
         }
         long end = System.currentTimeMillis()
@@ -102,7 +102,7 @@ public class ClassInject implements Opcodes {
             if (!projectJarFiles.contains(file)) {
                 continue
             }
-            project.logger.error("==fastdex ==inject jar: ${file}")
+            project.logger.error("==fastdex inject jar: ${file}")
             ClassInject.injectJar(fastdexVariant,file,file)
         }
         long end = System.currentTimeMillis()
@@ -129,37 +129,6 @@ public class ClassInject implements Opcodes {
         ClassInject.injectDirectory(fastdexVariant,tempDir,false)
         project.ant.zip(baseDir: tempDir, destFile: outputJar)
         FileUtils.deleteDir(tempDir)
-//        ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream()
-//
-//        ZipOutputStream outputJarStream = null
-//        ZipFile zipFile = new ZipFile(file.absolutePath);
-//        Enumeration enumeration = zipFile.entries();
-//        try {
-//            outputJarStream = new ZipOutputStream(new FileOutputStream(new File("/Users/tong/Desktop/${file.name}")));
-//            while (enumeration.hasMoreElements()) {
-//                ZipEntry entry = (ZipEntry) enumeration.nextElement();
-//                if (entry.isDirectory()) {
-//                    continue;
-//                }
-//
-//                ZipEntry e = new ZipEntry(entry.name)
-//                outputJarStream.putNextEntry(e)
-//                //byte[] bytes = FileUtils.readStream(zipFile.getInputStream(entry))
-//                byte[] bytes = FileUtils.readContents(new File("/Users/tong/Desktop/a.txt"))
-//                outputJarStream.write(bytes,0,bytes.length);
-//                outputJarStream.flush()
-//                outputJarStream.closeEntry()
-//            }
-//            //FileUtils.write2file(zipOutputStream.toByteArray(),file);
-//        } finally {
-//            if (outputJarStream != null) {
-//                outputJarStream.close();
-//            }
-//
-//            if (zipFile != null) {
-//                zipFile.close();
-//            }
-//        }
     }
 
     /**

@@ -136,7 +136,7 @@ public class Restarter {
         if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
             Log.v(Logging.LOG_TAG, "About to show toast for activity " + activity + ": " + text);
         }
-                activity.runOnUiThread(new Runnable() {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {

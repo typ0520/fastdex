@@ -7,7 +7,6 @@ import fastdex.common.ShareConstants;
  */
 public interface Constants extends ShareConstants {
     String BUILD_DIR = "fastdex"
-    String INJECTED_JAR_FILENAME = "injected-combined.jar"
     String R_TXT = "r.txt"
     String RESOURCE_PUBLIC_XML = "public.xml"
     String RESOURCE_IDX_XML = "idx.xml"
@@ -21,4 +20,5 @@ public interface Constants extends ShareConstants {
     String DEFAULT_LIBRARY_VARIANT_DIR_NAME = "release"
     String DEX_MERGE_JAR_FILENAME = "fastdex-dex-merge.jar"
     String STUDIO_INFO_SCRIPT_MACOS = "fastdex-studio-info-macos-%s.sh"
+    String MIN_BUILD_CACHE_ENABLED_VERSION = "2.2.2"
 }

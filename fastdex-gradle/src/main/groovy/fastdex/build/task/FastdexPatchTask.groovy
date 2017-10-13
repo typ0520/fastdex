@@ -106,15 +106,12 @@ public class FastdexPatchTask extends DefaultTask {
 
         } catch (Throwable e) {
             if (!(e instanceof FastdexRuntimeException)) {
-                if (fastdexVariant.configuration.debug) {
-                    e.printStackTrace()
-                }
+                e.printStackTrace()
                 fastdexVariant.project.logger.error("==fastdex ping installed app fail: " + e.message)
             }
             return
         }
         project.logger.error("==fastdex receive: ${runtimeMetaInfo}")
-
         project.logger.error("==fastdex app  sendResourcesApk: ${sendResourcesApk} , sendPatchDex: ${sendPatchDex}, sendMergedDex: ${sendMergedDex}")
 
         if (nothingChanged) {
@@ -180,9 +177,9 @@ public class FastdexPatchTask extends DefaultTask {
                     }
 
                     output.writeInt(ProtocolConstants.UPDATE_MODE_WARM_SWAP)
+                    //show toast
                     output.writeBoolean(true)
-
-                    input.readBoolean()
+                    output.writeBoolean(fastdexVariant.configuration.restartAppByCmd)
 
                     try {
                         return input.readBoolean()
@@ -194,7 +191,8 @@ public class FastdexPatchTask extends DefaultTask {
             long end = System.currentTimeMillis();
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
-            //app不在后台、补丁发送失败、补丁中包含dex并且有设置使用命令轻质重启
+            //app不在后台、补丁发送失败、补丁中包含dex并且有设置使用命令强制重启
+            //当前的activity栈如果只有一个activity并且是启动页activity不使用adb命令强制重启
             if (!runtimeMetaInfo.active || !result || ((sendPatchDex || sendMergedDex) && (fastdexVariant.configuration.restartAppByCmd))) {
                 killApp()
                 fastdexInstantRun.startBootActivity()

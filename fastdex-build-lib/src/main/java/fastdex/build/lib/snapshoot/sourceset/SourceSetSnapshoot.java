@@ -88,23 +88,21 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.DELETEED)) {
             JavaDirectorySnapshoot javaDirectorySnapshoot = oldSnapshoot.getJavaDirectorySnapshootByPath(diffInfo.uniqueKey);
 
-            JavaDirectoryDiffResultSet javaDirectoryDiffResultSet = javaDirectorySnapshoot.createEmptyResultSet();
+            JavaDirectoryDiffResultSet resultSet = javaDirectorySnapshoot.createEmptyResultSet();
             for (FileNode node : javaDirectorySnapshoot.nodes) {
-                javaDirectoryDiffResultSet.add(new JavaFileDiffInfo(Status.DELETEED,null,node));
-                //sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.DELETEED,null,node));
+                resultSet.add(new JavaFileDiffInfo(Status.DELETEED,null,node));
             }
-            sourceSetResultSet.mergeJavaDirectoryResultSet(path,javaDirectoryDiffResultSet);
+            sourceSetResultSet.mergeJavaDirectoryResultSet(path,resultSet);
         }
 
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.ADDED)) {
             JavaDirectorySnapshoot javaDirectorySnapshoot = getJavaDirectorySnapshootByPath(diffInfo.uniqueKey);
 
-            JavaDirectoryDiffResultSet javaDirectoryDiffResultSet = javaDirectorySnapshoot.createEmptyResultSet();
+            JavaDirectoryDiffResultSet resultSet = javaDirectorySnapshoot.createEmptyResultSet();
             for (FileNode node : javaDirectorySnapshoot.nodes) {
-                javaDirectoryDiffResultSet.add(new JavaFileDiffInfo(Status.ADDED,node,null));
-                //sourceSetResultSet.addJavaFileDiffInfo(new JavaFileDiffInfo(Status.ADDED,node,null));
+                resultSet.add(new JavaFileDiffInfo(Status.ADDED,node,null));
             }
-            sourceSetResultSet.mergeJavaDirectoryResultSet(path,javaDirectoryDiffResultSet);
+            sourceSetResultSet.mergeJavaDirectoryResultSet(path,resultSet);
         }
 
         for (DiffInfo diffInfo : sourceSetResultSet.getDiffInfos(Status.NOCHANGED)) {
@@ -118,7 +116,7 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         return sourceSetResultSet;
     }
 
-    private JavaDirectorySnapshoot getJavaDirectorySnapshootByPath(String path) {
+    public JavaDirectorySnapshoot getJavaDirectorySnapshootByPath(String path) {
         for (JavaDirectorySnapshoot snapshoot : directorySnapshootSet) {
             if (snapshoot.path.equals(path)) {
                 return snapshoot;
@@ -127,17 +125,29 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
         return null;
     }
 
-//    public void applyNewProjectDir(String oldRootProjectPath,String curRootProjectPath,String curProjectPath) {
-//        this.path = curProjectPath;
-//
-//        for (StringNode node : nodes) {
-//            node.setString(node.getString().replaceAll(oldRootProjectPath,curRootProjectPath));
-//        }
-//        for (JavaDirectorySnapshoot snapshoot : directorySnapshootSet) {
-//            snapshoot.path = snapshoot.path.replaceAll(oldRootProjectPath,curRootProjectPath);
-//            snapshoot.projectPath = snapshoot.projectPath.replaceAll(oldRootProjectPath,curRootProjectPath);
-//        }
-//    }
+    public JavaDirectorySnapshoot removeJavaDirectorySnapshootByPath(String path) {
+        JavaDirectorySnapshoot result = null;
+        for (JavaDirectorySnapshoot snapshoot : directorySnapshootSet) {
+            if (snapshoot.path.equals(path)) {
+                result = snapshoot;
+            }
+        }
+        if (result != null) {
+            directorySnapshootSet.remove(result);
+
+            StringNode preDelNode = null;
+            for (StringNode stringNode : nodes) {
+                if (stringNode.getString().equals(path)) {
+                    preDelNode = stringNode;
+                }
+            }
+
+            if (preDelNode != null) {
+                nodes.remove(preDelNode);
+            }
+        }
+        return result;
+    }
 
     @Override
     public String toString() {

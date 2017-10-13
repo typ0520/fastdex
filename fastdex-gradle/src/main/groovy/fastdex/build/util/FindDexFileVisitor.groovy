@@ -9,7 +9,7 @@ import fastdex.common.ShareConstants;
 /**
  * Created by tong on 17/9/24.
  */
-public class FindDexSimpleFileVisitor extends SimpleFileVisitor<Path> {
+public class FindDexFileVisitor extends SimpleFileVisitor<Path> {
     public boolean hasDex;
 
     @Override
