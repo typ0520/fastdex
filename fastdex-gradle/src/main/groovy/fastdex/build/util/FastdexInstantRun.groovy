@@ -213,55 +213,19 @@ public class FastdexInstantRun {
             File tempAssetsPath = new File(tempDir,"assets")
             FileUtils.copyDir(assetsPath,tempAssetsPath)
 
-            String[] cmds = new String[assetFiles.size() + 4]
-            cmds[0] = FastdexUtils.getAaptCmdPath(project)
-            cmds[1] = "add"
-            cmds[2] = "-f"
-            cmds[3] = tempResourcesApk.absolutePath
-
+            List<String> cmdArgs = new ArrayList<>()
+            cmdArgs.add(FastdexUtils.getAaptCmdPath(project))
+            cmdArgs.add("add")
+            cmdArgs.add("-f")
+            cmdArgs.add(tempResourcesApk.absolutePath)
 
             for (int i = 0; i < assetFiles.size(); i++) {
-                cmds[4 + i] = "assets/" + assetFiles.get(i).toString()
+                cmdArgs.add("assets/" + assetFiles.get(i).toString())
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder(cmds)
-            processBuilder.directory(tempDir)
-
-            def process = processBuilder.start()
-
-            InputStream is = process.getInputStream()
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is))
-            String line = null
-            while ((line = reader.readLine()) != null) {
-                println(line)
-            }
-            reader.close()
-
-            int status = process.waitFor()
-
-            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-            reader.close();
-            try {
-                process.destroy()
-            } catch (Throwable e) {
-
-            }
-
-            def cmd = cmds.join(" ")
-            if (fastdexVariant.configuration.debug) {
-                project.logger.error("==fastdex add asset files into resources.apk. cmd:\n${cmd}")
-            }
-
-            if (status != 0) {
-                throw new RuntimeException("==fastdex add asset files into resources.apk fail. cmd:\n${cmd}")
-            }
-            else {
-                tempResourcesApk.renameTo(resourcesApk)
-                FileUtils.deleteDir(tempDir)
-            }
+            FastdexUtils.runCommand(project,cmdArgs,tempDir,false)
+            tempResourcesApk.renameTo(resourcesApk)
+            FileUtils.deleteDir(tempDir)
 
             long end = System.currentTimeMillis();
             fastdexVariant.project.logger.error("==fastdex generate resources.apk success, use: ${end - start}ms")
@@ -298,23 +262,23 @@ public class FastdexInstantRun {
         //启动第一个activity
         String bootActivityName = GradleUtils.getBootActivity(fastdexVariant.manifestPath)
         if (bootActivityName) {
+            List<String> cmdArgs = new ArrayList<>()
+            cmdArgs.add(FastdexUtils.getAdbCmdPath(project))
+            cmdArgs.add("-s")
+            cmdArgs.add(device.getSerialNumber())
+            cmdArgs.add("shell")
+            cmdArgs.add("am")
+            cmdArgs.add("start")
+            cmdArgs.add("-n")
+            cmdArgs.add(packageName + "/" + bootActivityName)
+            cmdArgs.add("-a")
+            cmdArgs.add("android.intent.action.MAIN")
+            cmdArgs.add("-c")
+            cmdArgs.add("android.intent.category.LAUNCHER")
 
             //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
-            def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",device.getSerialNumber(),"shell","am","start","-n","\"${packageName}/${bootActivityName}\"","-a","android.intent.action.MAIN","-c","android.intent.category.LAUNCHER").start()
-            int status = process.waitFor()
-            try {
-                process.destroy()
-            } catch (Throwable e) {
 
-            }
-
-            String cmd = "adb -s ${device.getSerialNumber()} shell am start -n \"${packageName}/${bootActivityName}\" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER"
-            if (!background) {
-                project.logger.error("${cmd}")
-            }
-            if (status != 0 && !background) {
-                throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
-            }
+           FastdexUtils.runCommand(project,cmdArgs,background)
         }
     }
 

@@ -27,11 +27,11 @@ public class FastdexInstantRunMarkTask extends DefaultTask {
                 } catch (Throwable e) {
 
                 }
-                try {
-                    fastdexVariant.fastdexInstantRun.startTransparentActivity(true)
-                } catch (Throwable e) {
-
-                }
+//                try {
+//                    fastdexVariant.fastdexInstantRun.startTransparentActivity(true)
+//                } catch (Throwable e) {
+//
+//                }
             }
         }).start()
     }

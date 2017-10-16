@@ -36,9 +36,7 @@ public class MetaInfo {
 
     public int resourcesVersion
 
-    public boolean active
-
-    public int packageUsingPatchDexVersion
+    public boolean active = true
 
     /**
      * 是否移动了工程目录

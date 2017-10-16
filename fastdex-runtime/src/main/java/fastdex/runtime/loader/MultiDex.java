@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fastdex.runtime.multidex;
+package fastdex.runtime.loader;
 
 import android.app.Application;
 import android.content.Context;

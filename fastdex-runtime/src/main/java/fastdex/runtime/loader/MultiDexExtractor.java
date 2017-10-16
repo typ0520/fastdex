@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fastdex.runtime.multidex;
+package fastdex.runtime.loader;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -38,11 +38,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import fastdex.runtime.utils.ZipUtil;
+
 /**
  * Exposes application secondary dex files as files in the application data
  * directory.
  */
-final class MultiDexExtractor {
+public class MultiDexExtractor {
 
     /**
      * Zip file containing one secondary dex file.

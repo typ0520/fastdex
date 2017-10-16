@@ -7,7 +7,7 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="哈123"/>
+        android:text="2"/>
 
     <TextView
         android:id="@+id/tv2"

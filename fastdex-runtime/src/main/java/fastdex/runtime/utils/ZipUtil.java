@@ -18,7 +18,7 @@
  * ZipConstants from android libcore.
  */
 
-package fastdex.runtime.multidex;
+package fastdex.runtime.utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.zip.ZipException;
 /**
  * Tools to build a quick partial crc of zip files.
  */
-final class ZipUtil {
+public class ZipUtil {
     static class CentralDirectory {
         long offset;
         long size;
@@ -51,7 +51,7 @@ final class ZipUtil {
      * zip file. Does not support zip64 nor multidisk but it should be OK for now since ZipFile does
      * not either.
      */
-    static long getZipCrc(File apk) throws IOException {
+    public static long getZipCrc(File apk) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(apk, "r");
         try {
             CentralDirectory dir = findCentralDirectory(raf);
@@ -63,7 +63,7 @@ final class ZipUtil {
     }
 
     /* Package visible for testing */
-    static CentralDirectory findCentralDirectory(RandomAccessFile raf) throws IOException,
+    public static CentralDirectory findCentralDirectory(RandomAccessFile raf) throws IOException,
             ZipException {
         long scanOffset = raf.length() - ENDHDR;
         if (scanOffset < 0) {
@@ -103,7 +103,7 @@ final class ZipUtil {
     }
 
     /* Package visible for testing */
-    static long computeCrcOfCentralDir(RandomAccessFile raf, CentralDirectory dir)
+    public static long computeCrcOfCentralDir(RandomAccessFile raf, CentralDirectory dir)
             throws IOException {
         CRC32 crc = new CRC32();
         long stillToRead = dir.size;

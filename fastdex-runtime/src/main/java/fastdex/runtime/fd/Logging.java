@@ -16,59 +16,11 @@
 
 package fastdex.runtime.fd;
 
-import android.util.Log;
-import java.util.logging.Level;
-
 /**
  * Instant Run runtime logging related code
  */
 public class Logging {
 
     /** Log tag used by instant run runtime */
-    public static final String LOG_TAG = "FastdexInstantRun";
-
-    static {
-        fastdex.runtime.fd.Log.logging =
-                new fastdex.runtime.fd.Log.Logging() {
-            @Override
-            public void log(Level level, String string) {
-                log(level, string, null /* throwable */);
-            }
-
-            @Override
-            public boolean isLoggable(Level level) {
-                if (level == Level.SEVERE) {
-                    return Log.isLoggable(LOG_TAG, Log.ERROR);
-                } else if (level == Level.FINE) {
-                    return Log.isLoggable(LOG_TAG, Log.VERBOSE);
-                } else return Log.isLoggable(LOG_TAG, Log.INFO);
-            }
-
-            @Override
-            public void log(Level level, String string,
-                    Throwable throwable) {
-                if (level == Level.SEVERE) {
-                    if (throwable == null) {
-                        Log.e(LOG_TAG, string);
-                    } else {
-                        Log.e(LOG_TAG, string, throwable);
-                    }
-                } else if (level == Level.FINE) {
-                    if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
-                        if (throwable == null) {
-                            Log.v(LOG_TAG, string);
-                        } else {
-                            Log.v(LOG_TAG, string, throwable);
-                        }
-                    }
-                } else if (Log.isLoggable(LOG_TAG, Log.INFO)) {
-                    if (throwable == null) {
-                        Log.i(LOG_TAG, string);
-                    } else {
-                        Log.i(LOG_TAG, string, throwable);
-                    }
-                }
-            }
-        };
-    }
+    public static final String LOG_TAG = "Fastdex";
 }

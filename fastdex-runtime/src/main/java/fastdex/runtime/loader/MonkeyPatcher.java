@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fastdex.runtime.fd;
+package fastdex.runtime.loader;
 
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH;
@@ -43,6 +43,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import fastdex.runtime.fd.Logging;
 
 /**
  * Code which handles live-patching resources in a running app

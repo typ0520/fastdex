@@ -1,4 +1,4 @@
-package fastdex.runtime.antilazyload;
+package fastdex.runtime;
 
 /**
  * Created by tong on 17/3/15.

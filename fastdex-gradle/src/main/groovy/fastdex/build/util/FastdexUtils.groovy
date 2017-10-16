@@ -526,4 +526,65 @@ public class FastdexUtils {
             }
         }
     }
+
+    /**
+     * 执行命令
+     * @param cmdArgs
+     */
+    public static void runCommand(Project project, List<String> cmdArgs) {
+        runCommand(project, cmdArgs, false)
+    }
+
+    /**
+     * 执行命令
+     * @param cmdArgs
+     */
+    public static void runCommand(Project project, List<String> cmdArgs,boolean background) {
+       runCommand(project,cmdArgs,null,background)
+    }
+
+    /**
+     * 执行命令
+     * @param cmdArgs
+     */
+    public static void runCommand(Project project, List<String> cmdArgs,File directory,boolean background) {
+        if (!background) {
+            StringBuilder cmd = new StringBuilder()
+            for (int i = 0; i < cmdArgs.size(); i++) {
+                if (i != 0) {
+                    cmd.append(" ");
+                }
+                cmd.append(cmdArgs.get(i))
+            }
+            project.logger.error("\n${cmd}")
+        }
+
+        int status = -1
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder((String[])cmdArgs.toArray())
+            if (directory != null) {
+                processBuilder.directory(directory)
+            }
+            def process = processBuilder.start()
+            InputStream is = process.getInputStream()
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is))
+            String line = null
+            while ((line = reader.readLine()) != null) {
+                println(line)
+            }
+            reader.close()
+            status = process.waitFor()
+            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            reader.close();
+            process.destroy()
+        } catch (Throwable e) {
+
+        }
+        if (status != 0 && !background) {
+            throw new FastdexRuntimeException("Command exec fail....")
+        }
+    }
 }

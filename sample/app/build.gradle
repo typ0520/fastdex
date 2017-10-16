@@ -90,10 +90,8 @@ android {
     }
 }
 
+println "##fastdex.injected.invoked.from.ide : ${project.hasProperty("fastdex.injected.invoked.from.ide")}"
 println "##android.dexOptions.preDexLibraries: ${android.dexOptions.preDexLibraries}"
-
-android.dexOptions.preDexLibraries = false
-
 
 retrolambda {
     javaVersion JavaVersion.VERSION_1_7
@@ -119,21 +117,22 @@ dependencies {
     compile 'org.xutils:xutils:3.3.36'
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'de.hdodenhof:circleimageview:2.0.0'
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'info.hoang8f:android-segmented:1.0.6'
-    compile 'com.squareup.okio:okio:1.0.1'
-    compile 'com.zhy:okhttputils:2.4.1'
-    compile 'joda-time:joda-time:2.6'
-    compile 'com.squareup.retrofit:retrofit:1.8.0'
-    compile 'com.squareup.okhttp:okhttp:2.2.0'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
 
-    compile "org.greenrobot:eventbus:3.0.0"
-    compile "org.glassfish:javax.annotation:10.0-b28"
-    compile 'com.android.volley:volley:1.0.0'
-    compile 'com.dialonce:dialonce-android:2.3.1'
-    compile 'com.facebook.fresco:fresco:1.1.0'
-    compile 'com.google.guava:guava:18.0'
+//    compile 'com.squareup.retrofit:retrofit:1.9.0'
+//    compile 'info.hoang8f:android-segmented:1.0.6'
+//    compile 'com.squareup.okio:okio:1.0.1'
+//    compile 'com.zhy:okhttputils:2.4.1'
+//    compile 'joda-time:joda-time:2.6'
+//    compile 'com.squareup.retrofit:retrofit:1.8.0'
+//    compile 'com.squareup.okhttp:okhttp:2.2.0'
+//    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+//
+//    compile "org.greenrobot:eventbus:3.0.0"
+//    compile "org.glassfish:javax.annotation:10.0-b28"
+//    compile 'com.android.volley:volley:1.0.0'
+//    compile 'com.dialonce:dialonce-android:2.3.1'
+//    compile 'com.facebook.fresco:fresco:1.1.0'
+//    compile 'com.google.guava:guava:18.0'
 
 //    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2'
 //    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'
@@ -152,10 +151,5 @@ project.afterEvaluate {
 }
 
 task mytest {
-
-    def file = project.file('/Users/tong/Projects/fastdex/sample/app/build/fastdex/Debug/work/patch-classes/fastdex/sample/MainActivity$$ViewBinder.class')
-
-
-    println file.getName().indexOf("#")
 }
 

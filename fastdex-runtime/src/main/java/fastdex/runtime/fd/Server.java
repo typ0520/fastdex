@@ -15,40 +15,12 @@
  */
 package fastdex.runtime.fd;
 
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_EOF;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATCHES;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATH_CHECKSUM;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATH_EXISTS;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING_AND_SHOW_TOAST;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_RESTART_ACTIVITY;
-import static fastdex.common.fd.ProtocolConstants.MESSAGE_SHOW_TOAST;
-import static fastdex.common.fd.ProtocolConstants.PROTOCOL_IDENTIFIER;
-import static fastdex.common.fd.ProtocolConstants.PROTOCOL_VERSION;
-import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_COLD_SWAP;
-import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_NONE;
-import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
-
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
-
-import fastdex.common.ShareConstants;
-import fastdex.common.utils.FileUtils;
-import fastdex.runtime.Constants;
-import fastdex.runtime.MiddlewareActivity;
-import fastdex.runtime.fastdex.Fastdex;
-import fastdex.runtime.fastdex.RuntimeMetaInfo;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -57,6 +29,24 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+
+import fastdex.common.ShareConstants;
+import fastdex.common.utils.FileUtils;
+import fastdex.runtime.Constants;
+import fastdex.runtime.FastdexReceiver;
+import fastdex.runtime.Fastdex;
+import fastdex.runtime.RuntimeMetaInfo;
+
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_EOF;
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_PATCHES;
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING;
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_PING_AND_SHOW_TOAST;
+import static fastdex.common.fd.ProtocolConstants.MESSAGE_SHOW_TOAST;
+import static fastdex.common.fd.ProtocolConstants.PROTOCOL_IDENTIFIER;
+import static fastdex.common.fd.ProtocolConstants.PROTOCOL_VERSION;
+import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_COLD_SWAP;
+import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_NONE;
+import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
 
 /**
  * Server running in the app listening for messages from the IDE and updating the code and resources
@@ -228,7 +218,7 @@ public class Server {
                 return;
             }
 
-            Fastdex fastdex = Fastdex.get(context);
+            Fastdex fastdex = Fastdex.get();
 
             while (true) {
                 int message = input.readInt();
@@ -244,16 +234,16 @@ public class Server {
                         // Send an "ack" back to the IDE.
                         // The value of the boolean is true only when the app is in the
                         // foreground.
-                        boolean active = Restarter.getForegroundActivity(context) != null;
-                        output.writeBoolean(active);
+                        RuntimeMetaInfo runtimeMetaInfo = fastdex.readRuntimeMetaInfoFromFile();
+                        output.writeBoolean(runtimeMetaInfo.isActive());
 
-                        long buildMillis = fastdex.getRuntimeMetaInfo().getBuildMillis();
+                        long buildMillis = fastdex.readRuntimeMetaInfoFromFile().getBuildMillis();
                         output.writeLong(buildMillis);
-                        String variantName = fastdex.getRuntimeMetaInfo().getVariantName();
+                        String variantName = fastdex.readRuntimeMetaInfoFromFile().getVariantName();
                         output.writeUTF(variantName);
                         output.writeInt(android.os.Process.myPid());
                         if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                            Log.v(Logging.LOG_TAG, "Received Ping message from the IDE; " + "returned active = " + active);
+                            Log.v(Logging.LOG_TAG, "Received Ping message from the IDE; " + "returned active = " + runtimeMetaInfo.isActive());
                         }
                         continue;
                     }
@@ -262,11 +252,10 @@ public class Server {
                         // Send an "ack" back to the IDE.
                         // The value of the boolean is true only when the app is in the
                         // foreground.
-                        Activity activity = Restarter.getForegroundActivity(context);
-                        boolean active = activity != null;
-                        RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
+                        RuntimeMetaInfo runtimeMetaInfo = fastdex.readRuntimeMetaInfoFromFile();
 
-                        output.writeBoolean(active);
+
+                        output.writeBoolean(runtimeMetaInfo.isActive());
                         output.writeLong(runtimeMetaInfo.getBuildMillis());
                         output.writeUTF(runtimeMetaInfo.getVariantName());
 
@@ -275,13 +264,13 @@ public class Server {
                         output.writeInt(runtimeMetaInfo.getMergedDexVersion());
 
                         if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                            Log.v(Logging.LOG_TAG, "Received Ping message from the IDE; " + "returned active = " + active);
+                            Log.v(Logging.LOG_TAG, "Received Ping message from the IDE; " + "returned active = " + runtimeMetaInfo.isActive());
                         }
 
                         String text = input.readUTF();
 
                         if (text != null && !TextUtils.isEmpty(text.trim())) {
-                            showToast(text,context);
+                            showToast(text);
                         }
                         continue;
                     }
@@ -310,44 +299,24 @@ public class Server {
                         }
 
                         int updateMode = input.readInt();
-                        updateMode = handlePatches(changes, hasResources, updateMode);
+                        final RuntimeMetaInfo runtimeMetaInfo = fastdex.readRuntimeMetaInfoFromFile();
+                        Object[] objects = handlePatches(runtimeMetaInfo, changes, hasResources, updateMode);
+
+                        updateMode = (Integer) objects[0];
+                        String preparedPatchPath = (String) objects[1];
+                        runtimeMetaInfo.setPreparedPatchPath(preparedPatchPath);
+                        Fastdex.get().saveRuntimeMetaInfo(runtimeMetaInfo);
 
                         boolean showToast = input.readBoolean();
                         boolean restartAppByCmd = input.readBoolean();
-                        restart(updateMode,hasDex, hasResources,resourcesApkPath, showToast, restartAppByCmd);
-
+                        FastdexReceiver.restart(updateMode,hasDex, hasResources, preparedPatchPath,resourcesApkPath, showToast, restartAppByCmd);
                         output.writeBoolean(true);
-                        continue;
-                    }
-
-                    case MESSAGE_PATH_EXISTS: {
-
-                        continue;
-                    }
-
-                    case MESSAGE_PATH_CHECKSUM: {
-
-                        continue;
-                    }
-
-                    case MESSAGE_RESTART_ACTIVITY: {
-                        if (!authenticate(input)) {
-                            return;
-                        }
-
-                        Activity activity = Restarter.getForegroundActivity(context);
-                        if (activity != null) {
-                            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                                Log.v(Logging.LOG_TAG, "Restarting activity per user request");
-                            }
-                            Restarter.restartActivityOnUiThread(activity);
-                        }
                         continue;
                     }
 
                     case MESSAGE_SHOW_TOAST: {
                         String text = input.readUTF();
-                        showToast(text,context);
+                        showToast(text);
                         continue;
                     }
 
@@ -366,9 +335,9 @@ public class Server {
 
         private boolean authenticate(DataInputStream input) throws IOException {
             long token = input.readLong();
-            if (token != AppInfo.token) {
+            if (token != ShareConstants.MESSAGE_TOKEN) {
                 Log.w(Logging.LOG_TAG, "Mismatched identity token from client; received " + token
-                        + " and expected " + AppInfo.token);
+                        + " and expected " + ShareConstants.MESSAGE_TOKEN);
                 wrongTokenCount++;
                 return false;
             }
@@ -376,18 +345,12 @@ public class Server {
         }
     }
 
-    public static void showToast(String text,Context context) {
-        Activity foreground = Restarter.getForegroundActivity(context);
-        if (foreground != null) {
-            Restarter.showToast(foreground, text);
-        } else if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "Couldn't show toast (no activity) : " + text);
-        }
+    public static void showToast(String text) {
+        FastdexReceiver.showToast(text);
     }
 
     public static boolean isResourcePath(String path) {
         return path.endsWith(Constants.RES_SPLIT_STR + Constants.RESOURCE_APK_FILE_NAME) || path.startsWith("res/");
-        //return path.equals(Constants.RESOURCE_APK_FILE_NAME) || path.equals(Paths.RESOURCE_FILE_NAME) || path.startsWith("res/");
     }
 
     public static boolean isDexPath(String path) {
@@ -406,10 +369,8 @@ public class Server {
         return false;
     }
 
-    private int handlePatches(List<ApplicationPatch> changes, boolean hasResources,
-            int updateMode) {
-        final Fastdex fastdex = Fastdex.get(context);
-        final RuntimeMetaInfo runtimeMetaInfo = fastdex.getRuntimeMetaInfo();
+    private Object[] handlePatches(RuntimeMetaInfo runtimeMetaInfo, List<ApplicationPatch> changes, boolean hasResources, int updateMode) {
+        final Fastdex fastdex = Fastdex.get();
 
         final File workDir = new File(fastdex.getTempDirectory(),System.currentTimeMillis() + "-" + UUID.randomUUID().toString());
         final File patchDir = fastdex.getPatchDirectory();
@@ -429,9 +390,15 @@ public class Server {
                 if (path.endsWith(Constants.DEX_SUFFIX)) {
                     if (path.endsWith(ShareConstants.RES_SPLIT_STR + ShareConstants.MERGED_PATCH_DEX)) {
                         hasMergedDex = true;
+
+                        int version = Fastdex.parseVersionFromPath(path);
+                        runtimeMetaInfo.setMergedDexVersion(version);
                     }
                     if (path.endsWith(ShareConstants.RES_SPLIT_STR + ShareConstants.PATCH_DEX)) {
                         hasPatchDex = true;
+
+                        int version = Fastdex.parseVersionFromPath(path);
+                        runtimeMetaInfo.setPatchDexVersion(version);
                     }
                     int localUpdateMode = handleHotSwapPatch(updateMode, change,workDir);
                     if (localUpdateMode > updateMode) {
@@ -443,6 +410,9 @@ public class Server {
                     if (localUpdateMode > updateMode) {
                         updateMode = localUpdateMode;
                     }
+
+                    int version = Fastdex.parseVersionFromPath(path);
+                    runtimeMetaInfo.setResourcesVersion(version);
                 }
             }
 
@@ -464,16 +434,13 @@ public class Server {
             if (!hasMergedDex && runtimeMetaInfo.getMergedDexVersion() > 0 && FileUtils.isLegalFile(currentMergedPatchDex)) {
                 FileUtils.copyFileUsingStream(currentMergedPatchDex,new File(workDexDirectory,ShareConstants.MERGED_PATCH_DEX));
             }
-
-            runtimeMetaInfo.setPreparedPatchPath(workDir.getAbsolutePath());
-            runtimeMetaInfo.save(fastdex);
         } catch (Throwable e) {
             e.printStackTrace();
 
             Log.d(Logging.LOG_TAG,"exception when handlePatches: " + e.getMessage());
-            return UPDATE_MODE_NONE;
+            return new Object[]{UPDATE_MODE_NONE,workDir.getAbsolutePath()};
         }
-        return updateMode;
+        return new Object[]{updateMode,workDir.getAbsolutePath()};
     }
 
     private static int handleResourcePatch(int updateMode, ApplicationPatch patch, String path, File workDir) throws IOException {
@@ -501,93 +468,5 @@ public class Server {
             Log.e(Logging.LOG_TAG, "Couldn't apply code changes", e);
         }
         return UPDATE_MODE_COLD_SWAP;
-    }
-
-    public static String[] splitPatchPath(String path) {
-        return path.split(Constants.RES_SPLIT_STR);
-    }
-
-    public void restart(int updateMode, boolean hasDex, boolean hasResources, String resourcesApkPath, boolean toast, boolean restartAppByCmd) {
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "Finished loading changes; update mode =" + updateMode);
-        }
-
-        final List<Activity> activities = Restarter.getActivities(context, false);
-        Activity activity = Restarter.getForegroundActivity(context);
-
-        if (!hasDex && hasResources && updateMode == UPDATE_MODE_WARM_SWAP) {
-            // Try to just replace the resources on the fly!
-            File resDir = new File(Fastdex.get(context).getRuntimeMetaInfo().getPreparedPatchPath(),Constants.RES_DIR);
-            File file = new File(resDir, resourcesApkPath);
-            Log.v(Logging.LOG_TAG, "About to update resource file=" + file + ", activities=" + activities);
-
-            if (FileUtils.isLegalFile(file)) {
-                String resources = file.getAbsolutePath();
-                MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
-                String[] infoArr = splitPatchPath(file.getName());
-                String version = infoArr[0];
-                String path = infoArr[1];
-                if (path.equals(Constants.RESOURCE_APK_FILE_NAME)) {
-                    Fastdex.get(context).getRuntimeMetaInfo().setResourcesVersion(Integer.parseInt(version));
-                }
-            } else {
-                Log.e(Logging.LOG_TAG, "No resource file found to apply");
-                updateMode = UPDATE_MODE_COLD_SWAP;
-            }
-        }
-        if (updateMode == UPDATE_MODE_WARM_SWAP) {
-            if (activity != null) {
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "Restarting activity only!");
-                }
-
-                if (toast) {
-                    Restarter.showToast(activity, "Applied changes, restarted activity");
-                }
-                Restarter.restartActivityOnUiThread(activity);
-                return;
-            }
-
-            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                Log.v(Logging.LOG_TAG, "No activity found, falling through to do a full app restart");
-            }
-            updateMode = UPDATE_MODE_COLD_SWAP;
-        }
-
-        if (!restartAppByCmd && updateMode == UPDATE_MODE_COLD_SWAP) {
-            //restart app
-            if (activity instanceof MiddlewareActivity) {
-                ((MiddlewareActivity)activity).reset();
-            } else {
-                try {
-                    Intent e = new Intent(context, MiddlewareActivity.class);
-                    e.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    e.putExtra("reset", true);
-                    context.startActivity(e);
-                } catch (Exception exception) {
-                    final String str = "Fail to increment build, make sure you have <Activity android:name=\"" + MiddlewareActivity.class.getName() + "\"/> registered in AndroidManifest.xml";
-
-                    if (Log.isLoggable(Logging.LOG_TAG, Log.ERROR)) {
-                        Log.e(Logging.LOG_TAG, str);
-                    }
-
-                    (new Handler(Looper.getMainLooper())).post(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, str, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    public static String getBootActivityName(Context context) {
-        ApplicationInfo appInfo = null;
-        try {
-            appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return appInfo == null ? "" : appInfo.metaData.getString("FASTDEX_BOOT_ACTIVITY_CLASSNAME");
     }
 }

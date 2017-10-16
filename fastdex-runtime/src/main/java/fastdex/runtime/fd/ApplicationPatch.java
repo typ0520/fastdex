@@ -19,7 +19,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import fastdex.runtime.fastdex.Fastdex;
+
 import android.util.Log;
 
 // This class is used in both the Android runtime and in the IDE.
@@ -47,7 +47,7 @@ public class ApplicationPatch {
     public static List<ApplicationPatch> read(DataInputStream input) throws IOException {
         int changeCount = input.readInt();
 
-        Log.d(Fastdex.LOG_TAG, "Receiving " + changeCount + " changes");
+        Log.d(Logging.LOG_TAG, "Receiving " + changeCount + " changes");
         List<ApplicationPatch> changes = new ArrayList<ApplicationPatch>(changeCount);
         for (int i = 0; i < changeCount; i++) {
             String path = input.readUTF();
@@ -56,7 +56,7 @@ public class ApplicationPatch {
             input.readFully(bytes);
             changes.add(new ApplicationPatch(path, bytes));
 
-            Log.d(Fastdex.LOG_TAG, "Receiving path: " + path);
+            Log.d(Logging.LOG_TAG, "Receiving path: " + path);
         }
 
         return changes;

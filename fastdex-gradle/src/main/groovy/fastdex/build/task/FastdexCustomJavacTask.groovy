@@ -34,6 +34,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
     FastdexVariant fastdexVariant
     Task javaCompile
     Task javacIncrementalSafeguard
+    Task javaPreCompile
 
     FastdexCustomJavacTask() {
         group = 'fastdex'
@@ -44,6 +45,9 @@ public class FastdexCustomJavacTask extends DefaultTask {
 
         if (javacIncrementalSafeguard != null) {
             javacIncrementalSafeguard.enabled = false
+        }
+        if (javaPreCompile != null) {
+            javaPreCompile.enabled = false
         }
     }
 
@@ -219,46 +223,9 @@ public class FastdexCustomJavacTask extends DefaultTask {
             }
         }
 
-        StringBuilder cmd = new StringBuilder()
-        for (int i = 0; i < cmdArgs.size(); i++) {
-            if (i != 0) {
-                cmd.append(" ");
-            }
-            cmd.append(cmdArgs.get(i))
-        }
-
         long start = System.currentTimeMillis()
 
-        project.logger.error("\n${cmd}\n")
-
-        ProcessBuilder processBuilder = new ProcessBuilder((String[])cmdArgs.toArray())
-        def process = processBuilder.start()
-
-        InputStream is = process.getInputStream()
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is))
-        String line = null
-        while ((line = reader.readLine()) != null) {
-            println(line)
-        }
-        reader.close()
-
-        int status = process.waitFor()
-
-        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
-        reader.close();
-
-        try {
-            process.destroy()
-        } catch (Throwable e) {
-
-        }
-
-        if (status != 0) {
-            throw new FastdexRuntimeException("javac exec fail....")
-        }
+        FastdexUtils.runCommand(project, cmdArgs)
 
         if (!onlyROrBuildConfig) {
             //覆盖app/build/intermediates/classes内容

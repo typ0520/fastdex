@@ -15,4 +15,5 @@ public interface ShareConstants {
     String MERGED_PATCH_DEX = "merged-patch.dex";
     String PATCH_DEX = "patch.dex";
     String RES_SPLIT_STR = "__";
+    long MESSAGE_TOKEN = 0x19910520L;
 }

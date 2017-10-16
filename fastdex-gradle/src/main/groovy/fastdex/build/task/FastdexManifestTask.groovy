@@ -17,8 +17,8 @@ import org.gradle.api.tasks.TaskAction
 public class FastdexManifestTask extends DefaultTask {
     static final String FASTDEX_ORIGIN_APPLICATION_CLASSNAME = "FASTDEX_ORIGIN_APPLICATION_CLASSNAME"
     static final String FASTDEX_BOOT_ACTIVITY_CLASSNAME = "FASTDEX_BOOT_ACTIVITY_CLASSNAME"
-    static final String TRANSPARENT_ACTIVITY = "fastdex.runtime.TransparentActivity"
     static final String MIDDLEWARE_ACTIVITY = "fastdex.runtime.MiddlewareActivity"
+    static final String FASTDEX_SERVICE = "fastdex.runtime.FastdexService"
 
     FastdexVariant fastdexVariant
 
@@ -63,20 +63,20 @@ public class FastdexManifestTask extends DefaultTask {
             application.appendNode('meta-data', [(ns.name): FASTDEX_BOOT_ACTIVITY_CLASSNAME, (ns.value): bootActivityName])
 
             application['activity'].findAll {
-                it.attributes()[ns.name].equals(TRANSPARENT_ACTIVITY)
-            }.each {
-                it.parent().remove(it)
-            }
-
-            application.appendNode('activity', [(ns.name): TRANSPARENT_ACTIVITY, (ns.theme): '@android:style/Theme.Translucent.NoTitleBar'])
-
-            application['activity'].findAll {
                 it.attributes()[ns.name].equals(MIDDLEWARE_ACTIVITY)
             }.each {
                 it.parent().remove(it)
             }
 
             application.appendNode('activity', [(ns.name): MIDDLEWARE_ACTIVITY])
+
+            application['service'].findAll {
+                it.attributes()[ns.name].equals(FASTDEX_SERVICE)
+            }.each {
+                it.parent().remove(it)
+            }
+
+            application.appendNode('service', [(ns.name): FASTDEX_SERVICE,(ns.process): ":fastdex"])
 
             // Write the manifest file
             def printer = new XmlNodePrinter(new PrintWriter(fastdexVariant.manifestPath, "utf-8"))

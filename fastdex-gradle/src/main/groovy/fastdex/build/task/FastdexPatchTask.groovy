@@ -146,7 +146,7 @@ public class FastdexPatchTask extends DefaultTask {
                 @Override
                 public Boolean communicate(DataInputStream input, DataOutputStream output) throws IOException {
                     output.writeInt(ProtocolConstants.MESSAGE_PATCHES)
-                    output.writeLong(0L)
+                    output.writeLong(ShareConstants.MESSAGE_TOKEN)
                     output.writeInt(changeCount)
 
                     if (sendResourcesApk) {
@@ -208,19 +208,16 @@ public class FastdexPatchTask extends DefaultTask {
 
         //adb shell am force-stop 包名
         def packageName = fastdexVariant.getMergedPackageName()
-        //$ adb shell kill {appPid}
-        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",fastdexInstantRun.device.getSerialNumber(),"shell","am","force-stop","${packageName}").start()
-        int status = process.waitFor()
-        try {
-            process.destroy()
-        } catch (Throwable e) {
 
-        }
+        List<String> cmdArgs = new ArrayList<>()
+        cmdArgs.add(FastdexUtils.getAdbCmdPath(project))
+        cmdArgs.add("-s")
+        cmdArgs.add(fastdexInstantRun.device.getSerialNumber())
+        cmdArgs.add("shell")
+        cmdArgs.add("am")
+        cmdArgs.add("force-stop")
+        cmdArgs.add(packageName)
 
-        String cmd = "adb -s ${fastdexInstantRun.device.getSerialNumber()} shell am force-stop ${packageName}"
-        project.logger.error("${cmd}")
-        if (status != 0) {
-            throw new RuntimeException("==fastdex kill app fail: \n${cmd}")
-        }
+        FastdexUtils.runCommand(fastdexVariant.project, cmdArgs)
     }
 }

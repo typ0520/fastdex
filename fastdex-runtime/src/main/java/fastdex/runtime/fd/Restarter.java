@@ -16,21 +16,36 @@
 package fastdex.runtime.fd;
 
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.Application;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
+
+import fastdex.common.utils.FileUtils;
+import fastdex.runtime.Constants;
+import fastdex.runtime.MiddlewareActivity;
+import fastdex.runtime.Fastdex;
+import fastdex.runtime.RuntimeMetaInfo;
+import fastdex.runtime.loader.MonkeyPatcher;
+
+import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_COLD_SWAP;
+import static fastdex.common.fd.ProtocolConstants.UPDATE_MODE_WARM_SWAP;
 
 /**
  * Handler capable of restarting parts of the application in order for changes to become
@@ -48,8 +63,183 @@ import java.util.Map;
  * </ul>
  */
 public class Restarter {
+    public static final int ACTIVITY_NONE = 0;
+    public static final int ACTIVITY_CREATED = 1;
+    public static final int ACTIVITY_STARTED = 2;
+    public static final int ACTIVITY_RESUMED = 3;
+
+    private static final WeakHashMap<Activity, Integer> sActivitiesRefs = new WeakHashMap();
+
+    private static long sFirstTaskId = 0L;
+
+    private static final Application.ActivityLifecycleCallbacks sLifecycleCallback = new Application.ActivityLifecycleCallbacks() {
+
+        public void onActivityStopped(Activity activity) {
+            sActivitiesRefs.put(activity, ACTIVITY_CREATED);
+        }
+
+        public void onActivityStarted(Activity activity) {
+            sActivitiesRefs.put(activity, ACTIVITY_STARTED);
+        }
+
+        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+        }
+
+        public void onActivityResumed(Activity activity) {
+            sActivitiesRefs.put(activity, ACTIVITY_RESUMED);
+            RuntimeMetaInfo runtimeMetaInfo = Fastdex.get().readRuntimeMetaInfoFromFile(false);
+            if (runtimeMetaInfo != null && !runtimeMetaInfo.isActive()) {
+                runtimeMetaInfo.setActive(true);
+                Fastdex.get().saveRuntimeMetaInfo(runtimeMetaInfo,false);
+            }
+        }
+
+        public void onActivityPaused(Activity activity) {
+            sActivitiesRefs.put(activity, ACTIVITY_STARTED);
+            RuntimeMetaInfo runtimeMetaInfo = Fastdex.get().readRuntimeMetaInfoFromFile();
+            if (runtimeMetaInfo != null) {
+                boolean active = getTopActivity() != null;
+
+                if (runtimeMetaInfo.isActive() != active) {
+                    runtimeMetaInfo.setActive(active);
+                    Fastdex.get().saveRuntimeMetaInfo(runtimeMetaInfo,true);
+                }
+            }
+        }
+
+        public void onActivityDestroyed(Activity activity) {
+            sActivitiesRefs.remove(activity);
+        }
+
+        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+            sActivitiesRefs.put(activity, ACTIVITY_CREATED);
+
+            if (sFirstTaskId == 0L) {
+                sFirstTaskId = activity.getTaskId();
+            }
+        }
+    };
+
+    public static void initialize(Application app) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            app.registerActivityLifecycleCallbacks(sLifecycleCallback);
+        }
+    }
+
+    /**
+     * 重启app
+     * @param updateMode
+     * @param hasDex
+     * @param hasResources
+     * @param preparedPatchPath
+     * @param resourcesApkPath
+     * @param toast
+     * @param restartAppByCmd
+     */
+    public static void restart(int updateMode, boolean hasDex, boolean hasResources, String preparedPatchPath, String resourcesApkPath, boolean toast, boolean restartAppByCmd) {
+        Log.v(Logging.LOG_TAG, "Finished loading changes; update mode =" + updateMode);
+        Log.v(Logging.LOG_TAG, "Restart app hasDex: " + hasDex + " ,hasResources: " + hasResources + ", resourcesApkPath: " + resourcesApkPath + ", preparedPatchPath: " + preparedPatchPath);
+        RuntimeMetaInfo runtimeMetaInfo = Fastdex.get().readRuntimeMetaInfoFromFile();
+
+        final Context context = Fastdex.get().getApplicationContext();
+        Activity activity = getTopActivity();
+
+        if (!hasDex && hasResources && updateMode == UPDATE_MODE_WARM_SWAP) {
+            final List<Activity> activities = Restarter.getAllActivities();
+
+            // Try to just replace the resources on the fly!
+            File resDir = new File(runtimeMetaInfo.getPreparedPatchPath(), Constants.RES_DIR);
+            File file = new File(resDir, resourcesApkPath);
+            Log.v(Logging.LOG_TAG, "About to update resource file=" + file + ", activities=" + activities);
+
+            if (FileUtils.isLegalFile(file)) {
+                String resources = file.getAbsolutePath();
+                MonkeyPatcher.monkeyPatchExistingResources(context, resources, activities);
+            } else {
+                Log.e(Logging.LOG_TAG, "No resource file found to apply");
+                updateMode = UPDATE_MODE_COLD_SWAP;
+            }
+        }
+        if (updateMode == UPDATE_MODE_WARM_SWAP) {
+            if (activity != null) {
+                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                    Log.v(Logging.LOG_TAG, "Restarting activity only!");
+                }
+
+                if (toast) {
+                    Restarter.showToast(activity, "Applied changes, restarted activity");
+                }
+                Restarter.restartActivityOnUiThread(activity);
+                return;
+            }
+
+            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                Log.v(Logging.LOG_TAG, "No activity found, falling through to do a full app restart");
+            }
+            updateMode = UPDATE_MODE_COLD_SWAP;
+        }
+
+        if (!restartAppByCmd && updateMode == UPDATE_MODE_COLD_SWAP) {
+            //restart app
+            if (activity != null && (activity instanceof MiddlewareActivity)) {
+                ((MiddlewareActivity)activity).reset();
+            } else {
+                try {
+                    Intent e = new Intent(context, MiddlewareActivity.class);
+                    e.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    e.putExtra("reset", true);
+                    context.startActivity(e);
+                } catch (Exception exception) {
+                    final String str = "Fail to increment build, make sure you have <Activity android:name=\"" + MiddlewareActivity.class.getName() + "\"/> registered in AndroidManifest.xml";
+
+                    if (Log.isLoggable(Logging.LOG_TAG, Log.ERROR)) {
+                        Log.e(Logging.LOG_TAG, str);
+                    }
+
+                    (new Handler(Looper.getMainLooper())).post(new Runnable() {
+                        public void run() {
+                            Toast.makeText(context, str, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    static List<Activity> getAllActivities() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            ArrayList<Activity> list = new ArrayList<>();
+            for (Map.Entry<Activity, Integer> e : sActivitiesRefs.entrySet()) {
+                Activity a = e.getKey();
+                if (a != null && e.getValue().intValue() > 0) {
+                    list.add(a);
+                }
+            }
+            return list;
+        }
+        else {
+            return getActivities(Fastdex.get().getApplicationContext(),true);
+        }
+    }
+
+    static Activity getTopActivity() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            Activity r = null;
+            for (Map.Entry<Activity, Integer> e : sActivitiesRefs.entrySet()) {
+                Activity a = e.getKey();
+                if (a != null && e.getValue().intValue() == ACTIVITY_RESUMED) {
+                    r = a;
+                }
+            }
+            return r;
+        }
+        else {
+            return getForegroundActivity(Fastdex.get().getApplicationContext());
+        }
+    }
+
     /** Restart an activity. Should preserve as much state as possible. */
-    public static void restartActivityOnUiThread(final Activity activity) {
+    static void restartActivityOnUiThread(final Activity activity) {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -61,123 +251,16 @@ public class Restarter {
         });
     }
 
-    private static void restartActivity(Activity activity) {
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "About to restart " + activity.getClass().getSimpleName());
+    static Activity getForegroundActivity(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            return getTopActivity();
         }
-
-        // You can't restart activities that have parents: find the top-most activity
-        while (activity.getParent() != null) {
-            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                Log.v(Logging.LOG_TAG, activity.getClass().getSimpleName()
-                        + " is not a top level activity; restarting "
-                        + activity.getParent().getClass().getSimpleName() + " instead");
-            }
-            activity = activity.getParent();
-        }
-
-        // Directly supported by the framework!
-        activity.recreate();
-    }
-
-    /**
-     * Attempt to restart the app. Ideally this should also try to preserve as much state as
-     * possible:
-     * <ul>
-     *     <li>The current activity</li>
-     *     <li>If possible, state in the current activity, and</li>
-     *     <li>The activity stack</li>
-     * </ul>
-     *
-     * This may require some framework support. Apparently it may already be possible
-     * (Dianne says to put the app in the background, kill it then restart it; need to
-     * figure out how to do this.)
-     */
-    public static void restartApp(Context appContext,
-                                  Collection<Activity> knownActivities,
-                                  boolean toast) {
-        if (!knownActivities.isEmpty()) {
-            // Can't live patch resources; instead, try to restart the current activity
-            Activity foreground = getForegroundActivity(appContext);
-
-            if (foreground != null) {
-                // http://stackoverflow.com/questions/6609414/howto-programatically-restart-android-app
-                //noinspection UnnecessaryLocalVariable
-                if (toast) {
-                    showToast(foreground, "Restarting app to apply incompatible changes");
-                }
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "RESTARTING APP");
-                }
-                @SuppressWarnings("UnnecessaryLocalVariable") // fore code clarify
-                Context context = foreground;
-                Intent intent = new Intent(context, foreground.getClass());
-                int intentId = 0;
-                PendingIntent pendingIntent = PendingIntent.getActivity(context, intentId,
-                        intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                AlarmManager mgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent);
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "Scheduling activity " + foreground
-                            + " to start after exiting process");
-                }
-            } else {
-                showToast(knownActivities.iterator().next(), "Unable to restart app");
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "Couldn't find any foreground activities to restart " +
-                            "for resource refresh");
-                }
-            }
-            System.exit(0);
-        }
-    }
-
-    static void showToast(final Activity activity, final String text) {
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "About to show toast for activity " + activity + ": " + text);
-        }
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Context context = activity.getApplicationContext();
-                    if (context instanceof ContextWrapper) {
-                        Context base = ((ContextWrapper) context).getBaseContext();
-                        if (base == null) {
-                            if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
-                                Log.w(Logging.LOG_TAG, "Couldn't show toast: no base context");
-                            }
-                            return;
-                        }
-                    }
-
-                    // For longer messages, leave the message up longer
-                    int duration = Toast.LENGTH_SHORT;
-                    if (text.length() >= 60 || text.indexOf('\n') != -1) {
-                        duration = Toast.LENGTH_LONG;
-                    }
-
-                    // Avoid crashing when not available, e.g.
-                    //   java.lang.RuntimeException: Can't create handler inside thread that has
-                    //        not called Looper.prepare()
-                    Toast.makeText(activity, text, duration).show();
-                } catch (Throwable e) {
-                    if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
-                        Log.w(Logging.LOG_TAG, "Couldn't show toast", e);
-                    }
-                }
-            }
-        });
-    }
-
-    public static Activity getForegroundActivity(Context context) {
         List<Activity> list = getActivities(context, true);
         return list.isEmpty() ? null : list.get(0);
     }
 
     // http://stackoverflow.com/questions/11411395/how-to-get-current-foreground-activity-context-in-android
-
-    public static List<Activity> getActivities(Context context, boolean foregroundOnly) {
+    static List<Activity> getActivities(Context context, boolean foregroundOnly) {
         List<Activity> list = new ArrayList<Activity>();
         try {
             Class activityThreadClass = Class.forName("android.app.ActivityThread");
@@ -220,46 +303,71 @@ public class Restarter {
         return list;
     }
 
-    private static void updateActivity(Activity activity) {
-        // This method can be called for activities that are not in the foreground, as long
-        // as some of its resources have been updated. Therefore we'll need to make sure
-        // that this activity is in the foreground, and if not do nothing. Ways to do
-        // that are outlined here:
-        // http://stackoverflow.com/questions/3667022/checking-if-an-android-application-is-running-in-the-background/5862048#5862048
+    static void updateActivity(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                Log.v(Logging.LOG_TAG, "About to restart " + activity.getClass().getSimpleName());
+            }
 
-        // Try to force re-layout; there are many approaches; see
-        // http://stackoverflow.com/questions/5991968/how-to-force-an-entire-layout-view-refresh
+            // You can't restart activities that have parents: find the top-most activity
+            while (activity.getParent() != null) {
+                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                    Log.v(Logging.LOG_TAG, activity.getClass().getSimpleName()
+                            + " is not a top level activity; restarting "
+                            + activity.getParent().getClass().getSimpleName() + " instead");
+                }
+                activity = activity.getParent();
+            }
 
-        // This doesn't seem to update themes properly -- may need to do recreate() instead!
-        //getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+            // Directly supported by the framework!
+            activity.recreate();
+        }
+    }
 
-        // This is a bit of a sledgehammer. We should consider having an incremental updater,
-        // similar to IntelliJ's Look &amp; Feel updater which iterates to the view hierarchy
-        // and tries to incrementally refresh the LAF delegates and force a repaint.
-        // On the other hand, we may never be able to succeed with that, since there could be
-        // UI elements on the screen cached from callbacks. I should probably *not* attempt
-        // to try to poke the user's data models; recreating the current layout should be
-        // enough (e.g. if a layout references @string/foo, we'll recreate those widgets
-        //    if (mLastContentView != -1) {
-        //        setContentView(mLastContentView);
-        //    } else {
-        //        recreate();
-        //    }
-        // -- nope, even that's iffy. I had code which *after* calling setContentView would
-        // do some findViewById calls etc to reinitialize views.
-        //
-        // So what I should really try to do is have some knowledge about what changed,
-        // and see if I can figure out that the change is minor (e.g. doesn't affect themes
-        // or layout parameters etc), and if so, just try to poke the view hierarchy directly,
-        // and if not, just recreate
+    static void showToast(final Activity activity, final String text) {
+        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+            Log.v(Logging.LOG_TAG, "About to show toast for activity " + activity + ": " + text);
+        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Context context = activity.getApplicationContext();
+                    if (context instanceof ContextWrapper) {
+                        Context base = ((ContextWrapper) context).getBaseContext();
+                        if (base == null) {
+                            if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
+                                Log.w(Logging.LOG_TAG, "Couldn't show toast: no base context");
+                            }
+                            return;
+                        }
+                    }
 
-        //    if (changeManager.isSimpleDelta()) {
-        //        changeManager.applyDirectly(this);
-        //    } else {
+                    // For longer messages, leave the message up longer
+                    int duration = Toast.LENGTH_SHORT;
+                    if (text.length() >= 60 || text.indexOf('\n') != -1) {
+                        duration = Toast.LENGTH_LONG;
+                    }
 
+                    // Avoid crashing when not available, e.g.
+                    //   java.lang.RuntimeException: Can't create handler inside thread that has
+                    //        not called Looper.prepare()
+                    Toast.makeText(activity, text, duration).show();
+                } catch (Throwable e) {
+                    if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
+                        Log.w(Logging.LOG_TAG, "Couldn't show toast", e);
+                    }
+                }
+            }
+        });
+    }
 
-        // Note: This doesn't handle manifest changes like changing the application title
-
-        restartActivity(activity);
+    public static void showToast(String text) {
+        Activity foreground = getTopActivity();
+        if (foreground != null) {
+            Restarter.showToast(foreground, text);
+        } else if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+            Log.v(Logging.LOG_TAG, "Couldn't show toast (no activity) : " + text);
+        }
     }
 }

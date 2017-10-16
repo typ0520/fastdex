@@ -53,42 +53,8 @@ public class DexOperation {
             cmdArgs.add(patchJar.absolutePath);
         }
 
-        StringBuilder cmd = new StringBuilder()
-        for (int i = 0; i < cmdArgs.size(); i++) {
-            if (i != 0) {
-                cmd.append(" ");
-            }
-            cmd.append(cmdArgs.get(i))
-        }
-        fastdexVariant.project.logger.error("${cmd}")
-
         //调用dx命令
-        def process = new ProcessBuilder((String[])cmdArgs.toArray()).start()
-
-        InputStream is = process.getInputStream()
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is))
-        String line = null
-        while ((line = reader.readLine()) != null) {
-            println(line)
-        }
-        reader.close()
-
-        int status = process.waitFor()
-
-        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
-        reader.close();
-        try {
-            process.destroy()
-        } catch (Throwable e) {
-
-        }
-
-        if (status != 0) {
-            throw new FastdexRuntimeException("==fastdex generate dex fail")
-        }
+        FastdexUtils.runCommand(fastdexVariant.project, cmdArgs)
         long end = System.currentTimeMillis();
         fastdexVariant.project.logger.error("==fastdex patch transform generate dex success. use: ${end - start}ms")
     }
@@ -116,40 +82,7 @@ public class DexOperation {
         cmdArgs.add(patchDex.absolutePath);
         cmdArgs.add(cachedDex.absolutePath);
 
-        StringBuilder cmd = new StringBuilder()
-        for (int i = 0; i < cmdArgs.size(); i++) {
-            if (i != 0) {
-                cmd.append(" ");
-            }
-            cmd.append(cmdArgs.get(i))
-        }
-        fastdexVariant.project.logger.error("${cmd}")
-
-        def process = new ProcessBuilder((String[])cmdArgs.toArray()).start()
-        InputStream is = process.getInputStream()
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is))
-        String line = null
-        while ((line = reader.readLine()) != null) {
-            println(line)
-        }
-        reader.close()
-
-        int status = process.waitFor()
-
-        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
-        reader.close();
-        try {
-            process.destroy()
-        } catch (Throwable e) {
-
-        }
-
-        if (status != 0) {
-            throw new FastdexRuntimeException("==fastdex merge dex fail")
-        }
+        FastdexUtils.runCommand(fastdexVariant.project, cmdArgs)
 
         long end = System.currentTimeMillis();
         project.logger.error("==fastdex merge dex success. use: ${end - start}ms")

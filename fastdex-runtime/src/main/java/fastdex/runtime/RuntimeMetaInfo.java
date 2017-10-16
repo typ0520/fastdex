@@ -1,4 +1,4 @@
-package fastdex.runtime.fastdex;
+package fastdex.runtime;
 
 import android.util.Log;
 import org.json.JSONException;
@@ -34,6 +34,8 @@ public class RuntimeMetaInfo {
     private int patchDexVersion;
 
     private int resourcesVersion;
+
+    private boolean active = true;
 
     public long getBuildMillis() {
         return buildMillis;
@@ -107,6 +109,14 @@ public class RuntimeMetaInfo {
         this.resourcesVersion = resourcesVersion;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -126,26 +136,26 @@ public class RuntimeMetaInfo {
         return result;
     }
 
-    public void save(Fastdex fastdex) {
-        File metaInfoFile = new File(fastdex.fastdexDirectory, ShareConstants.META_INFO_FILENAME);
-        try {
-            JSONObject jObj = toJson();
+    public void save(Fastdex fastdex) throws IOException {
 
-            FileOutputStream outputStream = null;
-            FileUtils.ensumeDir(metaInfoFile.getParentFile());
-            try {
-                outputStream = new FileOutputStream(metaInfoFile);
-                outputStream.write(jObj.toString().getBytes());
-                outputStream.flush();
-            } finally {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
+    }
+
+    public void save(Fastdex fastdex,boolean printLog) throws IOException {
+        File metaInfoFile = Fastdex.get().getMetaInfoFile();
+        JSONObject jObj = toJson();
+        if (printLog) {
+            Log.d(Logging.LOG_TAG,"save meta info: \n" + jObj.toString());
+        }
+        FileOutputStream outputStream = null;
+        FileUtils.ensumeDir(metaInfoFile.getParentFile());
+        try {
+            outputStream = new FileOutputStream(metaInfoFile);
+            outputStream.write(jObj.toString().getBytes());
+            outputStream.flush();
+        } finally {
+            if (outputStream != null) {
+                outputStream.close();
             }
-            //SerializeUtils.serializeTo(metaInfoFile,this);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(Logging.LOG_TAG,e.getMessage());
         }
     }
 
@@ -162,6 +172,7 @@ public class RuntimeMetaInfo {
             jObj.put("mergedDexVersion",mergedDexVersion);
             jObj.put("patchDexVersion",patchDexVersion);
             jObj.put("resourcesVersion",resourcesVersion);
+            jObj.put("active",active);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -169,22 +180,9 @@ public class RuntimeMetaInfo {
         return jObj;
     }
 
-    public static RuntimeMetaInfo load(Fastdex fastdex) {
-        File metaInfoFile = new File(fastdex.fastdexDirectory, ShareConstants.META_INFO_FILENAME);
-        try {
-            return RuntimeMetaInfo.parse(new String(FileUtils.readContents(metaInfoFile)));
-            //return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),RuntimeMetaInfo.class);
-        } catch (Throwable e) {
-            Log.e(Logging.LOG_TAG,e.getMessage());
-        }
-
-        return null;
-    }
-
     public static RuntimeMetaInfo load(String json) {
         try {
             return RuntimeMetaInfo.parse(json);
-            //return new Gson().fromJson(json,RuntimeMetaInfo.class);
         } catch (Throwable e) {
             Log.e(Logging.LOG_TAG,e.getMessage());
         }
@@ -207,6 +205,8 @@ public class RuntimeMetaInfo {
             metaInfo.mergedDexVersion = jObj.optInt("mergedDexVersion");
             metaInfo.patchDexVersion = jObj.optInt("patchDexVersion");
             metaInfo.resourcesVersion = jObj.optInt("resourcesVersion");
+
+            metaInfo.active = jObj.optBoolean("active",true);
             return metaInfo;
         } catch (Exception e) {
             e.printStackTrace();

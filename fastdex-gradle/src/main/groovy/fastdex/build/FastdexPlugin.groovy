@@ -48,29 +48,29 @@ class FastdexPlugin implements Plugin<Project> {
             throw new GradleException('Android Application plugin required')
         }
 
-        //https://developer.android.com/studio/build/build-cache.html
-        //2.2.2 build-cache默认是关闭的，通过动态设置android.enableBuildCache=true打开这个功能
-        //2.2.2以后引入了build-cache机制，能大幅度提高全量打包速度
-        if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
-            GradleUtils.addDynamicProperty(project,"android.enableBuildCache","true")
-            project.logger.error("====fastdex add dynamic property: 'android.enableBuildCache=true'")
-        }
-        else {
-            project.logger.error("It is recommended to use versions larger than 2.3")
-        }
-
-        GradleUtils.addDynamicProperty(project,"kotlin.incremental","true")
         project.afterEvaluate {
             def configuration = project.fastdex
-
             //如果是fastdex的插件触发的打包，开启hook
-            if (hasProperty("fastdex.injected.invoked.from.ide")) {
+            if (project.hasProperty("fastdex.injected.invoked.from.ide")) {
                 configuration.fastdexEnable = true
             }
             if (!configuration.fastdexEnable) {
                 project.logger.error("====fastdex tasks are disabled.====")
                 return
             }
+
+            //https://developer.android.com/studio/build/build-cache.html
+            //2.2.2 build-cache默认是关闭的，通过动态设置android.enableBuildCache=true打开这个功能
+            //2.2.2以后引入了build-cache机制，能大幅度提高全量打包速度
+            if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
+                GradleUtils.addDynamicProperty(project,"android.enableBuildCache","true")
+                project.logger.error("====fastdex add dynamic property: 'android.enableBuildCache=true'")
+            }
+            else {
+                project.logger.error("It is recommended to use versions larger than 2.3")
+            }
+
+            GradleUtils.addDynamicProperty(project,"kotlin.incremental","true")
 
             //最低支持2.0.0
             String minSupportVersion = "2.0.0"
@@ -196,6 +196,7 @@ class FastdexPlugin implements Plugin<Project> {
                         customJavacTask.fastdexVariant = fastdexVariant
                         customJavacTask.javaCompile = javaCompile
                         customJavacTask.javacIncrementalSafeguard = getJavacIncrementalSafeguardTask(project, variantName)
+                        customJavacTask.javaPreCompile = getJavaPreCompileTask(project, variantName)
                         customJavacTask.dependsOn prepareTask
 
                         if (customJavacTask.javacIncrementalSafeguard != null) {
@@ -381,6 +382,15 @@ class FastdexPlugin implements Plugin<Project> {
 
     Task getJavacIncrementalSafeguardTask(Project project, String variantName) {
         String taskName = "incremental${variantName}JavaCompilationSafeguard"
+        try {
+            return  project.tasks.getByName(taskName)
+        } catch (Throwable e) {
+            return null
+        }
+    }
+
+    Task getJavaPreCompileTask(Project project, String variantName) {
+        String taskName = "javaPreCompile${variantName}"
         try {
             return  project.tasks.getByName(taskName)
         } catch (Throwable e) {

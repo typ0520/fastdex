@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fastdex.runtime.loader.shareutil;
+package fastdex.runtime.utils;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

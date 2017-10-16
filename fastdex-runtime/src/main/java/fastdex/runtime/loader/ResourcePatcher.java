@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import fastdex.runtime.loader.shareutil.ShareReflectUtil;
+import fastdex.runtime.utils.ShareReflectUtil;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.KITKAT;
 
@@ -38,7 +38,7 @@ import static android.os.Build.VERSION_CODES.KITKAT;
  * Thanks for Android Fragmentation
  */
 public class ResourcePatcher {
-    private static final String TAG               = "Tinker.ResourcePatcher";
+    private static final String TAG               = "Fastdex.ResourcePatcher";
 
     // original object
     private static Collection<WeakReference<Resources>> references            = null;

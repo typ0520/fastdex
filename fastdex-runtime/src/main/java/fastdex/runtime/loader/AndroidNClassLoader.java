@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import dalvik.system.DexFile;
 import dalvik.system.PathClassLoader;
-import fastdex.runtime.loader.shareutil.ShareReflectUtil;
+import fastdex.runtime.utils.ShareReflectUtil;
 
 /**
  * Created by zhangshaowen on 16/7/24.

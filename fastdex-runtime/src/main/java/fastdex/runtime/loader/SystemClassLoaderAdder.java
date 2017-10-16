@@ -32,8 +32,8 @@ import java.util.ListIterator;
 import java.util.zip.ZipFile;
 import dalvik.system.DexFile;
 import dalvik.system.PathClassLoader;
-import fastdex.runtime.loader.shareutil.SharePatchFileUtil;
-import fastdex.runtime.loader.shareutil.ShareReflectUtil;
+import fastdex.runtime.utils.SharePatchFileUtil;
+import fastdex.runtime.utils.ShareReflectUtil;
 
 /**
  * Created by zhangshaowen on 16/3/18.

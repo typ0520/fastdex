@@ -41,12 +41,16 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        tv2.setText("t3");
+//        if (true) {
+//            throw new RuntimeException("测试崩溃后是否还能接收补丁....");
+//        }
+        tv2.setText("1");
         new CustomView(this,null);
         //new CustomView2(this,null);
         view2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Toast.makeText(MainActivity.this, "view2",Toast.LENGTH_LONG).show();
             }
         });
@@ -59,7 +63,7 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
-        btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
+        //btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
 
         String s1 = getString(R.string.s1);
         String s3 = getString(R.string.s3);
