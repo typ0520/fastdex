@@ -116,10 +116,6 @@ public class FastdexPatchTask extends DefaultTask {
 
         if (nothingChanged) {
             fastdexInstantRun.setInstallApk(false)
-
-            if (runtimeMetaInfo != null && !runtimeMetaInfo.active) {
-                fastdexInstantRun.startTransparentActivity()
-            }
             return
         }
         File mergedPatchDex = FastdexUtils.getMergedPatchDex(fastdexVariant.project,fastdexVariant.variantName)

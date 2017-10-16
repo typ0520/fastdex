@@ -2,7 +2,6 @@ package fastdex.build.util
 
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
-import fastdex.build.task.FastdexManifestTask
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.FileUtils
 import org.gradle.api.Project
@@ -279,32 +278,6 @@ public class FastdexInstantRun {
             //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
 
            FastdexUtils.runCommand(project,cmdArgs,background)
-        }
-    }
-
-    def startTransparentActivity() {
-        startTransparentActivity(false)
-    }
-
-    def startTransparentActivity(boolean background) {
-        def packageName = fastdexVariant.getMergedPackageName()
-
-        //$ adb shell am start -n "com.dx168.fastdex.sample/com.dx168.fastdex.sample.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
-        def process = new ProcessBuilder(FastdexUtils.getAdbCmdPath(project),"-s",device.getSerialNumber(),"shell","am","start","-n","\"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\"").start()
-        int status = process.waitFor()
-        try {
-            process.destroy()
-        } catch (Throwable e) {
-
-        }
-
-        String cmd = "adb shell -s ${device.getSerialNumber()} am start -n \"${packageName}/${FastdexManifestTask.TRANSPARENT_ACTIVITY}\""
-        if (!background && fastdexVariant.configuration.debug) {
-            project.logger.error("${cmd}")
-        }
-
-        if (status != 0 && !background) {
-            throw new FastdexRuntimeException("==fastdex start activity fail: \n${cmd}")
         }
     }
 }
