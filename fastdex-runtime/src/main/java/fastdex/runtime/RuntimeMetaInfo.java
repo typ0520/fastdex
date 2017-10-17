@@ -6,7 +6,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import fastdex.common.ShareConstants;
 import fastdex.common.utils.FileUtils;
 import fastdex.runtime.fd.Logging;
 
@@ -134,10 +133,6 @@ public class RuntimeMetaInfo {
         int result = (int) (buildMillis ^ (buildMillis >>> 32));
         result = 31 * result + (variantName != null ? variantName.hashCode() : 0);
         return result;
-    }
-
-    public void save(Fastdex fastdex) throws IOException {
-
     }
 
     public void save(Fastdex fastdex,boolean printLog) throws IOException {

@@ -2,7 +2,6 @@ package fastdex.runtime;
 
 import android.content.Context;
 import android.util.Log;
-
 import fastdex.runtime.fd.Logging;
 
 /**

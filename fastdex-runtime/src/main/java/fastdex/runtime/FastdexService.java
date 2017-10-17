@@ -46,14 +46,14 @@ public class FastdexService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(Logging.LOG_TAG, "Starting fastdex Server for " + getPackageName());
+        Log.d(Logging.LOG_TAG, "Starting Fastdex Server for " + getPackageName());
         server = Server.create(this);
     }
 
     @Override
     public void onDestroy() {
         if (server != null) {
-            Log.d(Logging.LOG_TAG, "Stopping Instant Run Server for " + getPackageName());
+            Log.d(Logging.LOG_TAG, "Stopping Fastdex Server for " + getPackageName());
             server.shutdown();
         }
         super.onDestroy();

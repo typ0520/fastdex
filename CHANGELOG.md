@@ -1,3 +1,10 @@
+## 0.7.1  (2017-10-17)
+
+Bugfixes:
+
+   - 修复第一次补丁打包意外触发processResources任务的问题
+   - 修复复制fastdex-meta-info.json时出错的问题
+
 ## 0.7.0  (2017-10-17)
 
 Features:

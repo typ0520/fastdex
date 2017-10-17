@@ -263,12 +263,13 @@ public class FastdexVariant {
      */
     def copyMetaInfo2Assets() {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
-        File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
+        if (FileUtils.isLegalFile(metaInfoFile)) {
+            File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
+            File dest = new File(assetsPath,metaInfoFile.getName())
 
-        File dest = new File(assetsPath,metaInfoFile.getName())
-
-        project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
-        FileUtils.copyFileUsingStream(metaInfoFile,dest)
+            project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
+            FileUtils.copyFileUsingStream(metaInfoFile,dest)
+        }
     }
 
     /**

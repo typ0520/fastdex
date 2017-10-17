@@ -19,7 +19,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import android.util.Log;
 
 // This class is used in both the Android runtime and in the IDE.

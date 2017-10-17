@@ -62,19 +62,14 @@ public class Server {
 
     private LocalServerSocket serverSocket;
 
-    private final Context context;
-
-    private final Handler handler = new Handler();
-
     private static int wrongTokenCount;
 
 
     public static Server create(Context context) {
-        return new Server(context.getPackageName(), context);
+        return new Server(context.getPackageName());
     }
 
-    private Server(String packageName, Context context) {
-        this.context = context;
+    private Server(String packageName) {
         try {
             serverSocket = new LocalServerSocket(packageName);
             if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
