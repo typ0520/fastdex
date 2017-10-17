@@ -13,7 +13,7 @@ fastdex {
     //开启
     fastdexEnable = true
 
-    //default true
+    //default false
     //自定义的compile任务,用来代替compileXXXXJavaWithJavac
     useCustomCompile = false
 

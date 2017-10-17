@@ -164,12 +164,20 @@ class FastdexPlugin implements Plugin<Project> {
                     }
 
                     //保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
-                    FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
-                    applyResourceTask.fastdexVariant = fastdexVariant
-                    applyResourceTask.resDir = variantOutput.processResources.resDir
-                    //let applyResourceTask run after manifestTask
-                    applyResourceTask.mustRunAfter manifestTask
-                    variantOutput.processResources.dependsOn applyResourceTask
+//                    FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
+//                    applyResourceTask.fastdexVariant = fastdexVariant
+//                    applyResourceTask.resDir = variantOutput.processResources.resDir
+//                    applyResourceTask.mustRunAfter manifestTask
+//                    variantOutput.processResources.dependsOn applyResourceTask
+
+                    //这样做是为了解决第一次补丁打包时虽然资源没有发生变化但是也会执行processResources任务的问题(因为在processResources任务执行之前往输入目录里添加了public.xml)
+                    variantOutput.processResources.doFirst {
+                        FastdexResourceIdTask applyResourceTask = new FastdexResourceIdTask()
+                        applyResourceTask.project = project
+                        applyResourceTask.fastdexVariant = fastdexVariant
+                        applyResourceTask.resDir = variantOutput.processResources.resDir
+                        applyResourceTask.applyResourceId()
+                    }
 
                     variantOutput.processResources.doLast {
                         fastdexVariant.fastdexInstantRun.onResourceChanged()
