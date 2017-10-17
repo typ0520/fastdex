@@ -17,9 +17,9 @@ fastdex {
     //自定义的compile任务,用来代替compileXXXXJavaWithJavac
     useCustomCompile = false
 
-    //default 4
+    //default 3
     //当变化的java文件数量大于等于这个值时触发dex merge(随着变化的java文件的增多,补丁打包会越来越慢,dex merge以后当前的状态相当于全量打包以后的状态)
-    dexMergeThreshold = 2
+    dexMergeThreshold = 3
 }
 
 android {
@@ -118,21 +118,21 @@ dependencies {
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'de.hdodenhof:circleimageview:2.0.0'
 
-//    compile 'com.squareup.retrofit:retrofit:1.9.0'
-//    compile 'info.hoang8f:android-segmented:1.0.6'
-//    compile 'com.squareup.okio:okio:1.0.1'
-//    compile 'com.zhy:okhttputils:2.4.1'
-//    compile 'joda-time:joda-time:2.6'
-//    compile 'com.squareup.retrofit:retrofit:1.8.0'
-//    compile 'com.squareup.okhttp:okhttp:2.2.0'
-//    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
-//
-//    compile "org.greenrobot:eventbus:3.0.0"
-//    compile "org.glassfish:javax.annotation:10.0-b28"
-//    compile 'com.android.volley:volley:1.0.0'
-//    compile 'com.dialonce:dialonce-android:2.3.1'
-//    compile 'com.facebook.fresco:fresco:1.1.0'
-//    compile 'com.google.guava:guava:18.0'
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
+    compile 'info.hoang8f:android-segmented:1.0.6'
+    compile 'com.squareup.okio:okio:1.0.1'
+    compile 'com.zhy:okhttputils:2.4.1'
+    compile 'joda-time:joda-time:2.6'
+    compile 'com.squareup.retrofit:retrofit:1.8.0'
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+
+    compile "org.greenrobot:eventbus:3.0.0"
+    compile "org.glassfish:javax.annotation:10.0-b28"
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.dialonce:dialonce-android:2.3.1'
+    compile 'com.facebook.fresco:fresco:1.1.0'
+    compile 'com.google.guava:guava:18.0'
 
 //    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2'
 //    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'

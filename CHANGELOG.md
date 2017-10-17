@@ -1,3 +1,18 @@
+## 0.7.0  (2017-10-17)
+
+Features:
+
+  - 扫描apt目录，解决自动生成的代码有时候映射补上的问题
+  - 打开android-gradle 2.2.2和2.2.3的build-cache
+  - 发送补丁dex app重启的时候，会沿用原来的栈顺序重新创建这些Activity(默认是关闭的，通过restartAppByCmd=false打开这个功能)
+  - 优化custom compile逻辑
+  - 默认关闭了自定义编译任务(useCustomCompile=false)
+  - 在独立的进程中接收补丁，这样在主进程崩溃后仍然可以接收补丁
+
+Bugfixes:
+
+   - 修复javacIncrementalSafeguard任务顺序错误的问题
+
 ## 0.6.4  (2017-10-7)
 
 Bugfixes:

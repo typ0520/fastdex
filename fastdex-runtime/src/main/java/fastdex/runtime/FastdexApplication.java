@@ -25,24 +25,30 @@ public class FastdexApplication extends Application {
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(context);
         MultiDex.install(context);
-    }
-
-    public void onCreate() {
-        super.onCreate();
-
         fixGoogleMultiDex();
         createRealApplication(this);
-        Fastdex.get().initialize(this,realApplication);
+        invokeAttachBaseContext(context);
+    }
+
+    private void invokeAttachBaseContext(Context context) {
         if (this.realApplication != null) {
             try {
                 Method attachBaseContext = ContextWrapper.class
                         .getDeclaredMethod("attachBaseContext", new Class[]{Context.class});
 
                 attachBaseContext.setAccessible(true);
-                attachBaseContext.invoke(this.realApplication, new Object[]{this});
+                attachBaseContext.invoke(this.realApplication, new Object[]{context});
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
+        }
+    }
+
+    public void onCreate() {
+        super.onCreate();
+
+        Fastdex.get().initialize(this,realApplication);
+        if (this.realApplication != null) {
             this.realApplication.onCreate();
         }
     }

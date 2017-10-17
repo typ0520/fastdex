@@ -63,13 +63,14 @@ class FastdexPlugin implements Plugin<Project> {
             //2.2.2 build-cache默认是关闭的，通过动态设置android.enableBuildCache=true打开这个功能
             //2.2.2以后引入了build-cache机制，能大幅度提高全量打包速度
             if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
-                GradleUtils.addDynamicProperty(project,"android.enableBuildCache","true")
                 project.logger.error("====fastdex add dynamic property: 'android.enableBuildCache=true'")
+                GradleUtils.addDynamicProperty(project,"android.enableBuildCache","true")
             }
             else {
                 project.logger.error("It is recommended to use versions larger than 2.3")
             }
 
+            project.logger.error("====fastdex add dynamic property: 'kotlin.incremental=true'")
             GradleUtils.addDynamicProperty(project,"kotlin.incremental","true")
 
             //最低支持2.0.0

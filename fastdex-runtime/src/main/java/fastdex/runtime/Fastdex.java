@@ -49,25 +49,25 @@ public enum  Fastdex {
         patchDirectory = SharePatchFileUtil.getPatchDirectory(applicationContext);
         tempDirectory = SharePatchFileUtil.getPatchTempDirectory(applicationContext);
 
+        MonkeyPatcher.monkeyPatchApplication(getApplicationContext(),fastdexApplication,realApplication);
         if (Utils.isMainProcess(applicationContext)) {
             RuntimeMetaInfo metaInfo = loadRuntimeMetaInfo();
-            MonkeyPatcher.monkeyPatchApplication(applicationContext,fastdexApplication,realApplication);
 
             preparePatch(metaInfo);
             loadPatch(fastdexApplication,metaInfo);
 
-            Restarter.initialize(fastdexApplication);
+            Restarter.initialize(realApplication);
             Thread.setDefaultUncaughtExceptionHandler(new FastdexUncaughtExceptionHandler(getApplicationContext()));
-            registerFastdexReceiver(fastdexApplication);
-            fastdexApplication.startService(new Intent(fastdexApplication, FastdexService.class));
+            registerFastdexReceiver(realApplication);
+            realApplication.startService(new Intent(realApplication, FastdexService.class));
         }
     }
 
-    private void registerFastdexReceiver(FastdexApplication fastdexApplication) {
+    private void registerFastdexReceiver(Application application) {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(FastdexReceiver.FASTDEX_RECEIVER_ACTION);
-        intentFilter.addCategory(fastdexApplication.getPackageName());
-        fastdexApplication.registerReceiver(new FastdexReceiver(),intentFilter);
+        intentFilter.addCategory(application.getPackageName());
+        application.registerReceiver(new FastdexReceiver(),intentFilter);
     }
 
     /**
