@@ -166,11 +166,20 @@ public class FastdexVariant {
                 }
             } catch (Throwable e) {
                 hasDexCache = false
+                //删掉classes目录和transforms目录，是为了重新触发java编译和dex transform
+                File classesDir = androidVariant.getVariantData().getScope().getJavaOutputDir()
+                classesDir.deleteDir()
+                File transformsDir = new File(androidVariant.getVariantData().getScope().getGlobalScope().getIntermediatesDir(), "/transforms")
+                transformsDir.deleteDir()
+                File apkLocationDir = androidVariant.getVariantData().getScope().getGlobalScope().getApkLocation()
+                apkLocationDir.deleteDir()
 
                 if (!(e instanceof JumpException) && configuration.debug) {
                     e.printStackTrace()
                 }
-
+                project.logger.error("==fastdex delete ${classesDir}")
+                project.logger.error("==fastdex delete ${transformsDir}")
+                project.logger.error("==fastdex delete ${apkLocationDir}")
                 project.logger.error("==fastdex ${e.getMessage()}")
                 project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
             }

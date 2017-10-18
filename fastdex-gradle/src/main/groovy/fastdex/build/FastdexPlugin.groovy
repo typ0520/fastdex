@@ -146,10 +146,8 @@ class FastdexPlugin implements Plugin<Project> {
                     FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
                     cleanTask.fastdexVariant = fastdexVariant
 
-
                     //TODO change api
-                    variantOutput.processManifest.dependsOn getMergeDebugResources(project,variantName)
-                    //variantOutput.processManifest.dependsOn variant.getVariantData().getScope().getMergeResourcesTask()
+                    variantOutput.processManifest.dependsOn getMergeResources(project,variantName)
                     //替换项目的Application为fastdex.runtime.FastdexApplication
                     FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
                     manifestTask.fastdexVariant = fastdexVariant
@@ -259,12 +257,11 @@ class FastdexPlugin implements Plugin<Project> {
                         }
                     }
 
-                    FastdexInstantRunTask fastdexInstantRunTask = project.tasks.create("fastdex${variantName}",FastdexInstantRunTask)
-                    fastdexInstantRunTask.fastdexVariant = fastdexVariant
-
                     FastdexInstantRunMarkTask fastdexInstantRunMarkTask = project.tasks.create("fastdexMarkFor${variantName}",FastdexInstantRunMarkTask)
                     fastdexInstantRunMarkTask.fastdexVariant = fastdexVariant
-                    //fastdexInstantRunMarkTask.mustRunAfter variantOutput.processManifest
+
+                    FastdexInstantRunTask fastdexInstantRunTask = project.tasks.create("fastdex${variantName}",FastdexInstantRunTask)
+                    fastdexInstantRunTask.fastdexVariant = fastdexVariant
 
                     prepareTask.mustRunAfter fastdexInstantRunMarkTask
 
@@ -425,7 +422,7 @@ class FastdexPlugin implements Plugin<Project> {
         }
     }
 
-    Task getMergeDebugResources(Project project, String variantName) {
+    Task getMergeResources(Project project, String variantName) {
         String taskName = "merge${variantName}Resources"
         try {
             return project.tasks.getByName(taskName)

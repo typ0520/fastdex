@@ -1,3 +1,9 @@
+## 0.7.2  (2017-10-18)
+
+Bugfixes:
+
+   - 修复清除fastdex缓存后有时候不触发dex transform的问题
+
 ## 0.7.1  (2017-10-17)
 
 Bugfixes:
