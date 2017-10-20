@@ -16,7 +16,6 @@ import fastdex.build.util.MetaInfo
 import fastdex.build.util.ProjectSnapshoot
 import fastdex.build.util.FastdexUtils
 import fastdex.common.utils.FileUtils
-import fastdex.build.util.GradleUtils
 import org.gradle.api.Project
 
 /**
@@ -33,8 +32,6 @@ public class FastdexVariant {
     final ProjectSnapshoot projectSnapshoot
     final Set<LibDependency> libraryDependencies
 
-    String originPackageName
-    String mergedPackageName
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
@@ -177,11 +174,11 @@ public class FastdexVariant {
                 if (!(e instanceof JumpException) && configuration.debug) {
                     e.printStackTrace()
                 }
+                project.logger.error("==fastdex ${e.getMessage()}")
+                project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
                 project.logger.error("==fastdex delete ${classesDir}")
                 project.logger.error("==fastdex delete ${transformsDir}")
                 project.logger.error("==fastdex delete ${apkLocationDir}")
-                project.logger.error("==fastdex ${e.getMessage()}")
-                project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
             }
         }
 
@@ -213,12 +210,7 @@ public class FastdexVariant {
      * @return
      */
     public String getOriginPackageName() {
-        if (originPackageName != null) {
-            return originPackageName
-        }
-        String path = project.android.sourceSets.main.manifest.srcFile.absolutePath
-        originPackageName = GradleUtils.getPackageName(path)
-        return originPackageName
+        return androidVariant.getVariantData().getVariantConfiguration().getOriginalApplicationId()
     }
 
     /**
@@ -226,11 +218,7 @@ public class FastdexVariant {
      * @return
      */
     public String getMergedPackageName() {
-        if (mergedPackageName != null) {
-            return mergedPackageName
-        }
-        mergedPackageName = GradleUtils.getPackageName(manifestPath)
-        return mergedPackageName
+        return androidVariant.getVariantData().getVariantConfiguration().getApplicationId()
     }
 
     /**

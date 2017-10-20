@@ -146,8 +146,7 @@ class FastdexPlugin implements Plugin<Project> {
                     FastdexCleanTask cleanTask = project.tasks.create("fastdexCleanFor${variantName}", FastdexCleanTask)
                     cleanTask.fastdexVariant = fastdexVariant
 
-                    //TODO change api
-                    variantOutput.processManifest.dependsOn getMergeResources(project,variantName)
+                    variantOutput.processManifest.dependsOn variant.mergeResources
                     //替换项目的Application为fastdex.runtime.FastdexApplication
                     FastdexManifestTask manifestTask = project.tasks.create("fastdexProcess${variantName}Manifest", FastdexManifestTask)
                     manifestTask.fastdexVariant = fastdexVariant
@@ -241,7 +240,7 @@ class FastdexPlugin implements Plugin<Project> {
                         collectMultiDexComponentsTask.enabled = false
                     }
 
-                    Task mergeAssetsTask = getMergeAssetsTask(project, variantName)
+                    Task mergeAssetsTask = variant.mergeAssets
                     mergeAssetsTask.doLast {
                         fastdexVariant.fastdexInstantRun.onAssetsChanged()
                     }
@@ -370,16 +369,6 @@ class FastdexPlugin implements Plugin<Project> {
         javaCompile.options.compilerArgs.addAll(compilerArgs)
     }
 
-    Task getMergeAssetsTask(Project project, String variantName) {
-        String taskName = "merge${variantName}Assets"
-        try {
-            return  project.tasks.getByName(taskName)
-        } catch (Throwable e) {
-            return null
-        }
-    }
-
-
     Task getPackageTask(Project project, String variantName) {
         String taskName = "package${variantName}"
         try {
@@ -418,15 +407,6 @@ class FastdexPlugin implements Plugin<Project> {
 
     Task getTinkerPatchManifestTask(Project project, String variantName) {
         String taskName = "tinkerpatchSupportProcess${variantName}Manifest"
-        try {
-            return project.tasks.getByName(taskName)
-        } catch (Throwable e) {
-            return null
-        }
-    }
-
-    Task getMergeResources(Project project, String variantName) {
-        String taskName = "merge${variantName}Resources"
         try {
             return project.tasks.getByName(taskName)
         } catch (Throwable e) {
