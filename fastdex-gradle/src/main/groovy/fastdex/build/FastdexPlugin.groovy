@@ -209,6 +209,9 @@ class FastdexPlugin implements Plugin<Project> {
                         if (customJavacTask.javacIncrementalSafeguard != null) {
                             customJavacTask.javacIncrementalSafeguard.mustRunAfter customJavacTask
                         }
+                        if (customJavacTask.javaPreCompile != null) {
+                            customJavacTask.javaPreCompile.mustRunAfter customJavacTask
+                        }
                         javaCompile.dependsOn customJavacTask
                         scanAptOutputTask.mustRunAfter customJavacTask
                     }

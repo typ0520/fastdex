@@ -44,10 +44,18 @@ public class FastdexCustomJavacTask extends DefaultTask {
         javaCompile.enabled = false
 
         if (javacIncrementalSafeguard != null) {
-            javacIncrementalSafeguard.enabled = false
+            try {
+                javacIncrementalSafeguard.enabled = false
+            } catch (Throwable e) {
+
+            }
         }
         if (javaPreCompile != null) {
-            javaPreCompile.enabled = false
+            try {
+                javaPreCompile.enabled = false
+            } catch (Throwable e) {
+
+            }
         }
     }
 
