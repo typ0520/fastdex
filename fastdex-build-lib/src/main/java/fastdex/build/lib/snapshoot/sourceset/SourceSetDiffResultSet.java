@@ -16,7 +16,7 @@ import java.util.Set;
  * Created by tong on 17/3/31.
  */
 public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
-    public final Set<JavaFileDiffInfo> changedJavaFileDiffInfos = new HashSet<JavaFileDiffInfo>();
+    public final Set<JavaFileDiffInfo> changedJavaFileDiffInfos = new HashSet<>();
 
     @Expose
     public Set<String> addOrModifiedClasses = new HashSet<>();
@@ -86,9 +86,7 @@ public class SourceSetDiffResultSet extends DiffResultSet<StringDiffInfo> {
         if (!super.equals(o)) return false;
 
         SourceSetDiffResultSet resultSet = (SourceSetDiffResultSet) o;
-
-        return changedJavaFileDiffInfos != null ? changedJavaFileDiffInfos.equals(resultSet.changedJavaFileDiffInfos) : resultSet.changedJavaFileDiffInfos == null;
-
+        return changedJavaFileDiffInfos.equals(resultSet.changedJavaFileDiffInfos);
     }
 
     @Override

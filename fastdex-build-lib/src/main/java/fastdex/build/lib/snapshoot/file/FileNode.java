@@ -9,11 +9,10 @@ import java.io.File;
  * Created by tong on 17/3/29.
  */
 public class FileNode extends Node {
-    //public String absolutePath;
     public String nodePath;
+    public String md5;
     public long lastModified;
     public long fileLength;
-    public String md5;
 
     @Override
     public String getUniqueKey() {
@@ -22,20 +21,19 @@ public class FileNode extends Node {
 
     @Override
     public boolean diffEquals(Node anNode) {
-        if (this == anNode) return true;
-        if (anNode == null) return false;
+        if (!super.diffEquals(anNode))
+            return false;
 
         FileNode fileNode = (FileNode) anNode;
-        if (fileLength != fileNode.fileLength) return false;
-
-
-        if (lastModified != fileNode.lastModified) {
-            if (md5 != null && md5.equals(((FileNode) anNode).md5)) {
-                return true;
-            }
+        if (fileLength != fileNode.fileLength)
             return false;
+
+        if (md5 != null) {
+            return md5.equals(((FileNode) anNode).md5);
         }
-        return equals(fileNode);
+        else {
+            return lastModified == fileNode.lastModified;
+        }
     }
 
     @Override

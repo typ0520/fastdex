@@ -22,3 +22,7 @@ tasks['install'].doLast {
         project.file('build/libs').deleteDir()
     }
 }
+
+tasks['bintrayUpload'].doLast {
+    project.file('build/libs').deleteDir()
+}

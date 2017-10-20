@@ -41,25 +41,25 @@ public class FileDiffInfo extends DiffInfo<FileNode> {
         int result = super.hashCode();
         int nowLastModified = 0;
 
-        if (now != null) {
-            nowLastModified = (int) (((FileNode)now).lastModified ^ (((FileNode)now).lastModified >>> 32));
+        if (now != null && now.md5 == null) {
+            nowLastModified = (int) (now.lastModified ^ (now.lastModified >>> 32));
         }
 
         int oldLastModified = 0;
-        if (old != null) {
-            oldLastModified = (int) (((FileNode)old).lastModified ^ (((FileNode)old).lastModified >>> 32));
+        if (old != null && old.md5 == null) {
+            oldLastModified = (int) (old.lastModified ^ (old.lastModified >>> 32));
         }
 
         int nowFileLength = 0;
         int oldFileLength = 0;
         if (now != null) {
-            nowFileLength = (int) (((FileNode)now).fileLength ^ (((FileNode)now).fileLength >>> 32));
+            nowFileLength = (int) (now.fileLength ^ (now.fileLength >>> 32));
         }
         if (old != null) {
-            oldFileLength = (int) (((FileNode)old).fileLength ^ (((FileNode)old).fileLength >>> 32));
+            oldFileLength = (int) (old.fileLength ^ (old.fileLength >>> 32));
         }
-        result = 31 * result + (now != null ? (now.hashCode() + nowLastModified + nowFileLength) : 0);
-        result = 31 * result + (old != null ? (old.hashCode() + oldLastModified + oldFileLength) : 0);
+        result = 31 * result + (now != null && now.md5 != null ? (now.md5.hashCode() + nowLastModified + nowFileLength) : 0);
+        result = 31 * result + (old != null && old.md5 != null ? (old.md5.hashCode() + oldLastModified + oldFileLength) : 0);
         return result;
     }
 }

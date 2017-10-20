@@ -3,9 +3,7 @@ package fastdex.build.task
 import fastdex.build.util.Constants
 import fastdex.common.utils.FileUtils
 import fastdex.build.variant.FastdexVariant
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskAction
 import fastdex.build.lib.aapt.AaptResourceCollector
 import fastdex.build.lib.aapt.AaptUtil
 import fastdex.build.lib.aapt.PatchUtil
