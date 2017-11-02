@@ -1,30 +1,23 @@
 package fastdex.build.transform
 
-import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformException
-import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
-import fastdex.build.util.ClassInject
 import fastdex.build.util.Constants
-import fastdex.build.util.FastdexUtils
 import fastdex.build.util.GradleUtils
 import fastdex.build.util.JarOperation
 import fastdex.build.variant.FastdexVariant
 import com.android.build.api.transform.Format
 import fastdex.common.utils.FileUtils
-import fastdex.common.utils.SerializeUtils
 
 /**
  * 拦截transformClassesWithJarMergingFor${variantName}任务,
  * Created by tong on 17/27/3.
  */
 class FastdexJarMergingTransform extends TransformProxy {
-    FastdexVariant fastdexVariant
 
-    FastdexJarMergingTransform(Transform base, FastdexVariant fastdexVariant) {
-        super(base)
-        this.fastdexVariant = fastdexVariant
+    FastdexJarMergingTransform(Transform base,File streamOutputFolder, FastdexVariant fastdexVariant) {
+        super(base,streamOutputFolder,fastdexVariant)
     }
 
     @Override
@@ -41,21 +34,7 @@ class FastdexJarMergingTransform extends TransformProxy {
             }
         }
         else {
-            //所有输入的jar
-            Set<String> jarInputFiles = new HashSet<>();
-            for (TransformInput input : transformInvocation.getInputs()) {
-                Collection<JarInput> jarInputs = input.getJarInputs()
-                if (jarInputs != null) {
-                    for (JarInput jarInput : jarInputs) {
-                        jarInputFiles.add(jarInput.getFile().absolutePath)
-                    }
-                }
-            }
-            File classpathFile = new File(FastdexUtils.getBuildDir(fastdexVariant.project,fastdexVariant.variantName),Constants.CLASSPATH_FILENAME)
-            SerializeUtils.serializeTo(classpathFile,jarInputFiles)
-
-            //inject dir input
-            ClassInject.injectTransformInvocation(fastdexVariant,transformInvocation)
+            fastdexBuilder.injectInputAndSaveClassPath(transformInvocation)
 
             if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0) {
                 //不做合并时为了使用build-cache
@@ -72,13 +51,13 @@ class FastdexJarMergingTransform extends TransformProxy {
      * @param invocation
      * @return
      */
-    public File getCombinedJarFile(TransformInvocation invocation) {
-        def outputProvider = invocation.getOutputProvider();
+    def getCombinedJarFile(TransformInvocation invocation) {
+        def outputProvider = invocation.getOutputProvider()
 
         // all the output will be the same since the transform type is COMBINED.
         // and format is SINGLE_JAR so output is a jar
-        File jarFile = outputProvider.getContentLocation("combined", base.getOutputTypes(), base.getScopes(), Format.JAR);
-        FileUtils.ensumeDir(jarFile.getParentFile());
+        File jarFile = outputProvider.getContentLocation("combined", base.getOutputTypes(), base.getScopes(), Format.JAR)
+        FileUtils.ensumeDir(jarFile.getParentFile())
         return jarFile
     }
 }

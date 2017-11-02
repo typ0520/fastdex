@@ -14,7 +14,7 @@ import org.gradle.api.tasks.TaskAction
  *
  * Created by tong on 17/3/11.
  */
-public class FastdexManifestTask extends DefaultTask {
+class FastdexManifestTask extends DefaultTask {
     static final String FASTDEX_ORIGIN_APPLICATION_CLASSNAME = "FASTDEX_ORIGIN_APPLICATION_CLASSNAME"
     static final String FASTDEX_BOOT_ACTIVITY_CLASSNAME = "FASTDEX_BOOT_ACTIVITY_CLASSNAME"
     static final String MIDDLEWARE_ACTIVITY = "fastdex.runtime.MiddlewareActivity"
@@ -34,7 +34,7 @@ public class FastdexManifestTask extends DefaultTask {
 
         def application = xml.application[0]
         if (application) {
-            QName nameAttr = new QName("http://schemas.android.com/apk/res/android", 'name', 'android');
+            QName nameAttr = new QName("http://schemas.android.com/apk/res/android", 'name', 'android')
             def applicationName = application.attribute(nameAttr)
             if (applicationName == null || applicationName.isEmpty()) {
                 applicationName = "android.app.Application"

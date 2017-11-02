@@ -34,17 +34,19 @@ import java.nio.file.attribute.BasicFileAttributes
  * 代码注入，往所有的构造方法中添加对fastdex.runtime.antilazyload.AntilazyLoad的依赖
  * Created by tong on 17/10/3.
  */
-public class ClassInject implements Opcodes {
+class ClassInject implements Opcodes {
+    private static final boolean DEBUG_INJECT = false
+
     /**
      * 注入class目录和jar文件
      * @param fastdexVariant
      * @param transformInvocation
      */
-    public static void injectTransformInvocation(FastdexVariant fastdexVariant, TransformInvocation transformInvocation) {
+     static void injectTransformInvocation(FastdexVariant fastdexVariant, TransformInvocation transformInvocation) {
         //所有的class目录
-        HashSet<File> directoryInputFiles = new HashSet<>();
+        HashSet<File> directoryInputFiles = new HashSet<>()
         //所有输入的jar
-        HashSet<File> jarInputFiles = new HashSet<>();
+        HashSet<File> jarInputFiles = new HashSet<>()
         for (TransformInput input : transformInvocation.getInputs()) {
             Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs()
             if (directoryInputs != null) {
@@ -68,7 +70,7 @@ public class ClassInject implements Opcodes {
      * 往所有项目代码里注入解决pre-verify问题的code
      * @param directoryInputFiles
      */
-    public static void injectDirectoryInputFiles(FastdexVariant fastdexVariant, HashSet<File> directoryInputFiles) {
+    static void injectDirectoryInputFiles(FastdexVariant fastdexVariant, HashSet<File> directoryInputFiles) {
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
         for (File classpathFile : directoryInputFiles) {
@@ -85,11 +87,19 @@ public class ClassInject implements Opcodes {
      * @param fastdexVariant
      * @param directoryInputFiles
      */
-    public static void injectJarInputFiles(FastdexVariant fastdexVariant, HashSet<File> jarInputFiles) {
+    static void injectJarInputFiles(FastdexVariant fastdexVariant, HashSet<File> jarInputFiles) {
+        if (jarInputFiles == null || jarInputFiles.isEmpty()) {
+            return
+        }
         def project = fastdexVariant.project
         long start = System.currentTimeMillis()
 
-        Set<LibDependency> libraryDependencies = fastdexVariant.libraryDependencies
+        Set<LibDependency> libraryDependencies = fastdexVariant.getLibraryDependencies()
+
+        if (DEBUG_INJECT) {
+            project.logger.error("==jarInputFiles: " + jarInputFiles)
+            project.logger.error("==libraryDependencies: " + libraryDependencies)
+        }
         List<File> projectJarFiles = new ArrayList<>()
         //获取所有依赖工程的输出jar (compile project(':xxx'))
         for (LibDependency dependency : libraryDependencies) {
@@ -116,7 +126,7 @@ public class ClassInject implements Opcodes {
      * @param outputJar
      * @return
      */
-    public static injectJar(FastdexVariant fastdexVariant, File inputJar,File outputJar) {
+    static injectJar(FastdexVariant fastdexVariant, File inputJar,File outputJar) {
         File tempDir = new File(fastdexVariant.buildDir,"temp")
         FileUtils.deleteDir(tempDir)
         FileUtils.ensumeDir(tempDir)
@@ -135,7 +145,7 @@ public class ClassInject implements Opcodes {
      * 注入指定目录下的所有class
      * @param classpath
      */
-    public static void injectDirectory(FastdexVariant fastdexVariant,File classesDir,boolean applicationProjectSrc) {
+    static void injectDirectory(FastdexVariant fastdexVariant,File classesDir,boolean applicationProjectSrc) {
         if (!FileUtils.dirExists(classesDir.absolutePath)) {
             return
         }
@@ -147,17 +157,18 @@ public class ClassInject implements Opcodes {
                 File classFile = file.toFile()
                 String fileName = classFile.getName()
                 if (!fileName.endsWith(Constants.CLASS_SUFFIX)) {
-                    return FileVisitResult.CONTINUE;
+                    return FileVisitResult.CONTINUE
                 }
 
                 boolean needInject = true
-                if (applicationProjectSrc && (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class"))) {
-                    String packageName = fastdexVariant.getOriginPackageName()
-                    String packageNamePath = packageName.split("\\.").join(File.separator)
-                    if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
-                        needInject = false
-                    }
-                }
+                //
+//                if (applicationProjectSrc && (fileName.endsWith("R.class") || fileName.matches("R\\\$\\S{1,}.class"))) {
+//                    String packageName = fastdexVariant.getOriginPackageName()
+//                    String packageNamePath = packageName.split("\\.").join(File.separator)
+//                    if (!classFile.absolutePath.endsWith("${packageNamePath}${File.separator}${fileName}")) {
+//                        needInject = false
+//                    }
+//                }
                 if (needInject) {
                     fastdexVariant.project.logger.error("==fastdex inject: ${classFile.getAbsolutePath()}")
                     byte[] classBytes = FileUtils.readContents(classFile)
@@ -174,56 +185,55 @@ public class ClassInject implements Opcodes {
      * @param classBytes
      * @return
      */
-    public static final byte[] inject(byte[] classBytes) {
-        ClassReader classReader = new ClassReader(classBytes);
-        ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS);
-        ClassVisitor classVisitor = new MyClassVisitor(classWriter);
-        classReader.accept(classVisitor, Opcodes.ASM5);
+    static final byte[] inject(byte[] classBytes) {
+        ClassReader classReader = new ClassReader(classBytes)
+        ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+        ClassVisitor classVisitor = new MyClassVisitor(classWriter)
+        classReader.accept(classVisitor, Opcodes.ASM5)
 
         return classWriter.toByteArray()
     }
 
     private static class MyClassVisitor extends ClassVisitor {
-        public MyClassVisitor(ClassVisitor classVisitor) {
-            super(Opcodes.ASM5, classVisitor);
+        MyClassVisitor(ClassVisitor classVisitor) {
+            super(Opcodes.ASM5, classVisitor)
         }
 
         @Override
-        public MethodVisitor visitMethod(int access,
+        MethodVisitor visitMethod(int access,
                                          String name,
                                          String desc,
                                          String signature,
                                          String[] exceptions) {
             if ("<init>".equals(name)) {
                 //get origin method
-                MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
-                //System.out.println(name + " | " + desc + " | " + signature);
-                MethodVisitor newMethod = new AsmMethodVisit(mv);
-                return newMethod;
+                MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions)
+                MethodVisitor newMethod = new AsmMethodVisit(mv)
+                return newMethod
             } else {
-                return super.visitMethod(access, name, desc, signature, exceptions);
+                return super.visitMethod(access, name, desc, signature, exceptions)
             }
         }
     }
 
     static class AsmMethodVisit extends MethodVisitor {
-        public AsmMethodVisit(MethodVisitor mv) {
-            super(Opcodes.ASM5, mv);
+        AsmMethodVisit(MethodVisitor mv) {
+            super(Opcodes.ASM5, mv)
         }
 
         @Override
-        public void visitInsn(int opcode) {
+        void visitInsn(int opcode) {
             if (opcode == Opcodes.RETURN) {
-                super.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
-                super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                Label l0 = new Label();
-                super.visitJumpInsn(IFEQ, l0);
-                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                mv.visitFieldInsn(GETSTATIC, "fastdex/runtime/antilazyload/AntilazyLoad", "str", "Ljava/lang/String;");
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
-                super.visitLabel(l0);
+                super.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;")
+                super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false)
+                Label l0 = new Label()
+                super.visitJumpInsn(IFEQ, l0)
+                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
+                mv.visitFieldInsn(GETSTATIC, "fastdex/runtime/antilazyload/AntilazyLoad", "str", "Ljava/lang/String;")
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false)
+                super.visitLabel(l0)
             }
-            super.visitInsn(opcode);
+            super.visitInsn(opcode)
         }
     }
 }

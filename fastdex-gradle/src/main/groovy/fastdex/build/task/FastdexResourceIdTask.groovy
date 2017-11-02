@@ -22,7 +22,7 @@ import fastdex.build.util.FastdexUtils
  *
  * Created by tong on 17/3/11.
  */
-public class FastdexResourceIdTask {
+class FastdexResourceIdTask {
     Project project
     FastdexVariant fastdexVariant
     String resDir
@@ -43,8 +43,8 @@ public class FastdexResourceIdTask {
         File idsXmlFile = FastdexUtils.getIdxXmlFile(project,fastdexVariant.variantName)
         File publicXmlFile = FastdexUtils.getPublicXmlFile(project,fastdexVariant.variantName)
 
-        String idsXml = resDir + "/values/ids.xml";
-        String publicXml = resDir + "/values/public.xml";
+        String idsXml = resDir + "/values/ids.xml"
+        String publicXml = resDir + "/values/public.xml"
         File resDirIdsXmlFile = new File(idsXml)
         File resDirPublicXmlFile = new File(publicXml)
 
@@ -61,8 +61,9 @@ public class FastdexResourceIdTask {
             return
         }
 
-        FileUtils.deleteFile(idsXml);
-        FileUtils.deleteFile(publicXml);
+        FileUtils.deleteFile(idsXml)
+        FileUtils.deleteFile(publicXml)
+
         List<String> resourceDirectoryList = new ArrayList<String>()
         resourceDirectoryList.add(resDir)
 
@@ -72,7 +73,6 @@ public class FastdexResourceIdTask {
         AaptResourceCollector aaptResourceCollector = AaptUtil.collectResource(resourceDirectoryList, rTypeResourceMap)
         PatchUtil.generatePublicResourceXml(aaptResourceCollector, idsXml, publicXml)
         File publicFile = new File(publicXml)
-
         if (publicFile.exists()) {
             FileUtils.copyFileUsingStream(publicFile, publicXmlFile)
             project.logger.error("==fastdex gen resource public.xml in ${Constants.RESOURCE_PUBLIC_XML}")

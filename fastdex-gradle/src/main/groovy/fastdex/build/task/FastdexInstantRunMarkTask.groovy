@@ -7,7 +7,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Created by tong on 17/3/12.
  */
-public class FastdexInstantRunMarkTask extends DefaultTask {
+class FastdexInstantRunMarkTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexInstantRunMarkTask() {
@@ -15,7 +15,7 @@ public class FastdexInstantRunMarkTask extends DefaultTask {
     }
 
     @TaskAction
-    void mark() {
+    def mark() {
         fastdexVariant.fastdexInstantRun.fromFastdexInstantRun = true
         project.logger.error("==fastdex fromFastdexInstantRun: true")
 
@@ -27,11 +27,6 @@ public class FastdexInstantRunMarkTask extends DefaultTask {
                 } catch (Throwable e) {
 
                 }
-//                try {
-//                    fastdexVariant.fastdexInstantRun.startTransparentActivity(true)
-//                } catch (Throwable e) {
-//
-//                }
             }
         }).start()
     }

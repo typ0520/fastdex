@@ -13,16 +13,16 @@ import java.nio.file.attribute.BasicFileAttributes
 /**
  * Created by tong on 17/3/14.
  */
-public class FastdexUtils {
+class FastdexUtils {
     /**
      * 获取sdk路径
      * @param project
      * @return
      */
-    public static final String getSdkDirectory(Project project) {
+    static final String getSdkDirectory(Project project) {
         String sdkDirectory = project.android.getSdkDirectory()
         if (sdkDirectory.contains("\\")) {
-            sdkDirectory = sdkDirectory.replace("\\", "/");
+            sdkDirectory = sdkDirectory.replace("\\", "/")
         }
         return sdkDirectory
     }
@@ -32,7 +32,7 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final String getDxCmdPath(Project project) {
+    static final String getDxCmdPath(Project project) {
         File dx = new File(FastdexUtils.getSdkDirectory(project),"build-tools${File.separator}${project.android.buildToolsVersion.toString()}${File.separator}dx")
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return "${dx.absolutePath}.bat"
@@ -45,7 +45,7 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final String getAaptCmdPath(Project project) {
+    static final String getAaptCmdPath(Project project) {
         File aapt = new File(FastdexUtils.getSdkDirectory(project),"build-tools${File.separator}${project.android.buildToolsVersion.toString()}${File.separator}aapt")
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return "${aapt.absolutePath}.exe"
@@ -58,7 +58,7 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final String getAdbCmdPath(Project project) {
+    static final String getAdbCmdPath(Project project) {
         File adb = new File(FastdexUtils.getSdkDirectory(project),"platform-tools${File.separator}adb")
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return "${adb.absolutePath}.exe"
@@ -70,7 +70,7 @@ public class FastdexUtils {
      * 获取当前jdk路径
      * @return
      */
-    public static final String getCurrentJdk() {
+    static final String getCurrentJdk() {
         String javaHomeProp = System.properties.'java.home'
         if (javaHomeProp) {
             int jreIndex = javaHomeProp.lastIndexOf("${File.separator}jre")
@@ -88,7 +88,7 @@ public class FastdexUtils {
      * 获取java命令路径
      * @return
      */
-    public static final String getJavaCmdPath() {
+    static final String getJavaCmdPath() {
         StringBuilder cmd = new StringBuilder(getCurrentJdk())
         if (!cmd.toString().endsWith(File.separator)) {
             cmd.append(File.separator)
@@ -104,7 +104,7 @@ public class FastdexUtils {
      * 获取javac命令路径
      * @return
      */
-    public static final String getJavacCmdPath() {
+    static final String getJavacCmdPath() {
         StringBuilder cmd = new StringBuilder(getCurrentJdk())
         if (!cmd.toString().endsWith(File.separator)) {
             cmd.append(File.separator)
@@ -122,15 +122,15 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static boolean hasDexCache(Project project, String variantName) {
+    static boolean hasDexCache(Project project, String variantName) {
         File cacheDexDir = getDexCacheDir(project,variantName)
         if (!FileUtils.dirExists(cacheDexDir.absolutePath)) {
-            return false;
+            return false
         }
 
-        FindDexFileVisitor visitor = new FindDexFileVisitor();
-        Files.walkFileTree(cacheDexDir.toPath(),visitor);
-        return visitor.hasDex;
+        FindDexFileVisitor visitor = new FindDexFileVisitor()
+        Files.walkFileTree(cacheDexDir.toPath(),visitor)
+        return visitor.hasDex
     }
 
     /**
@@ -138,9 +138,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getBuildDir(Project project) {
-        File file = new File(project.getBuildDir(),Constants.BUILD_DIR);
-        return file;
+    static final File getBuildDir(Project project) {
+        File file = new File(project.getBuildDir(),Constants.BUILD_DIR)
+        return file
     }
 
     /**
@@ -148,9 +148,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getBuildDir(Project project,String variantName) {
-        File file = new File(getBuildDir(project),variantName);
-        return file;
+    static final File getBuildDir(Project project,String variantName) {
+        File file = new File(getBuildDir(project),variantName)
+        return file
     }
 
     /**
@@ -158,9 +158,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getWorkDir(Project project,String variantName) {
+    static final File getWorkDir(Project project,String variantName) {
         File file = new File(getBuildDir(project,variantName),"work")
-        return file;
+        return file
     }
 
     /**
@@ -169,9 +169,9 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static getDexDir(Project project,String variantName) {
-        File file = new File(getBuildDir(project,variantName),"dex");
-        return file;
+    static getDexDir(Project project,String variantName) {
+        File file = new File(getBuildDir(project,variantName),"dex")
+        return file
     }
 
     /**
@@ -179,9 +179,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getDexCacheDir(Project project,String variantName) {
-        File file = new File(getDexDir(project,variantName),"cache");
-        return file;
+    static final File getDexCacheDir(Project project,String variantName) {
+        File file = new File(getDexDir(project,variantName),"cache")
+        return file
     }
 
     /**
@@ -189,9 +189,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getMergedPatchDexDir(Project project,String variantName) {
-        File file = new File(getDexDir(project,variantName),"merged-patch");
-        return file;
+    static final File getMergedPatchDexDir(Project project,String variantName) {
+        File file = new File(getDexDir(project,variantName),"merged-patch")
+        return file
     }
 
     /**
@@ -199,9 +199,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getMergedPatchDexFile(Project project,String variantName) {
-        File file = new File(getMergedPatchDexDir(project,variantName),Constants.CLASSES_DEX);
-        return file;
+    static final File getMergedPatchDexFile(Project project,String variantName) {
+        File file = new File(getMergedPatchDexDir(project,variantName),Constants.CLASSES_DEX)
+        return file
     }
 
     /**
@@ -209,9 +209,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getPatchDexDir(Project project,String variantName) {
-        File file = new File(getDexDir(project,variantName),"patch");
-        return file;
+    static final File getPatchDexDir(Project project,String variantName) {
+        File file = new File(getDexDir(project,variantName),"patch")
+        return file
     }
 
     /**
@@ -219,9 +219,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getPatchDexFile(Project project,String variantName) {
-        File file = new File(getPatchDexDir(project,variantName),Constants.CLASSES_DEX);
-        return file;
+    static final File getPatchDexFile(Project project,String variantName) {
+        File file = new File(getPatchDexDir(project,variantName),Constants.CLASSES_DEX)
+        return file
     }
 
     /**
@@ -230,9 +230,9 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static final File getMergedPatchDex(Project project,String variantName) {
-        File file = new File(getMergedPatchDexDir(project,variantName),Constants.CLASSES_DEX);
-        return file;
+    static final File getMergedPatchDex(Project project,String variantName) {
+        File file = new File(getMergedPatchDexDir(project,variantName),Constants.CLASSES_DEX)
+        return file
     }
 
     /**
@@ -240,9 +240,9 @@ public class FastdexUtils {
      * @param project
      * @return
      */
-    public static final File getSourceSetSnapshootFile(Project project, String variantName) {
-        File file = new File(getBuildDir(project,variantName),Constants.SOURCESET_SNAPSHOOT_FILENAME);
-        return file;
+    static final File getSourceSetSnapshootFile(Project project, String variantName) {
+        File file = new File(getBuildDir(project,variantName),Constants.SOURCESET_SNAPSHOOT_FILENAME)
+        return file
     }
 
     /**
@@ -251,7 +251,7 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static boolean cleanCache(Project project,String variantName) {
+    static boolean cleanCache(Project project,String variantName) {
         File dir = getBuildDir(project,variantName)
         project.logger.error("==fastdex clean dir: ${dir}")
         return FileUtils.deleteDir(dir)
@@ -263,7 +263,7 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static boolean cleanAllCache(Project project) {
+    static boolean cleanAllCache(Project project) {
         File dir = getBuildDir(project)
         project.logger.error("==fastdex clean dir: ${dir}")
         return FileUtils.deleteDir(dir)
@@ -275,17 +275,17 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getResourceMappingFile(Project project, String variantName) {
-        File resourceMappingFile = new File(getBuildResourceDir(project,variantName),Constants.R_TXT)
+    static File getResourceMappingFile(Project project, String variantName) {
+        File resourceMappingFile = new File(getBuildDir(project,variantName),"symbols/" + Constants.R_TXT)
         return resourceMappingFile
     }
 
-    public static File getResourceDir(Project project, String variantName) {
+    static File getResourceDir(Project project, String variantName) {
         File resDir = new File(getBuildDir(project,variantName),"res")
         return resDir
     }
 
-    public static File getResourcesApk(Project project, String variantName) {
+    static File getResourcesApk(Project project, String variantName) {
         File resourcesApk = new File(getResourceDir(project,variantName),ShareConstants.RESOURCE_APK_FILE_NAME)
         return resourcesApk
     }
@@ -296,8 +296,8 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getIdxXmlFile(Project project, String variantName) {
-        File idxXmlFile = new File(getBuildResourceDir(project,variantName),Constants.RESOURCE_IDX_XML)
+    static File getIdxXmlFile(Project project, String variantName) {
+        File idxXmlFile = new File(getResourceKeepDir(project,variantName),Constants.RESOURCE_IDX_XML)
         return idxXmlFile
     }
 
@@ -307,13 +307,13 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getPublicXmlFile(Project project, String variantName) {
-        File publicXmlFile = new File(getBuildResourceDir(project,variantName),Constants.RESOURCE_PUBLIC_XML)
+    static File getPublicXmlFile(Project project, String variantName) {
+        File publicXmlFile = new File(getResourceKeepDir(project,variantName),Constants.RESOURCE_PUBLIC_XML)
         return publicXmlFile
     }
 
-    private static File getBuildResourceDir(Project project, String variantName) {
-        return new File(getBuildDir(project,variantName),"r")
+    static File getResourceKeepDir(Project project, String variantName) {
+        return new File(getBuildDir(project,variantName),"res-keep")
     }
 
     /**
@@ -322,17 +322,17 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getCachedDependListFile(Project project,String variantName) {
+    static File getCachedDependListFile(Project project,String variantName) {
         File cachedDependListFile = new File(getBuildDir(project,variantName),Constants.DEPENDENCIES_FILENAME)
         return cachedDependListFile
     }
 
-    public static File getAndroidManifestStatFile(Project project,String variantName) {
+    static File getAndroidManifestStatFile(Project project,String variantName) {
         File file = new File(getBuildDir(project,variantName),Constants.ANDROID_MANIFEST_FILENAME)
         return file
     }
 
-    public static File getMetaInfoFile(Project project,String variantName) {
+    static File getMetaInfoFile(Project project,String variantName) {
         File cachedDependListFile = new File(getBuildDir(project,variantName),Constants.META_INFO_FILENAME)
         return cachedDependListFile
     }
@@ -343,7 +343,7 @@ public class FastdexUtils {
      * @param variantName
      * @return
      */
-    public static File getDiffResultSetFile(Project project,String variantName) {
+    static File getDiffResultSetFile(Project project,String variantName) {
         File diffResultFile = new File(getBuildDir(project,variantName),Constants.LAST_DIFF_RESULT_SET_FILENAME)
         return diffResultFile
     }
@@ -354,7 +354,7 @@ public class FastdexUtils {
      * @param sourceSetKey
      * @return
      */
-    public static LinkedHashSet<File> getSrcDirs(Project project,String sourceSetKey) {
+    static LinkedHashSet<File> getSrcDirs(Project project,String sourceSetKey) {
         def srcDirs = new LinkedHashSet()
         def sourceSetsValue = project.android.sourceSets.findByName(sourceSetKey)
         if (sourceSetsValue) {
@@ -363,15 +363,15 @@ public class FastdexUtils {
         return srcDirs
     }
 
-    public static File getManifestFile(Project project,String sourceSetKey) {
+    static File getManifestFile(Project project,String sourceSetKey) {
         def sourceSetsValue = project.android.sourceSets.findByName(sourceSetKey)
         if (sourceSetsValue) {
-             return sourceSetsValue.manifest.srcFile
+            return sourceSetsValue.manifest.srcFile
         }
         return null
     }
 
-    public static boolean isDataBindingEnabled(Project project) {
+    static boolean isDataBindingEnabled(Project project) {
         return project.android.dataBinding && project.android.dataBinding.enabled
     }
 
@@ -384,7 +384,7 @@ public class FastdexUtils {
      *
      * @param dexDir
      */
-    public static void incrementDexDir(File dexDir,int dsize) {
+    static void incrementDexDir(File dexDir,int dsize) {
         if (dsize <= 0) {
             throw new RuntimeException("dsize must be greater than 0!")
         }
@@ -421,23 +421,23 @@ public class FastdexUtils {
      * 使用buildCache全量打包时hook dex输出目录
      * @param dexOutputDir
      */
-    public static File mergeDexOutputDir(File dexOutputDir, int dsize) {
+    static File mergeDexOutputDir(File dexOutputDir, int dsize) {
         final HashSet<File> dexDirSet = new HashSet<>()
         Files.walkFileTree(dexOutputDir.toPath(),new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (file.toFile().getName().endsWith(Constants.DEX_SUFFIX)) {
                     dexDirSet.add(file.getParent().toFile())
                 }
-                return FileVisitResult.CONTINUE;
+                return FileVisitResult.CONTINUE
             }
-        });
+        })
 
-        File result = null;
+        File result = null
         int maxClassesDexIndex = 0
         for (File dir : dexDirSet) {
             if (result == null) {
-                result = dir;
+                result = dir
                 incrementDexDir(dir,dsize)
                 maxClassesDexIndex = FastdexUtils.getMaxClassesDexIndex(dir)
             }
@@ -454,7 +454,7 @@ public class FastdexUtils {
      * 使用buildCache全量打包时hook dex输出目录
      * @param dexOutputDir
      */
-    public static File mergeDexOutputDir(File dexOutputDir) {
+    static File mergeDexOutputDir(File dexOutputDir) {
         mergeDexOutputDir(dexOutputDir,1)
     }
 
@@ -463,7 +463,7 @@ public class FastdexUtils {
      * @param dexDir
      * @return
      */
-    public static int getMaxClassesDexIndex(File dexDir) {
+    static int getMaxClassesDexIndex(File dexDir) {
         return getClassesDexBoundary(dexDir)[1]
     }
 
@@ -472,7 +472,7 @@ public class FastdexUtils {
      * @param dexDir
      * @return
      */
-    public static int[] getClassesDexBoundary(File dexDir) {
+    static int[] getClassesDexBoundary(File dexDir) {
         int[] boundary = new int[2]
 
         if (dexDir.listFiles() == null) {
@@ -515,13 +515,17 @@ public class FastdexUtils {
      * 清理dex输出目录，除了classes*.dex其它的文件全删掉，防止package任务把别的文件当成dex打进aak里面
      * @param dexOutputDir
      */
-    public static void clearDexOutputDir(File dexOutputDir) {
+    static void clearDexOutputDir(File dexOutputDir) {
         if (dexOutputDir == null) {
             return
         }
         dexOutputDir.listFiles().each {
-            if (it.isFile() && !(it.name.startsWith(ShareConstants.CLASSES) && it.name.endsWith(ShareConstants.DEX_SUFFIX))) {
-                //println("remove: " + it.absolutePath)
+//            if (it.isFile() && !(it.name.startsWith(ShareConstants.CLASSES) && it.name.endsWith(ShareConstants.DEX_SUFFIX))) {
+//                it.delete()
+//            }
+
+            //避免删除3.0.0以后的__content__.json
+            if (it.isFile() && it.isHidden()) {
                 it.delete()
             }
         }
@@ -531,7 +535,7 @@ public class FastdexUtils {
      * 执行命令
      * @param cmdArgs
      */
-    public static void runCommand(Project project, List<String> cmdArgs) {
+    static void runCommand(Project project, List<String> cmdArgs) {
         runCommand(project, cmdArgs, false)
     }
 
@@ -539,20 +543,20 @@ public class FastdexUtils {
      * 执行命令
      * @param cmdArgs
      */
-    public static void runCommand(Project project, List<String> cmdArgs,boolean background) {
-       runCommand(project,cmdArgs,null,background)
+    static void runCommand(Project project, List<String> cmdArgs,boolean background) {
+        runCommand(project,cmdArgs,null,background)
     }
 
     /**
      * 执行命令
      * @param cmdArgs
      */
-    public static void runCommand(Project project, List<String> cmdArgs,File directory,boolean background) {
+    static void runCommand(Project project, List<String> cmdArgs,File directory,boolean background) {
         if (!background) {
             StringBuilder cmd = new StringBuilder()
             for (int i = 0; i < cmdArgs.size(); i++) {
                 if (i != 0) {
-                    cmd.append(" ");
+                    cmd.append(" ")
                 }
                 cmd.append(cmdArgs.get(i))
             }
@@ -574,11 +578,11 @@ public class FastdexUtils {
             }
             reader.close()
             status = process.waitFor()
-            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                System.out.println(line)
             }
-            reader.close();
+            reader.close()
             process.destroy()
         } catch (Throwable e) {
 

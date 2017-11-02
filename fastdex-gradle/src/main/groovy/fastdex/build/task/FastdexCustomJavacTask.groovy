@@ -30,7 +30,7 @@ import java.nio.file.attribute.BasicFileAttributes
  *
  * Created by tong on 17/3/12.
  */
-public class FastdexCustomJavacTask extends DefaultTask {
+class FastdexCustomJavacTask extends DefaultTask {
     FastdexVariant fastdexVariant
     Task javaCompile
     Task javacIncrementalSafeguard
@@ -60,7 +60,7 @@ public class FastdexCustomJavacTask extends DefaultTask {
     }
 
     @TaskAction
-    void compile() {
+    def compile() {
         if (!fastdexVariant.hasDexCache) {
             project.logger.error("==fastdex miss dex cache, just ignore")
             return
@@ -248,8 +248,8 @@ public class FastdexCustomJavacTask extends DefaultTask {
                     project.logger.error("==fastdex apply class to ${destFile}")
 
                     String classRelativePath = relativePath.toString()
-                    classRelativePath = classRelativePath.substring(0, classRelativePath.length() - ShareConstants.CLASS_SUFFIX.length());
-                    classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.");
+                    classRelativePath = classRelativePath.substring(0, classRelativePath.length() - ShareConstants.CLASS_SUFFIX.length())
+                    classRelativePath = classRelativePath.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
 
                     int index = classRelativePath.indexOf("\$")
                     if (index != -1) {

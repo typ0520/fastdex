@@ -16,7 +16,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Created by tong on 17/3/12.
  */
-public class FastdexPatchTask extends DefaultTask {
+class FastdexPatchTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexPatchTask() {
@@ -59,7 +59,7 @@ public class FastdexPatchTask extends DefaultTask {
         try {
             runtimeMetaInfo = serviceCommunicator.talkToService(fastdexInstantRun.device, new Communicator<MetaInfo>() {
                 @Override
-                public MetaInfo communicate(DataInputStream input, DataOutputStream output) throws IOException {
+                MetaInfo communicate(DataInputStream input, DataOutputStream output) throws IOException {
                     output.writeInt(ProtocolConstants.MESSAGE_PING_AND_SHOW_TOAST)
 
                     MetaInfo info = new MetaInfo()
@@ -106,7 +106,6 @@ public class FastdexPatchTask extends DefaultTask {
 
         } catch (Throwable e) {
             if (!(e instanceof FastdexRuntimeException)) {
-                e.printStackTrace()
                 fastdexVariant.project.logger.error("==fastdex ping installed app fail: " + e.message)
             }
             return
@@ -140,7 +139,7 @@ public class FastdexPatchTask extends DefaultTask {
         try {
             boolean result = serviceCommunicator.talkToService(fastdexInstantRun.device, new Communicator<Boolean>() {
                 @Override
-                public Boolean communicate(DataInputStream input, DataOutputStream output) throws IOException {
+                Boolean communicate(DataInputStream input, DataOutputStream output) throws IOException {
                     output.writeInt(ProtocolConstants.MESSAGE_PATCHES)
                     output.writeLong(ShareConstants.MESSAGE_TOKEN)
                     output.writeInt(changeCount)
@@ -184,7 +183,7 @@ public class FastdexPatchTask extends DefaultTask {
                     }
                 }
             })
-            long end = System.currentTimeMillis();
+            long end = System.currentTimeMillis()
             project.logger.error("==fastdex send patch data success. use: ${end - start}ms")
 
             //app不在后台、补丁发送失败、补丁中包含dex并且有设置使用命令强制重启
@@ -195,7 +194,9 @@ public class FastdexPatchTask extends DefaultTask {
             }
             fastdexInstantRun.setInstallApk(false)
         } catch (Throwable e) {
-            e.printStackTrace()
+            if (!(e instanceof FastdexRuntimeException)) {
+                fastdexVariant.project.logger.error("==fastdex send patch fail: " + e.message)
+            }
         }
     }
 

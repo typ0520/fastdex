@@ -3,7 +3,7 @@ package fastdex.build.extension
 /**
  * Created by tong on 17/10/3.
  */
-public class FastdexExtension {
+class FastdexExtension {
     /**
      * 是否可用
      */

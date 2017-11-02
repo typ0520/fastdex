@@ -3,7 +3,7 @@ package fastdex.build.util
 /**
  * Created by tong on 17/4/18.
  */
-public class FastdexRuntimeException extends RuntimeException {
+class FastdexRuntimeException extends RuntimeException {
 
     FastdexRuntimeException() {
     }

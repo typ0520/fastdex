@@ -9,7 +9,7 @@ import org.gradle.api.tasks.TaskAction
  * 清空指定variantName的缓存，如果variantName == null清空所有缓存
  * Created by tong on 17/3/12.
  */
-public class FastdexCleanTask extends DefaultTask {
+class FastdexCleanTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexCleanTask() {
@@ -17,7 +17,7 @@ public class FastdexCleanTask extends DefaultTask {
     }
 
     @TaskAction
-    void clean() {
+    def clean() {
         if (fastdexVariant == null) {
             FastdexUtils.cleanAllCache(project)
         }

@@ -10,7 +10,7 @@ import org.gradle.api.tasks.TaskAction
  * 所以这个任务就没有存在的意义了，禁止掉这个任务以提高打包速度，但是transformClassesWithDexFor${variantName}会使用这个任务输出的txt文件，所以需要生成一个空文件防止报错
  * Created by tong on 17/3/12.
  */
-public class FastdexCreateMaindexlistFileTask extends DefaultTask {
+class FastdexCreateMaindexlistFileTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexCreateMaindexlistFileTask() {
@@ -18,7 +18,7 @@ public class FastdexCreateMaindexlistFileTask extends DefaultTask {
     }
 
     @TaskAction
-    void createFile() {
+    def createFile() {
         if (fastdexVariant.androidVariant != null) {
             File maindexlistFile = fastdexVariant.androidVariant.getVariantData().getScope().getMainDexListFile()
             File parentFile = maindexlistFile.getParentFile()

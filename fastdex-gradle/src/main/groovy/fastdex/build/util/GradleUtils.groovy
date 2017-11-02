@@ -1,6 +1,7 @@
 package fastdex.build.util
 
 import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.pipeline.IntermediateFolderUtils
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.builder.model.Version
@@ -10,12 +11,14 @@ import java.lang.reflect.Field
 import com.android.build.api.transform.TransformInvocation
 import org.gradle.api.Project
 import com.android.build.api.transform.QualifiedContent.ContentType
+import com.android.build.gradle.internal.scope.VariantScope
+import java.lang.reflect.Method
 
 /**
  * Created by tong on 17/3/14.
  */
-public class GradleUtils {
-    public static final String UTF8_BOM = "\uFEFF";
+class GradleUtils {
+    public static final String UTF8_BOM = "\uFEFF"
 
     /**
      * 获取指定variant的依赖列表
@@ -23,54 +26,71 @@ public class GradleUtils {
      * @param applicationVariant
      * @return
      */
-    public static Set<String> getCurrentDependList(Project project,Object applicationVariant) {
-        String buildTypeName = applicationVariant.getBuildType().buildType.getName()
-
+    static Set<String> getCurrentDependList(Project project,Object applicationVariant) {
         Set<String> result = new HashSet<>()
-
-        project.configurations.compile.each { File file ->
-            result.add(file.getAbsolutePath())
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") < 0) {
+            String buildTypeName = applicationVariant.getBuildType().buildType.getName()
+            project.configurations.compile.each { File file ->
+                result.add(file.getAbsolutePath())
+            }
+            project.configurations."${buildTypeName}Compile".each { File file ->
+                result.add(file.getAbsolutePath())
+            }
         }
+        else {
+            def variantScope = applicationVariant.variantData.getScope()
 
-        project.configurations."${buildTypeName}Compile".each { File file ->
-            result.add(file.getAbsolutePath())
+            //def artifacts = com.android.build.gradle.internal.ide.ArtifactDependencyGraph.getAllArtifacts(variantScope,  com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,null);
+            //ArtifactDependencyGraph这个api3.0.0才有，fastdex依赖的是低版本的android gradle编译通不过,所以通过反射调用
+            Class dependencyGraphClass = Class.forName("com.android.build.gradle.internal.ide.ArtifactDependencyGraph")
+            Class consumedConfigTypeClass = Class.forName("com.android.build.gradle.internal.publishing.AndroidArtifacts\$ConsumedConfigType")
+            Method getAllArtifactsMethod = dependencyGraphClass.getMethod("getAllArtifacts",VariantScope.class,consumedConfigTypeClass,Class.forName("com.android.build.gradle.internal.ide.DependencyFailureHandler"))
+            Object[] values = consumedConfigTypeClass.getMethod("values").invoke(null,null)
+            def artifacts = getAllArtifactsMethod.invoke(null,variantScope,values.find { it.getName().equals("compileClasspath") },null)
+
+            for (org.gradle.api.artifacts.result.ResolvedArtifactResult artifact : artifacts) {
+                if (artifact.getDependencyType().getExtension().equals(com.android.SdkConstants.EXT_JAR)) {
+                    File jarFile = artifact.getFile()
+
+                    result.add(jarFile.getAbsolutePath())
+                }
+                else {
+                    final File explodedFolder = artifact.getFile()
+                    File aarFile = artifact.bundleResult != null ? artifact.bundleResult.getFile() : explodedFolder
+
+                    result.add(aarFile.getAbsolutePath())
+                }
+            }
         }
         return result
     }
 
     /**
-     * 获取transformClassesWithDexFor${variantName}任务的dex输出目录
+     * 获取dex输出目录
      * @param transformInvocation
      * @return
      */
-    public static File getDexOutputDir(TransformInvocation transformInvocation) {
-        File location = com.android.utils.FileUtils.join(transformInvocation.getOutputProvider().rootLocation,
-                IntermediateFolderUtils.FOLDERS,
-                typesToString(TransformManager.CONTENT_DEX))
+    static File getDexOutputDir(TransformInvocation transformInvocation) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") < 0) {
+            File location = com.android.utils.FileUtils.join(transformInvocation.getOutputProvider().rootLocation,
+                    IntermediateFolderUtils.FOLDERS,
+                    typesToString(TransformManager.CONTENT_DEX))
 
-        return location
-    }
-
-    /**
-     * 获取transformClassesWithDexFor${variantName}任务的dex输出目录
-     * @param transformInvocation
-     * @return
-     */
-    public static File getDexOutputDir(ApplicationVariant variant) {
-        File location = com.android.utils.FileUtils.join(variant.getVariantData().getOutputs().get(0).getScope().getVariantScope().getDexOutputFolder(),
-                IntermediateFolderUtils.FOLDERS,
-                typesToString(TransformManager.CONTENT_DEX))
-
-        return location
+            return location
+        }
+        else {
+            Field folderUtilsField = transformInvocation.getOutputProvider().getClass().getDeclaredField("folderUtils")
+            folderUtilsField.setAccessible(true)
+            return folderUtilsField.get(transformInvocation.getOutputProvider()).getRootFolder()
+        }
     }
 
     private static String typesToString(Set<ContentType> types) {
-        int value = 0;
+        int value = 0
         for (ContentType type : types) {
-            value += type.getValue();
+            value += type.getValue()
         }
-
-        return String.format("%x", value);
+        return String.format("%x", value)
     }
 
     /**
@@ -78,29 +98,28 @@ public class GradleUtils {
      * @param xmlPath
      * @return
      */
-    public static Object parseXml(String xmlPath) {
+    static Object parseXml(String xmlPath) {
         byte[] bytes = FileUtils.readContents(new File(xmlPath))
         try {
             def xml = new XmlParser().parse(new InputStreamReader(new ByteArrayInputStream(bytes), "utf-8"))
             return xml
         } catch (org.xml.sax.SAXParseException e) {
-            String msg = e.getMessage();
+            String msg = e.getMessage()
             //从eclipse转过来的项目可能会有这个问题
             if (msg != null && msg.contains("Content is not allowed in prolog.")) {
-                BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), "UTF8"));
+                BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), "UTF8"))
 
-                ByteArrayOutputStream fos = new ByteArrayOutputStream();
-                Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"));
+                ByteArrayOutputStream fos = new ByteArrayOutputStream()
+                Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"))
                 boolean firstLine = true
                 for (String s = ""; (s = r.readLine()) != null;) {
                     if (firstLine) {
-                        s = removeUTF8BOM(s);
-                        firstLine = false;
+                        s = removeUTF8BOM(s)
+                        firstLine = false
                     }
-                    w.write(s + System.getProperty("line.separator"));
-                    w.flush();
+                    w.write(s + System.getProperty("line.separator"))
+                    w.flush()
                 }
-
                 def xml = new XmlParser().parse(new InputStreamReader(new ByteArrayInputStream(fos.toByteArray()), "utf-8"))
                 return xml
             }
@@ -112,9 +131,9 @@ public class GradleUtils {
 
     private static String removeUTF8BOM(String s) {
         if (s.startsWith(UTF8_BOM)) {
-            s = s.substring(1);
+            s = s.substring(1)
         }
-        return s;
+        return s
     }
 
     /**
@@ -122,7 +141,7 @@ public class GradleUtils {
      * @param manifestPath
      * @return
      */
-    public static String getPackageName(String manifestPath) {
+    static String getPackageName(String manifestPath) {
         def xml = parseXml(manifestPath)
         String packageName = xml.attribute('package')
         return packageName
@@ -133,7 +152,7 @@ public class GradleUtils {
      * @param manifestPath
      * @return
      */
-    public static String getBootActivity(String manifestPath) {
+    static String getBootActivity(String manifestPath) {
         def xml = parseXml(manifestPath)
         return getBootActivityByXmlNode(xml)
     }
@@ -143,13 +162,13 @@ public class GradleUtils {
      * @param xml
      * @return
      */
-    public static String getBootActivityByXmlNode(Node xml) {
+    static String getBootActivityByXmlNode(Node xml) {
         def bootActivityName = ""
         def application = xml.application[0]
 
         if (application) {
             def activities = application.activity
-            QName androidNameAttr = new QName("http://schemas.android.com/apk/res/android", 'name', 'android');
+            QName androidNameAttr = new QName("http://schemas.android.com/apk/res/android", 'name', 'android')
 
             try {
                 activities.each { activity->
@@ -202,7 +221,7 @@ public class GradleUtils {
      * 获取android gradle插件版本
      * @return
      */
-    public static String getAndroidGradlePluginVersion() {
+    static String getAndroidGradlePluginVersion() {
         return Version.ANDROID_GRADLE_PLUGIN_VERSION
     }
 
@@ -211,7 +230,7 @@ public class GradleUtils {
      * @param variant
      * @return
      */
-    public static File getAptOutputDir(ApplicationVariant variant) {
+    static File getAptOutputDir(ApplicationVariant variant) {
         if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
             //2.2.0以后才有getAnnotationProcessorOutputDir()这个api
             return variant.getVariantData().getScope().getAnnotationProcessorOutputDir()
@@ -227,7 +246,7 @@ public class GradleUtils {
      * @param key
      * @param value
      */
-    public static void addDynamicProperty(Project project,Object key, Object value) {
+    static void addDynamicProperty(Project project,Object key, Object value) {
         Class defaultConventionClass = null
         try {
             defaultConventionClass = Class.forName("org.gradle.api.internal.plugins.DefaultConvention")
@@ -257,5 +276,29 @@ public class GradleUtils {
                 }
             }
         }
+    }
+
+    /**
+     * 获取apk输出目录
+     * @param variant
+     * @return
+     */
+    static File getApkLocation(ApplicationVariant variant) {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") >= 0) {
+            return variant.variantData.getScope().getApkLocation()
+        }
+        else {
+            return variant.getVariantData().getScope().getGlobalScope().getApkLocation()
+        }
+    }
+
+    /**
+     * 获取aar工程
+     * @param project
+     * @param buildTypeName
+     * @return
+     */
+    static BaseVariant getLibraryFirstVariant(Project project,String buildTypeName) {
+        return project.android.libraryVariants.find { it.getBuildType().buildType.getName().equals(buildTypeName) }
     }
 }

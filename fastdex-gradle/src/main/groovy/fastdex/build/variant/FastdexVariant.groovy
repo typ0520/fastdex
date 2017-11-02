@@ -5,7 +5,7 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.github.typ0520.fastdex.Version
 import fastdex.build.extension.FastdexExtension
 import fastdex.build.task.FastdexInstantRunTask
-import fastdex.build.transform.FastdexTransform
+import fastdex.build.transform.FastdexDexTransform
 import fastdex.build.util.Constants
 import fastdex.build.util.FastdexInstantRun
 import fastdex.build.util.FastdexRuntimeException
@@ -17,11 +17,12 @@ import fastdex.build.util.ProjectSnapshoot
 import fastdex.build.util.FastdexUtils
 import fastdex.common.utils.FileUtils
 import org.gradle.api.Project
+import fastdex.build.util.GradleUtils
 
 /**
  * Created by tong on 17/3/10.
  */
-public class FastdexVariant {
+class FastdexVariant {
     final Project project
     final FastdexExtension configuration
     final ApplicationVariant androidVariant
@@ -30,44 +31,61 @@ public class FastdexVariant {
     final File rootBuildDir
     final File buildDir
     final ProjectSnapshoot projectSnapshoot
-    final Set<LibDependency> libraryDependencies
+
+    Set<LibDependency> libraryDependencies
+
+    File textSymbolOutputFile
+    File dexBuilderOutputFolder
+    File dexMergerOutputFolder
+    File preDexOutputFolder
 
     boolean hasDexCache
     boolean firstPatchBuild
     boolean initialized
     boolean needExecDexMerge
     boolean hasJarMergingTask
+    boolean hasPreDexTask
     boolean compiledByCustomJavac
     boolean compiledByOriginJavac
     MetaInfo metaInfo
-    FastdexTransform fastdexTransform
+    FastdexDexTransform fastdexTransform
     FastdexInstantRun fastdexInstantRun
     FastdexInstantRunTask fastdexInstantRunTask
 
     TransformInvocation transformInvocation
+    FastdexBuilder fastdexBuilder
 
-    FastdexVariant(Project project, Object androidVariant) {
+    FastdexVariant(Project project, ApplicationVariant androidVariant) {
         this.project = project
         this.androidVariant = androidVariant
 
         this.configuration = project.fastdex
         this.variantName = androidVariant.name.capitalize()
-        this.manifestPath = androidVariant.outputs.first().processManifest.manifestOutputFile
+        def processManifest = androidVariant.outputs.first().processManifest
+        def processResources = androidVariant.outputs.first().processResources
+
+        if (processManifest.properties['manifestOutputFile'] != null) {
+            this.manifestPath = processManifest.manifestOutputFile.absolutePath
+        } else if (processResources.properties['manifestFile']  != null) {
+            this.manifestPath = androidVariant.outputs.first().processResources.manifestFile.absolutePath
+        }
+
         this.rootBuildDir = FastdexUtils.getBuildDir(project)
         this.buildDir = FastdexUtils.getBuildDir(project,variantName)
 
         projectSnapshoot = new ProjectSnapshoot(this)
-        libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
 
         if (configuration.dexMergeThreshold <= 1) {
             throw new FastdexRuntimeException("DexMergeThreshold must be greater than 1!!")
         }
+
+        fastdexBuilder = new FastdexBuilder(this)
     }
 
     /*
     * 检查缓存是否过期，如果过期就删除
     */
-    void prepareEnv() {
+    def prepareEnv() {
         if (initialized) {
             return
         }
@@ -168,22 +186,28 @@ public class FastdexVariant {
                 classesDir.deleteDir()
                 File transformsDir = new File(androidVariant.getVariantData().getScope().getGlobalScope().getIntermediatesDir(), "/transforms")
                 transformsDir.deleteDir()
-                File apkLocationDir = androidVariant.getVariantData().getScope().getGlobalScope().getApkLocation()
+                File apkLocationDir = GradleUtils.getApkLocation(androidVariant)
                 apkLocationDir.deleteDir()
 
                 if (!(e instanceof JumpException) && configuration.debug) {
                     e.printStackTrace()
                 }
-                project.logger.error("==fastdex ${e.getMessage()}")
-                project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
                 project.logger.error("==fastdex delete ${classesDir}")
                 project.logger.error("==fastdex delete ${transformsDir}")
                 project.logger.error("==fastdex delete ${apkLocationDir}")
+                project.logger.error("==fastdex ${e.getMessage()}")
+                project.logger.error("==fastdex we will remove ${variantName.toLowerCase()} cache")
             }
         }
 
         if (hasDexCache && metaInfo != null) {
             project.logger.error("==fastdex discover dex cache for ${variantName.toLowerCase()}")
+
+            try {
+                project.tasks.getByName("transformDexArchiveWithExternalLibsDexMergerFor${variantName}").enabled = false
+            } catch (Throwable e) {
+
+            }
         }
         else {
             metaInfo = new MetaInfo()
@@ -205,11 +229,19 @@ public class FastdexVariant {
         fastdexInstantRun.onFastdexPrepare()
     }
 
+    def getLibraryDependencies() {
+        if (libraryDependencies == null) {
+            libraryDependencies = LibDependency.resolveProjectDependency(project,androidVariant)
+        }
+
+        return libraryDependencies
+    }
+
     /**
      * 获取原始manifest文件的package节点的值
      * @return
      */
-    public String getOriginPackageName() {
+    def getOriginPackageName() {
         return androidVariant.getVariantData().getVariantConfiguration().getOriginalApplicationId()
     }
 
@@ -217,7 +249,7 @@ public class FastdexVariant {
      * 获取合并以后的manifest文件的package节点的值
      * @return
      */
-    public String getMergedPackageName() {
+    def getMergedPackageName() {
         return androidVariant.getVariantData().getVariantConfiguration().getApplicationId()
     }
 
@@ -225,7 +257,7 @@ public class FastdexVariant {
      * 当dex生成以后
      * @param nornalBuild
      */
-    public void onDexGenerateSuccess(boolean nornalBuild,boolean dexMerge) {
+    def onDexGenerateSuccess(boolean nornalBuild,boolean dexMerge) {
         if (nornalBuild) {
             saveMetaInfo()
             copyRTxt()
@@ -261,7 +293,7 @@ public class FastdexVariant {
     def copyMetaInfo2Assets() {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
         if (FileUtils.isLegalFile(metaInfoFile)) {
-            File assetsPath = androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
+            File assetsPath = androidVariant.getMergeAssets().outputDir
             File dest = new File(assetsPath,metaInfoFile.getName())
 
             project.logger.error("==fastdex copy meta info: \nfrom: " + metaInfoFile + "\ninto: " + dest)
@@ -281,11 +313,7 @@ public class FastdexVariant {
      * 保存资源映射文件
      */
     def copyRTxt() {
-        File rtxtFile = new File(androidVariant.getVariantData().getScope().getSymbolLocation(),"R.txt")
-        if (!FileUtils.isLegalFile(rtxtFile)) {
-            rtxtFile = new File(project.buildDir,"${File.separator}intermediates${File.separator}symbols${File.separator}${androidVariant.dirName}${File.separator}R.txt")
-        }
-        FileUtils.copyFileUsingStream(rtxtFile,FastdexUtils.getResourceMappingFile(project,variantName))
+        FileUtils.copyFileUsingStream(textSymbolOutputFile,FastdexUtils.getResourceMappingFile(project,variantName))
     }
 
     /**

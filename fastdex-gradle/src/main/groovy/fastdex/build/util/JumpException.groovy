@@ -1,14 +1,13 @@
-package fastdex.build.util;
+package fastdex.build.util
 
 /**
  * Created by tong on 17/5/2.
  */
-
-public class JumpException extends RuntimeException {
-    public JumpException() {
+class JumpException extends RuntimeException {
+    JumpException() {
     }
 
-    public JumpException(String s) {
-        super(s);
+    JumpException(String s) {
+        super(s)
     }
 }

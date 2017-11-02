@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
-apply plugin: 'com.jakewharton.butterknife'
+//apply plugin: 'com.jakewharton.butterknife'
 //apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'fastdex.app'
 
@@ -24,7 +24,7 @@ fastdex {
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
-    buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
+    //buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
 
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
@@ -43,7 +43,7 @@ android {
         applicationId "com.github.typ0520.fastdex.sample"
         versionCode 1
         versionName "1.0.0"
-        multiDexEnabled true
+        multiDexEnabled false
     }
 
     signingConfigs {
@@ -67,13 +67,6 @@ android {
             shrinkResources false
             signingConfig signingConfigs.config
         }
-
-        //fastdex 会忽略开启混淆的buildType
-        product{
-            minifyEnabled true
-            shrinkResources false
-            signingConfig signingConfigs.config
-        }
     }
 
 //    productFlavors {
@@ -84,18 +77,15 @@ android {
 //        }
 //    }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
 }
 
-println "##fastdex.injected.invoked.from.ide : ${project.hasProperty("fastdex.injected.invoked.from.ide")}"
-println "##android.dexOptions.preDexLibraries: ${android.dexOptions.preDexLibraries}"
-
-retrolambda {
-    javaVersion JavaVersion.VERSION_1_7
-}
+//retrolambda {
+//    javaVersion JavaVersion.VERSION_1_7
+//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -117,22 +107,22 @@ dependencies {
     compile 'org.xutils:xutils:3.3.36'
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'de.hdodenhof:circleimageview:2.0.0'
-
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'info.hoang8f:android-segmented:1.0.6'
-    compile 'com.squareup.okio:okio:1.0.1'
-    compile 'com.zhy:okhttputils:2.4.1'
-    compile 'joda-time:joda-time:2.6'
-    compile 'com.squareup.retrofit:retrofit:1.8.0'
-    compile 'com.squareup.okhttp:okhttp:2.2.0'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
-
-    compile "org.greenrobot:eventbus:3.0.0"
-    compile "org.glassfish:javax.annotation:10.0-b28"
-    compile 'com.android.volley:volley:1.0.0'
-    compile 'com.dialonce:dialonce-android:2.3.1'
-    compile 'com.facebook.fresco:fresco:1.1.0'
-    compile 'com.google.guava:guava:18.0'
+//
+//    compile 'com.squareup.retrofit:retrofit:1.9.0'
+//    compile 'info.hoang8f:android-segmented:1.0.6'
+//    compile 'com.squareup.okio:okio:1.0.1'
+//    compile 'com.zhy:okhttputils:2.4.1'
+//    compile 'joda-time:joda-time:2.6'
+//    compile 'com.squareup.retrofit:retrofit:1.8.0'
+//    compile 'com.squareup.okhttp:okhttp:2.2.0'
+//    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+//
+//    compile "org.greenrobot:eventbus:3.0.0"
+//    compile "org.glassfish:javax.annotation:10.0-b28"
+//    compile 'com.android.volley:volley:1.0.0'
+//    compile 'com.dialonce:dialonce-android:2.3.1'
+//    compile 'com.facebook.fresco:fresco:1.1.0'
+//    compile 'com.google.guava:guava:18.0'
 
 //    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2'
 //    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'
@@ -144,7 +134,8 @@ project.afterEvaluate {
         def variantName = variant.name.capitalize()
         def variantOutput = variant.outputs.first()
 
-        if ("Debug".equals(variantName)) {
+        if (variantName.contains("Debug")) {
+
 
         }
     }

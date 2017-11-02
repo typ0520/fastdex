@@ -9,7 +9,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Created by tong on 17/3/12.
  */
-public class FastdexInstantRunTask extends DefaultTask {
+class FastdexInstantRunTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexInstantRunTask() {
@@ -17,7 +17,7 @@ public class FastdexInstantRunTask extends DefaultTask {
     }
 
     @TaskAction
-    void instantRun() {
+    def instantRun() {
         FastdexInstantRun fastdexInstantRun = fastdexVariant.fastdexInstantRun
 
         if (!fastdexInstantRun.isInstallApk()) {

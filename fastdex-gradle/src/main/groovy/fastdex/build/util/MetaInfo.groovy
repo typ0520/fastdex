@@ -4,12 +4,12 @@ import fastdex.common.utils.SerializeUtils
 import fastdex.build.variant.FastdexVariant
 import com.google.gson.Gson
 import fastdex.common.utils.FileUtils
-import org.gradle.api.Project;
+import org.gradle.api.Project
 
 /**
  * Created by tong on 17/4/18.
  */
-public class MetaInfo {
+class MetaInfo {
     /**
      * 全量编译时的工程路径
      */
@@ -43,29 +43,28 @@ public class MetaInfo {
      * @param project
      * @return
      */
-    public boolean isRootProjectDirChanged(String curRootProjectPath) {
+    def isRootProjectDirChanged(String curRootProjectPath) {
         return !curRootProjectPath.equals(rootProjectPath)
     }
 
-    public void save(FastdexVariant fastdexVariant) {
+    def save(FastdexVariant fastdexVariant) {
         File metaInfoFile = FastdexUtils.getMetaInfoFile(fastdexVariant.project,fastdexVariant.variantName)
         SerializeUtils.serializeTo(new FileOutputStream(metaInfoFile),this)
     }
 
-    public static MetaInfo load(Project project,String variantName) {
-        File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
-        return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),MetaInfo.class)
-    }
-
-
     @Override
-    public String toString() {
+    String toString() {
         return "MetaInfo{" +
                 "buildMillis=" + buildMillis +
                 ", variantName='" + variantName + '\'' +
                 ", mergedDexVersion=" + mergedDexVersion +
                 ", patchDexVersion=" + patchDexVersion +
                 ", resourcesVersion=" + resourcesVersion +
-                '}';
+                '}'
+    }
+
+    static MetaInfo load(Project project,String variantName) {
+        File metaInfoFile = FastdexUtils.getMetaInfoFile(project,variantName)
+        return new Gson().fromJson(new String(FileUtils.readContents(metaInfoFile)),MetaInfo.class)
     }
 }

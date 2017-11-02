@@ -1,5 +1,6 @@
 package fastdex.build.util
 
+import com.android.build.gradle.api.BaseVariant
 import fastdex.build.lib.snapshoot.api.DiffResultSet
 import fastdex.build.lib.snapshoot.file.FileDiffInfo
 import fastdex.build.lib.snapshoot.res.AndManifestDirectorySnapshoot
@@ -14,8 +15,10 @@ import fastdex.common.utils.FileUtils
 /**
  * Created by tong on 17/3/31.
  */
-public class ProjectSnapshoot {
-    FastdexVariant fastdexVariant
+class ProjectSnapshoot {
+    private static final boolean DEBUG_SNAPSHOOT = true
+
+    final FastdexVariant fastdexVariant
     SourceSetSnapshoot sourceSetSnapshoot
     SourceSetSnapshoot oldSourceSetSnapshoot
     SourceSetDiffResultSet diffResultSet
@@ -62,7 +65,7 @@ public class ProjectSnapshoot {
             andManifestDirectorySnapshoot.addFile(it)
         }
 
-        for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
+        for (LibDependency libDependency : fastdexVariant.getLibraryDependencies()) {
             if (libDependency.androidLibrary) {
                 File file = libDependency.dependencyProject.android.sourceSets.main.manifest.srcFile
                 andManifestDirectorySnapshoot.addFile(file)
@@ -104,7 +107,7 @@ public class ProjectSnapshoot {
      */
     def handleGeneratedSource(SourceSetSnapshoot snapshoot) {
         List<LibDependency> androidLibDependencies = new ArrayList<>()
-        for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
+        for (LibDependency libDependency : fastdexVariant.getLibraryDependencies()) {
             if (libDependency.androidLibrary) {
                 androidLibDependencies.add(libDependency)
             }
@@ -117,6 +120,10 @@ public class ProjectSnapshoot {
         }
 
         def libraryVariantdirName = Constants.DEFAULT_LIBRARY_VARIANT_DIR_NAME
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") >= 0) {
+            //3.0之前默认依赖release，3.0依赖Application工程的buildType对应的library工程的buildType
+            libraryVariantdirName = fastdexVariant.androidVariant.getBuildType().buildType.getName()
+        }
 
         //dataBinding
         if (FastdexUtils.isDataBindingEnabled(fastdexVariant.project)) {
@@ -131,33 +138,20 @@ public class ProjectSnapshoot {
 
         for (int i = 0;i < projectList.size();i++) {
             Project project = projectList.get(i)
-            //TODO 需要处理library工程包含flavor的场景
             String packageName = (i == 0 ? fastdexVariant.getOriginPackageName() : GradleUtils.getPackageName(project.android.sourceSets.main.manifest.srcFile.absolutePath))
             String packageNamePath = packageName.split("\\.").join(File.separator)
             //buildconfig
             String buildConfigJavaRelativePath = "${packageNamePath}${File.separator}BuildConfig.java"
             String rJavaRelativePath = "${packageNamePath}${File.separator}R.java"
 
-            File buildConfigDir = null
-            File rDir = null
-            File rsDir = null
-            File aidlDir = null
-            File aptDir = null
-            if (i == 0) {
-                buildConfigDir = fastdexVariant.androidVariant.getVariantData().getScope().getBuildConfigSourceOutputDir()
-                rDir = fastdexVariant.androidVariant.getVariantData().getScope().getRClassSourceOutputDir()
-                rsDir = fastdexVariant.androidVariant.getVariantData().getScope().getRenderscriptSourceOutputDir()
-                aidlDir = fastdexVariant.androidVariant.getVariantData().getScope().getAidlSourceOutputDir()
-                aptDir = GradleUtils.getAptOutputDir(fastdexVariant.androidVariant)
-            }
-            else {
-                //TODO 需要处理library工程包含flavor的场景
-                buildConfigDir = new File(project.buildDir,"generated${File.separator}source${File.separator}buildConfig${File.separator}${libraryVariantdirName}${File.separator}")
-                rDir = new File(project.buildDir,"generated${File.separator}source${File.separator}r${File.separator}${libraryVariantdirName}${File.separator}")
-                rsDir = new File(project.buildDir,"generated${File.separator}source${File.separator}rs${File.separator}${libraryVariantdirName}${File.separator}")
-                aidlDir = new File(project.buildDir,"generated${File.separator}source${File.separator}aidl${File.separator}${libraryVariantdirName}${File.separator}")
-                aptDir = new File(project.buildDir,"generated${File.separator}source${File.separator}apt${File.separator}${libraryVariantdirName}${File.separator}")
-            }
+            BaseVariant baseVariant = (i == 0 ? fastdexVariant.androidVariant : GradleUtils.getLibraryFirstVariant(project,libraryVariantdirName))
+
+            File buildConfigDir = baseVariant.getVariantData().getScope().getBuildConfigSourceOutputDir()
+            File rDir = baseVariant.getVariantData().getScope().getRClassSourceOutputDir()
+            File rsDir = baseVariant.getVariantData().getScope().getRenderscriptSourceOutputDir()
+            File aidlDir = baseVariant.getVariantData().getScope().getAidlSourceOutputDir()
+            File aptDir = GradleUtils.getAptOutputDir(fastdexVariant.androidVariant)
+
             //buildconfig
             File buildConfigJavaFile = new File(buildConfigDir,buildConfigJavaRelativePath)
             JavaDirectorySnapshoot buildConfigSnapshoot = new JavaDirectorySnapshoot(buildConfigDir,true,buildConfigJavaFile.absolutePath)
@@ -199,7 +193,10 @@ public class ProjectSnapshoot {
      * @param snapshoot
      */
     def handleLibraryDependencies(SourceSetSnapshoot snapshoot) {
-        for (LibDependency libDependency : fastdexVariant.libraryDependencies) {
+        if (DEBUG_SNAPSHOOT) {
+            fastdexVariant.project.logger.error("==fastdex: libraryDependencies: ${fastdexVariant.getLibraryDependencies()}")
+        }
+        for (LibDependency libDependency : fastdexVariant.getLibraryDependencies()) {
             Set<File> srcDirSet = getProjectSrcDirSet(libDependency.dependencyProject)
 
             for (File file : srcDirSet) {
@@ -255,7 +252,10 @@ public class ProjectSnapshoot {
             srcDirs.addAll(project.sourceSets.main.java.srcDirs.asList())
         }
 
-        project.logger.error("==fastdex: sourceSets ${srcDirs}")
+        if (DEBUG_SNAPSHOOT) {
+            project.logger.error("==fastdex: sourceSets ${srcDirs}")
+        }
+
         Set<File> srcDirSet = new LinkedHashSet<>()
         if (srcDirs != null) {
             for (java.lang.Object src : srcDirs) {

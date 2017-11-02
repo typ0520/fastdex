@@ -22,9 +22,9 @@ import java.util.zip.ZipOutputStream
  * jar操作
  * Created by tong on 17/11/4.
  */
-public class JarOperation implements Opcodes {
-    public static void generatePatchJar(FastdexVariant fastdexVariant, TransformInvocation transformInvocation, File patchJar) throws IOException {
-        Set<LibDependency> libraryDependencies = fastdexVariant.libraryDependencies
+class JarOperation implements Opcodes {
+    static void generatePatchJar(FastdexVariant fastdexVariant, TransformInvocation transformInvocation, File patchJar) throws IOException {
+        Set<LibDependency> libraryDependencies = fastdexVariant.getLibraryDependencies()
         Map<String,String> jarAndProjectPathMap = new HashMap<>()
         List<File> projectJarFiles = new ArrayList<>()
         //获取所有依赖工程的输出jar (compile project(':xxx'))
@@ -34,9 +34,9 @@ public class JarOperation implements Opcodes {
         }
 
         //所有的class目录
-        Set<File> directoryInputFiles = new HashSet<>();
+        Set<File> directoryInputFiles = new HashSet<>()
         //所有library工程输出的jar
-        Set<File> jarInputFiles = new HashSet<>();
+        Set<File> jarInputFiles = new HashSet<>()
         for (TransformInput input : transformInvocation.getInputs()) {
             Collection<DirectoryInput> directoryInputs = input.getDirectoryInputs()
             if (directoryInputs != null) {
@@ -80,7 +80,7 @@ public class JarOperation implements Opcodes {
                 directoryInputFiles.add(classesDir)
             }
         }
-        JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,moudleDirectoryInputFiles,patchJar);
+        JarOperation.generatePatchJar(fastdexVariant,directoryInputFiles,moudleDirectoryInputFiles,patchJar)
     }
 
     /**
@@ -91,7 +91,7 @@ public class JarOperation implements Opcodes {
      * @param changedClassPatterns
      * @throws IOException
      */
-    public static void generatePatchJar(FastdexVariant fastdexVariant, Set<File> directoryInputFiles,Set<File> moudleDirectoryInputFiles, File patchJar) throws IOException {
+    static void generatePatchJar(FastdexVariant fastdexVariant, Set<File> directoryInputFiles,Set<File> moudleDirectoryInputFiles, File patchJar) throws IOException {
         long start = System.currentTimeMillis()
         def project = fastdexVariant.project
         project.logger.error("==fastdex generate patch jar start")
@@ -117,12 +117,13 @@ public class JarOperation implements Opcodes {
         }
 
         FileUtils.deleteFile(patchJar)
+        FileUtils.ensumeDir(patchJar.getParentFile())
 
         boolean willExeDexMerge = fastdexVariant.willExecDexMerge()
 
         ZipOutputStream outputJarStream = null
         try {
-            outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar));
+            outputJarStream = new ZipOutputStream(new FileOutputStream(patchJar))
             for (File classesDir : directoryInputFiles) {
                 //fix library databinding bug
                 if (!FileUtils.dirExists(classesDir.absolutePath)) {
@@ -138,12 +139,12 @@ public class JarOperation implements Opcodes {
                     @Override
                     FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         if (!file.toFile().getName().endsWith(Constants.CLASS_SUFFIX)) {
-                            return FileVisitResult.CONTINUE;
+                            return FileVisitResult.CONTINUE
                         }
                         Path relativePath = classpath.relativize(file)
                         String entryName = relativePath.toString()
                         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                            entryName = entryName.replace("\\", "/");
+                            entryName = entryName.replace("\\", "/")
                         }
 
                         if (libraryClassesDirectory) {
@@ -162,7 +163,7 @@ public class JarOperation implements Opcodes {
                             outputJarStream.closeEntry()
                         }
                         else {
-                            String className = relativePath.toString().substring(0,relativePath.toString().length() - Constants.CLASS_SUFFIX.length());
+                            String className = relativePath.toString().substring(0,relativePath.toString().length() - Constants.CLASS_SUFFIX.length())
                             className = className.replaceAll(Os.isFamily(Os.FAMILY_WINDOWS) ? "\\\\" : File.separator,"\\.")
 
                             //假如发生变化的java文件是fastdex/sample/MainActivity.java， fastdex/sample/MainActivity.class和以fastdex/sample/MainActivity$开头的class会被加进去
@@ -194,14 +195,14 @@ public class JarOperation implements Opcodes {
 
         } finally {
             if (outputJarStream != null) {
-                outputJarStream.close();
+                outputJarStream.close()
             }
         }
 
         if (!FileUtils.isLegalFile(patchJar)) {
             throw new GradleException("==fastdex generate patch jar fail: ${patchJar}")
         }
-        long end = System.currentTimeMillis();
-        project.logger.error("==fastdex generate patch jar complete: ${patchJar} use: ${end - start}ms")
+        long end = System.currentTimeMillis()
+        project.logger.error("==fastdex generate patch jar complete, use: ${end - start}ms \n${patchJar}")
     }
 }

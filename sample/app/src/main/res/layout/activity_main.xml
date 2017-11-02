@@ -15,6 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         layout="@layout/my_view" />
+
+
     <Button
         android:id="@+id/btn"
         android:layout_width="match_parent"
@@ -29,6 +31,7 @@
         android:textColor="#ffffff"
         android:layout_centerInParent="true"
         android:text="Fastdex sample"/>
+
 
     <fastdex.sample.common.CommonView
         android:layout_width="wrap_content"

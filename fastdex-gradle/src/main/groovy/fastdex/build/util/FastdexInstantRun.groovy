@@ -9,7 +9,7 @@ import org.gradle.api.Project
 /**
  * Created by tong on 17/3/12.
  */
-public class FastdexInstantRun {
+class FastdexInstantRun {
     FastdexVariant fastdexVariant
     File resourceApFile
     String resDir
@@ -30,11 +30,11 @@ public class FastdexInstantRun {
     }
 
     private void waitForDevice(AndroidDebugBridge bridge) {
-        int count = 0;
+        int count = 0
         while (!bridge.hasInitialDeviceList()) {
             try {
-                Thread.sleep(100);
-                count++;
+                Thread.sleep(100)
+                count++
             } catch (InterruptedException ignored) {
             }
             if (count > 300) {
@@ -98,29 +98,29 @@ public class FastdexInstantRun {
     /**
      * 如果资源发生变化会执行processResources
      */
-    public void onResourceChanged() {
+    def onResourceChanged() {
         resourceChanged = true
     }
 
     /**
      * 如果执行了dexTransform则代码发生变化
      */
-    public void onSourceChanged() {
+    def onSourceChanged() {
         sourceChanged = true
     }
 
     /**
      * 如果assets发生变化会执行mergeAssets任务
      */
-    public void onAssetsChanged() {
+    def onAssetsChanged() {
         assetsChanged = true
     }
 
-    public void onManifestChanged() {
+    def onManifestChanged() {
 
     }
 
-    public void onFastdexPrepare() {
+    def onFastdexPrepare() {
 
     }
 
@@ -200,33 +200,40 @@ public class FastdexInstantRun {
     def generateResourceApk(File resourcesApk) {
         if (GradleUtils.getAndroidGradlePluginVersion().compareTo("2.2") >= 0) {
             long start = System.currentTimeMillis()
-            File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
-            FileUtils.cleanDir(tempDir)
 
-            File tempResourcesApk = new File(tempDir,resourcesApk.getName())
-            FileUtils.copyFileUsingStream(resourceApFile,tempResourcesApk)
-
-            project.logger.error("==fastdex copy resources.ap_ \ncopy : ${resourceApFile} \ninto: ${tempResourcesApk}")
-            File assetsPath = fastdexVariant.androidVariant.getVariantData().getScope().getMergeAssetsOutputDir()
+            File assetsPath = fastdexVariant.androidVariant.getMergeAssets().outputDir
             List<String> assetFiles = getAssetFiles(assetsPath)
-            File tempAssetsPath = new File(tempDir,"assets")
-            FileUtils.copyDir(assetsPath,tempAssetsPath)
 
-            List<String> cmdArgs = new ArrayList<>()
-            cmdArgs.add(FastdexUtils.getAaptCmdPath(project))
-            cmdArgs.add("add")
-            cmdArgs.add("-f")
-            cmdArgs.add(tempResourcesApk.absolutePath)
+            if (assetFiles.isEmpty()) {
+                project.logger.error("==fastdex \ncopy : ${resourceApFile} \ninto: ${resourcesApk}")
+                FileUtils.copyFileUsingStream(resourceApFile,resourcesApk)
+            }
+            else {
+                File tempDir = new File(FastdexUtils.getResourceDir(project,fastdexVariant.variantName),"temp")
+                FileUtils.cleanDir(tempDir)
+                File tempResourcesApk = new File(tempDir,resourcesApk.getName())
+                FileUtils.copyFileUsingStream(resourceApFile,tempResourcesApk)
+                project.logger.error("==fastdex copy resources.ap_ \ncopy : ${resourceApFile} \ninto: ${tempResourcesApk}")
 
-            for (int i = 0; i < assetFiles.size(); i++) {
-                cmdArgs.add("assets/" + assetFiles.get(i).toString())
+                File tempAssetsPath = new File(tempDir,"assets")
+                FileUtils.copyDir(assetsPath,tempAssetsPath)
+                List<String> cmdArgs = new ArrayList<>()
+                cmdArgs.add(FastdexUtils.getAaptCmdPath(project))
+                cmdArgs.add("add")
+                cmdArgs.add("-f")
+                cmdArgs.add(tempResourcesApk.absolutePath)
+
+                for (int i = 0; i < assetFiles.size(); i++) {
+                    cmdArgs.add("assets/" + assetFiles.get(i).toString())
+                }
+
+                FastdexUtils.runCommand(project,cmdArgs,tempDir,false)
+
+                tempResourcesApk.renameTo(resourcesApk)
+                FileUtils.deleteDir(tempDir)
             }
 
-            FastdexUtils.runCommand(project,cmdArgs,tempDir,false)
-            tempResourcesApk.renameTo(resourcesApk)
-            FileUtils.deleteDir(tempDir)
-
-            long end = System.currentTimeMillis();
+            long end = System.currentTimeMillis()
             fastdexVariant.project.logger.error("==fastdex generate resources.apk success, use: ${end - start}ms")
         }
         else {
@@ -235,7 +242,7 @@ public class FastdexInstantRun {
         }
     }
 
-    List<String> getAssetFiles(File dir) {
+    def getAssetFiles(File dir) {
         ArrayList<String> result = new ArrayList<>()
         if (dir == null || !FileUtils.dirExists(dir.getAbsolutePath())) {
             return result
@@ -248,7 +255,7 @@ public class FastdexInstantRun {
                 result.add(file.getName())
             }
         }
-        return result;
+        return result
     }
 
     def startBootActivity() {

@@ -8,7 +8,7 @@ import org.gradle.api.tasks.TaskAction
  * 准备上下文环境
  * Created by tong on 17/4/18.
  */
-public class FastdexPrepareTask extends DefaultTask {
+class FastdexPrepareTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexPrepareTask() {
@@ -16,7 +16,7 @@ public class FastdexPrepareTask extends DefaultTask {
     }
 
     @TaskAction
-    void prepareContext() {
+    def prepareContext() {
         fastdexVariant.prepareEnv()
     }
 }

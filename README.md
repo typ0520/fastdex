@@ -40,7 +40,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
         }
         
         dependencies {
-            classpath 'com.github.typ0520:fastdex-gradle:0.7.4'
+            classpath 'com.github.typ0520:fastdex-gradle:0.8.0'
         }
     }
    	````
@@ -95,7 +95,7 @@ Android API 9(2.3)+  ; android-gradle-build 2.0.0+
      classes.dex         => classes2.dex
      classes2.dex        => classes3.dex
      然后运行期在入口Application(fastdex.runtime.FastdexApplication)使用MultiDex把所有的dex加载进来
-  - @see [fastdex.build.transform.FastdexTransform](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/transform/FastdexTransform.groovy)
+  - @see [fastdex.build.transform.FastdexDexTransform](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/transform/FastdexTransform.groovy)
   - 7、保存资源映射表，为了保持id的值一致，详情看
   - @see [fastdex.build.task.FastdexResourceIdTask](https://github.com/typ0520/fastdex/blob/master/fastdex-gradle/src/main/groovy/fastdex/build/task/FastdexResourceIdTask.groovy)
 

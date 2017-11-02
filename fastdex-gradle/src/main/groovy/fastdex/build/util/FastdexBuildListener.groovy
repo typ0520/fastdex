@@ -1,15 +1,15 @@
 package fastdex.build.util
 
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.BuildListener;
+import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.execution.TaskExecutionListener;
-import org.gradle.api.initialization.Settings;
-import org.gradle.api.invocation.Gradle;
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.execution.TaskExecutionListener
+import org.gradle.api.initialization.Settings
+import org.gradle.api.invocation.Gradle
 import org.gradle.api.tasks.TaskState
 import fastdex.build.FastdexPlugin
 import com.github.typ0520.fastdex.Version
@@ -119,11 +119,11 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     }
                     report.append("plugins                   : ${plugins}\n\n")
                     try {
-                        int keyLength = str.length();
+                        int keyLength = str.length()
                         if (!map.isEmpty()) {
                             for (String key : map.keySet()) {
-                                int dsize = keyLength - key.length();
-                                report.append(key + getSpaceString(dsize) + ": " + map.get(key) + "\n");
+                                int dsize = keyLength - key.length()
+                                report.append(key + getSpaceString(dsize) + ": " + map.get(key) + "\n")
                             }
 
                             if (!"true".equals(map.get("instant_run_disabled"))) {
@@ -179,20 +179,20 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
 
     Throwable getRootThrowable(Throwable throwable) {
         if (throwable == null) {
-            return null;
+            return null
         }
-        Throwable cause = throwable.getCause();
+        Throwable cause = throwable.getCause()
         if (cause == null) {
-            return throwable;
+            return throwable
         }
         if (cause == throwable) {
-            return throwable;
+            return throwable
         }
-        return getRootThrowable(throwable.getCause());
+        return getRootThrowable(throwable.getCause())
     }
 
 
-    public Map<String,String> getStudioInfo() {
+    Map<String,String> getStudioInfo() {
         Map<String,String> map = new HashMap<>()
         if (Os.isFamily(Os.FAMILY_MAC)) {
             try {
@@ -201,9 +201,9 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
                     FileUtils.copyResourceUsingStream(Constants.STUDIO_INFO_SCRIPT_MACOS,script)
                 }
 
-                int pid = getPid();
+                int pid = getPid()
                 if (pid == -1) {
-                    return map;
+                    return map
                 }
 
                 List<String> cmdArgs = new ArrayList<>()
@@ -219,31 +219,31 @@ class FastdexBuildListener implements TaskExecutionListener, BuildListener {
         return map
     }
 
-    public static String getSpaceString(int count) {
+    static String getSpaceString(int count) {
         if (count > 0) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder()
             for (int i = 0; i < count; i++) {
-                sb.append(" ");
+                sb.append(" ")
             }
-            return sb.toString();
+            return sb.toString()
         }
-        return "";
+        return ""
     }
 
-    public static int getPid() {
-        String name = ManagementFactory.getRuntimeMXBean().getName();
+    static int getPid() {
+        String name = ManagementFactory.getRuntimeMXBean().getName()
         if (name != null) {
-            String[] arr = name.split("@");
+            String[] arr = name.split("@")
             try {
-                return Integer.valueOf(arr[0]);
+                return Integer.valueOf(arr[0])
             } catch (Throwable e) {
 
             }
         }
-        return -1;
+        return -1
     }
 
-    public static void addByProject(Project pro) {
+    static void addByProject(Project pro) {
         FastdexBuildListener listener = new FastdexBuildListener(pro)
         pro.gradle.addListener(listener)
     }

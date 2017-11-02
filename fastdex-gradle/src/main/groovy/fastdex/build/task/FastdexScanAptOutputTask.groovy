@@ -16,7 +16,7 @@ import org.gradle.api.tasks.TaskAction
  * 恢复对apt目录的扫描
  * Created by tong on 17/10/13.
  */
-public class FastdexScanAptOutputTask extends DefaultTask {
+class FastdexScanAptOutputTask extends DefaultTask {
     FastdexVariant fastdexVariant
 
     FastdexScanAptOutputTask() {
@@ -24,7 +24,7 @@ public class FastdexScanAptOutputTask extends DefaultTask {
     }
 
     @TaskAction
-    void scan() {
+    def scan() {
         //如果没有使用自定义的编译任务需要拿老的apt快照与当前的对比
         boolean needDiff = fastdexVariant.hasDexCache && !fastdexVariant.compiledByCustomJavac
         //开启自定义的javac任务正常是不需要在扫描apt目录的，但是如果执行了dex merge会在保存一次当前快照，所以这种情况下要重新加回去
@@ -60,16 +60,16 @@ public class FastdexScanAptOutputTask extends DefaultTask {
                     project.logger.error("==fastdex not find old apt snapshoot")
 
                     //add
-                    JavaDirectoryDiffResultSet resultSet = aptDirectorySnapshoot.createEmptyResultSet();
+                    JavaDirectoryDiffResultSet resultSet = aptDirectorySnapshoot.createEmptyResultSet()
                     for (FileNode node : aptDirectorySnapshoot.nodes) {
-                        resultSet.add(new JavaFileDiffInfo(Status.ADDED,node,null));
+                        resultSet.add(new JavaFileDiffInfo(Status.ADDED,node,null))
                         project.logger.error("==fastdex find new apt file: " + node.uniqueKey)
                     }
-                    diffResultSet.mergeJavaDirectoryResultSet(sourceSetSnapshoot.path,resultSet);
+                    diffResultSet.mergeJavaDirectoryResultSet(sourceSetSnapshoot.path,resultSet)
                 }
                 else {
                     //diff
-                    JavaDirectoryDiffResultSet resultSet = (JavaDirectoryDiffResultSet) aptDirectorySnapshoot.diff(oldAptJavaDirectorySnapshoot);
+                    JavaDirectoryDiffResultSet resultSet = (JavaDirectoryDiffResultSet) aptDirectorySnapshoot.diff(oldAptJavaDirectorySnapshoot)
                     for (JavaFileDiffInfo diffInfo : resultSet.changedDiffInfos) {
                         if (diffInfo.status == Status.ADDED) {
                             project.logger.error("==fastdex find new apt file: " + diffInfo.uniqueKey)
@@ -78,7 +78,7 @@ public class FastdexScanAptOutputTask extends DefaultTask {
                             project.logger.error("==fastdex find changed apt file: " + diffInfo.uniqueKey)
                         }
                     }
-                    diffResultSet.mergeJavaDirectoryResultSet(sourceSetSnapshoot.path,resultSet);
+                    diffResultSet.mergeJavaDirectoryResultSet(sourceSetSnapshoot.path,resultSet)
                 }
             }
         }

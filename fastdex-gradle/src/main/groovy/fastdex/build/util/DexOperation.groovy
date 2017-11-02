@@ -9,7 +9,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
  * dex操作
  * Created by tong on 17/11/4.
  */
-public class DexOperation {
+class DexOperation {
     /**
      * 生成补丁dex
      * @param fastdexVariant
@@ -17,7 +17,7 @@ public class DexOperation {
      * @param patchJar
      * @param patchDex
      */
-    public static final void generatePatchDex(FastdexVariant fastdexVariant, Transform base,File patchJar,File patchDex) {
+    static final void generatePatchDex(FastdexVariant fastdexVariant, Transform base,File patchJar,File patchDex) {
         FileUtils.deleteFile(patchDex)
         FileUtils.ensumeDir(patchDex.parentFile)
 
@@ -44,18 +44,18 @@ public class DexOperation {
                 FileUtils.copyResourceUsingStream("fastdex-dx",dxCommandFile)
             }
 
-            cmdArgs.add("sh");
-            cmdArgs.add(dxCommandFile.absolutePath);
-            cmdArgs.add("--dex");
-            cmdArgs.add("--no-optimize");
-            cmdArgs.add("--force-jumbo");
-            cmdArgs.add("--output=${patchDex}");
-            cmdArgs.add(patchJar.absolutePath);
+            cmdArgs.add("sh")
+            cmdArgs.add(dxCommandFile.absolutePath)
+            cmdArgs.add("--dex")
+            cmdArgs.add("--no-optimize")
+            cmdArgs.add("--force-jumbo")
+            cmdArgs.add("--output=${patchDex}")
+            cmdArgs.add(patchJar.absolutePath)
         }
 
         //调用dx命令
         FastdexUtils.runCommand(fastdexVariant.project, cmdArgs)
-        long end = System.currentTimeMillis();
+        long end = System.currentTimeMillis()
         fastdexVariant.project.logger.error("==fastdex patch transform generate dex success. use: ${end - start}ms")
     }
 
@@ -66,7 +66,7 @@ public class DexOperation {
      * @param patchDex      补丁dex路径
      * @param cachedDex
      */
-    public static void mergeDex(FastdexVariant fastdexVariant,File outputDex,File patchDex,File cachedDex) {
+    static void mergeDex(FastdexVariant fastdexVariant,File outputDex,File patchDex,File cachedDex) {
         long start = System.currentTimeMillis()
         def project = fastdexVariant.project
         File dexMergeJar = new File(FastdexUtils.getBuildDir(project),Constants.DEX_MERGE_JAR_FILENAME)
@@ -75,16 +75,16 @@ public class DexOperation {
         }
 
         List<String> cmdArgs = new ArrayList<>()
-        cmdArgs.add(FastdexUtils.getJavaCmdPath());
-        cmdArgs.add("-jar");
-        cmdArgs.add(dexMergeJar.absolutePath);
-        cmdArgs.add(outputDex.absolutePath);
-        cmdArgs.add(patchDex.absolutePath);
-        cmdArgs.add(cachedDex.absolutePath);
+        cmdArgs.add(FastdexUtils.getJavaCmdPath())
+        cmdArgs.add("-jar")
+        cmdArgs.add(dexMergeJar.absolutePath)
+        cmdArgs.add(outputDex.absolutePath)
+        cmdArgs.add(patchDex.absolutePath)
+        cmdArgs.add(cachedDex.absolutePath)
 
         FastdexUtils.runCommand(fastdexVariant.project, cmdArgs)
 
-        long end = System.currentTimeMillis();
+        long end = System.currentTimeMillis()
         project.logger.error("==fastdex merge dex success. use: ${end - start}ms")
     }
 }

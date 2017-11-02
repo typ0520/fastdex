@@ -1,3 +1,13 @@
+## 0.8.0  (2017-11-2)
+
+Features:
+
+  - 支持android gradle plugin 3.0
+
+Bugfixes:
+
+   - 修复assets目录为空时生成资源补丁出错的问题
+
 ## 0.7.4  (2017-10-20)
 
 Bugfixes:
