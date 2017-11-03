@@ -33,15 +33,14 @@ class FastdexPlugin implements Plugin<Project> {
 
         project.extensions.create('fastdex', FastdexExtension)
         FastdexBuildListener.addByProject(project)
-        GradleUtils.addDynamicProperty(project,"android.enableAapt2","false")
 
         def android = project.extensions.android
+        //open jumboMode
+        android.dexOptions.jumboMode = true
+
         try {
-            //open jumboMode
-            android.dexOptions.jumboMode = true
-        } catch (Throwable e) {
-        }
-        try {
+            //禁止掉aapt2
+            GradleUtils.addDynamicProperty(project,"android.enableAapt2","false")
             reflectAapt2Flag()
         } catch (Throwable e) {
         }
@@ -161,23 +160,22 @@ class FastdexPlugin implements Plugin<Project> {
                         manifestTask.mustRunAfter tinkerPatchManifestTask
                     }
 
-//                        保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
-//                        FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
-//                        applyResourceTask.fastdexVariant = fastdexVariant
-//                        applyResourceTask.resDir = variantOutput.processResources.resDir
-//                        applyResourceTask.mustRunAfter manifestTask
-//                        variantOutput.processResources.dependsOn applyResourceTask
+//                    保持补丁打包时R文件中相同的节点和第一次打包时的值保持一致
+//                    FastdexResourceIdTask applyResourceTask = project.tasks.create("fastdexProcess${variantName}ResourceId", FastdexResourceIdTask)
+//                    applyResourceTask.fastdexVariant = fastdexVariant
+//                    applyResourceTask.resDir = variantOutput.processResources.resDir
+//                    applyResourceTask.mustRunAfter manifestTask
+//                    variantOutput.processResources.dependsOn applyResourceTask
+
+                    File resDir = GradleUtils.getResOutputDir(variantOutput.processResources)
+                    FixPublicSymbolLogger.inject(variantOutput.processResources,resDir,fastdexVariant)
 
                     //这样做是为了解决第一次补丁打包时虽然资源没有发生变化但是也会执行processResources任务的问题(因为在processResources任务执行之前往输入目录里添加了public.xml)
                     variantOutput.processResources.doFirst {
                         FastdexResourceIdTask applyResourceTask = new FastdexResourceIdTask()
                         applyResourceTask.project = project
                         applyResourceTask.fastdexVariant = fastdexVariant
-                        if (variantOutput.processResources.properties['resDir'] != null) {
-                            applyResourceTask.resDir = variantOutput.processResources.resDir
-                        } else if (variantOutput.processResources.properties['inputResourcesDir'] != null) {
-                            applyResourceTask.resDir = variantOutput.processResources.inputResourcesDir.getFiles().first()
-                        }
+                        applyResourceTask.resDir = resDir
                         applyResourceTask.applyResourceId()
                     }
 
@@ -196,7 +194,7 @@ class FastdexPlugin implements Plugin<Project> {
 
                     Task transformClassesWithJarMergingTask = getTransformClassesWithJarMergingTask(project,variantName)
                     Task transformClassesWithDexTask = getTransformClassesWithDexTask(project,variantName)
-                    Task transformDexWithDexForTask = getTransformDexWithDexForTask(project,variantName)
+                    Task transformDexWithDexTask = getTransformDexWithDexForTask(project,variantName)
                     Task transformDexArchiveWithDexMergerTask = getTransformDexArchiveWithDexMergerTask(project,variantName)
                     Task transformClassesWithPreDexTask = getTransformClassesWithPreDexTask(project,variantName)
 
@@ -239,8 +237,8 @@ class FastdexPlugin implements Plugin<Project> {
                     if (transformDexArchiveWithDexMergerTask != null) {
                         transformDexArchiveWithDexMergerTask.dependsOn scanAptOutputTask
                     }
-                    if (transformDexWithDexForTask != null) {
-                        transformDexWithDexForTask.dependsOn scanAptOutputTask
+                    if (transformDexWithDexTask != null) {
+                        transformDexWithDexTask.dependsOn scanAptOutputTask
                     }
                     if (transformClassesWithPreDexTask != null) {
                         transformClassesWithPreDexTask.dependsOn scanAptOutputTask
@@ -277,8 +275,8 @@ class FastdexPlugin implements Plugin<Project> {
                     if (transformClassesWithDexTask != null) {
                         fastdexPatchTask.mustRunAfter transformClassesWithDexTask
                     }
-                    if (transformDexWithDexForTask != null) {
-                        fastdexPatchTask.mustRunAfter transformDexWithDexForTask
+                    if (transformDexWithDexTask != null) {
+                        fastdexPatchTask.mustRunAfter transformDexWithDexTask
                     }
                     if (transformDexArchiveWithDexMergerTask != null) {
                         fastdexPatchTask.mustRunAfter transformDexArchiveWithDexMergerTask
@@ -287,6 +285,7 @@ class FastdexPlugin implements Plugin<Project> {
                         fastdexPatchTask.mustRunAfter transformClassesWithPreDexTask
                     }
                     fastdexPatchTask.mustRunAfter mergeAssetsTask
+                    fastdexPatchTask.mustRunAfter variantOutput.processResources
                     packageTask.dependsOn fastdexPatchTask
 
                     if (packageTask != null) {
@@ -311,23 +310,6 @@ class FastdexPlugin implements Plugin<Project> {
                     project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
                         @Override
                         void graphPopulated(TaskExecutionGraph taskGraph) {
-                            //2.0.0 2.1.0 2.2.0 2.3.0 3.3.0
-                            //3.0.0适配功能
-//                            assembleDebug_multidex_false_15_output.txt    ok
-//                            assembleDebug_multidex_false_21_output.txt    ok
-//                            assembleDebug_multidex_true_15_output.txt     ok
-//                            assembleDebug_multidex_true_21_output.txt     ok
-
-//                            assembleRelease_multidex_false_15_output.txt               ok
-//                            assembleRelease_multidex_false_15_predex_false_output.txt  ok
-//                            assembleRelease_multidex_false_21_output.txt               ok
-//                            assembleRelease_multidex_false_21_output_predex_false.txt  ok
-//                            assembleRelease_multidex_true_15_output.txt                ok
-//                            assembleRelease_multidex_true_15_output_predex_false.txt   ok
-//                            assembleRelease_multidex_true_21_output.txt
-//                            assembleRelease_multidex_true_21_output_predex_false.txt
-
-
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task.getProject().equals(project)
                                         && task instanceof TransformTask
@@ -345,7 +327,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         fastdexVariant.hasJarMergingTask = true
 
                                         FastdexJarMergingTransform jarMergingTransform = new FastdexJarMergingTransform(transform,task.getStreamOutputFolder(),fastdexVariant)
-                                        Field field = getFieldByName(task.getClass(),'transform')
+                                        Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,jarMergingTransform)
                                     }
@@ -359,7 +341,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         //代理DexTransform,实现自定义的转换
                                         FastdexDexTransform dexTransform = new FastdexDexTransform(transform,task.getStreamOutputFolder(),fastdexVariant)
                                         fastdexVariant.fastdexTransform = dexTransform
-                                        Field field = getFieldByName(task.getClass(),'transform')
+                                        Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,dexTransform)
                                     }
@@ -369,7 +351,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         FastdexDexBuilderTransform dexBuilderTransform = new FastdexDexBuilderTransform(transform,task.getStreamOutputFolder(),fastdexVariant)
                                         fastdexVariant.dexBuilderOutputFolder = task.getStreamOutputFolder()
 
-                                        Field field = getFieldByName(task.getClass(),'transform')
+                                        Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,dexBuilderTransform)
                                     }
@@ -379,7 +361,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         FastdexDexMergerTransform dexMergerTransform = new FastdexDexMergerTransform(transform,task.getStreamOutputFolder(),fastdexVariant)
                                         fastdexVariant.dexMergerOutputFolder = task.getStreamOutputFolder()
 
-                                        Field field = getFieldByName(task.getClass(),'transform')
+                                        Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,dexMergerTransform)
                                     }
@@ -390,7 +372,7 @@ class FastdexPlugin implements Plugin<Project> {
                                         fastdexVariant.preDexOutputFolder = task.getStreamOutputFolder()
                                         fastdexVariant.hasPreDexTask = true
 
-                                        Field field = getFieldByName(task.getClass(),'transform')
+                                        Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,preDexTransform)
                                     }
@@ -578,18 +560,5 @@ class FastdexPlugin implements Plugin<Project> {
         } catch (Throwable e) {
             return null
         }
-    }
-
-    Field getFieldByName(Class<?> aClass, String name) {
-        Class<?> currentClass = aClass
-        while (currentClass != null) {
-            try {
-                return currentClass.getDeclaredField(name)
-            } catch (NoSuchFieldException e) {
-                // ignored.
-            }
-            currentClass = currentClass.getSuperclass()
-        }
-        return null
     }
 }

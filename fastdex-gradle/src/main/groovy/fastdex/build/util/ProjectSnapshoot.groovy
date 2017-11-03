@@ -16,7 +16,7 @@ import fastdex.common.utils.FileUtils
  * Created by tong on 17/3/31.
  */
 class ProjectSnapshoot {
-    private static final boolean DEBUG_SNAPSHOOT = true
+    private static final boolean DEBUG_SNAPSHOOT = false
 
     final FastdexVariant fastdexVariant
     SourceSetSnapshoot sourceSetSnapshoot

@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
-        //btn.setOnClickListener(view -> Toast.makeText(this,"哈哈",Toast.LENGTH_LONG).show());
+        btn.setOnClickListener(view -> Toast.makeText(this,new ImplementTest().test() + " 1 " + InterfaceTest.staticMethod(),Toast.LENGTH_LONG).show());
 
         String s1 = getString(R.string.s1);
         String s3 = getString(R.string.s3);
