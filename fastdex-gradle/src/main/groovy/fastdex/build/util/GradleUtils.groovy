@@ -301,4 +301,20 @@ class GradleUtils {
     static BaseVariant getLibraryFirstVariant(Project project,String buildTypeName) {
         return project.android.libraryVariants.find { it.getBuildType().buildType.getName().equals(buildTypeName) }
     }
+
+    /**
+     * 获取资源输出目录
+     * @param processResources
+     * @return
+     */
+    static File getResOutputDir(Object processResources) {
+        File resDir = null
+        if (processResources.properties['resDir'] != null) {
+            resDir = processResources.resDir
+        } else if (processResources.properties['inputResourcesDir'] != null) {
+            resDir = processResources.inputResourcesDir.getFiles().first()
+        }
+
+        return resDir
+    }
 }

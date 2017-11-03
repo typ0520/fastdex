@@ -68,10 +68,13 @@ class FastdexResourceIdTask {
         resourceDirectoryList.add(resDir)
 
         project.logger.error("==fastdex we build ${project.getName()} apk with apply resource mapping file ${resourceMappingFile}")
+        long start = System.currentTimeMillis()
         Map<RDotTxtEntry.RType, Set<RDotTxtEntry>> rTypeResourceMap = PatchUtil.readRTxt(resourceMappingFile)
-
         AaptResourceCollector aaptResourceCollector = AaptUtil.collectResource(resourceDirectoryList, rTypeResourceMap)
         PatchUtil.generatePublicResourceXml(aaptResourceCollector, idsXml, publicXml)
+        long end = System.currentTimeMillis()
+        project.logger.error("==fastdex generate public.xml and ids.xml complete, use: ${end - start}ms")
+
         File publicFile = new File(publicXml)
         if (publicFile.exists()) {
             FileUtils.copyFileUsingStream(publicFile, publicXmlFile)
