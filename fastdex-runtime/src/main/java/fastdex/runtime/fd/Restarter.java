@@ -96,7 +96,7 @@ public class Restarter {
 
         public void onActivityPaused(Activity activity) {
             sActivitiesRefs.put(activity, ACTIVITY_STARTED);
-            RuntimeMetaInfo runtimeMetaInfo = Fastdex.get().readRuntimeMetaInfoFromFile();
+            RuntimeMetaInfo runtimeMetaInfo = Fastdex.get().readRuntimeMetaInfoFromFile(false);
             if (runtimeMetaInfo != null) {
                 boolean active = getTopActivity() != null;
 

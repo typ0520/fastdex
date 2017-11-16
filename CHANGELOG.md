@@ -1,3 +1,9 @@
+## 0.8.1  (2017-11-16)
+
+Bugfixes:
+
+   - fix error: Public symbol
+
 ## 0.8.0  (2017-11-2)
 
 Features:
