@@ -21,6 +21,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.util.Log;
+
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
 import fastdex.runtime.utils.ZipUtil;
 
 /**
@@ -95,7 +97,7 @@ public class MultiDexExtractor {
      *         secondary dex files
      */
     static List<? extends File> load(Context context, ApplicationInfo applicationInfo, File dexDir,
-            boolean forceReload) throws IOException {
+                                     boolean forceReload) throws IOException {
         Log.i(TAG, "MultiDexExtractor.load(" + applicationInfo.sourceDir + ", " + forceReload + ")");
         final File sourceApk = new File(applicationInfo.sourceDir);
 
@@ -167,7 +169,10 @@ public class MultiDexExtractor {
         int totalDexNumber = multiDexPreferences.getInt(KEY_DEX_NUMBER, 1);
         final List<ExtractedDex> files = new ArrayList<ExtractedDex>(totalDexNumber - 1);
 
-        for (int secondaryNumber = 2; secondaryNumber <= totalDexNumber; secondaryNumber++) {
+
+
+
+        for (int secondaryNumber = getSecondaryNumber(); secondaryNumber <= totalDexNumber; secondaryNumber++) {
             String fileName = extractedFilePrefix + secondaryNumber + EXTRACTED_SUFFIX;
             ExtractedDex extractedFile = new ExtractedDex(dexDir, fileName);
             if (extractedFile.isFile()) {
@@ -193,6 +198,10 @@ public class MultiDexExtractor {
         }
 
         return files;
+    }
+
+    private static int getSecondaryNumber() {
+        return MultiDex.is21or22() ? 100 : 2;
     }
 
 
@@ -241,7 +250,7 @@ public class MultiDexExtractor {
         final ZipFile apk = new ZipFile(sourceApk);
         try {
 
-            int secondaryNumber = 2;
+            int secondaryNumber = getSecondaryNumber();
 
             ZipEntry dexFile = apk.getEntry(DEX_PREFIX + secondaryNumber + DEX_SUFFIX);
             while (dexFile != null) {
@@ -305,14 +314,14 @@ public class MultiDexExtractor {
      * {@link #LOCK_FILENAME}.
      */
     private static void putStoredApkInfo(Context context, long timeStamp, long crc,
-            List<ExtractedDex> extractedDexes) {
+                                         List<ExtractedDex> extractedDexes) {
         SharedPreferences prefs = getMultiDexPreferences(context);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putLong(KEY_TIME_STAMP, timeStamp);
         edit.putLong(KEY_CRC, crc);
-        edit.putInt(KEY_DEX_NUMBER, extractedDexes.size() + 1);
+        edit.putInt(KEY_DEX_NUMBER, extractedDexes.size() + (MultiDex.is21or22() ? 99 : 1));
 
-        int extractedDexId = 2;
+        int extractedDexId = getSecondaryNumber();
         for (ExtractedDex dex : extractedDexes) {
             edit.putLong(KEY_DEX_CRC + extractedDexId, dex.crc);
             edit.putLong(KEY_DEX_TIME + extractedDexId, dex.lastModified());
@@ -365,7 +374,7 @@ public class MultiDexExtractor {
     }
 
     private static void extract(ZipFile apk, ZipEntry dexFile, File extractTo,
-            String extractedFilePrefix) throws IOException, FileNotFoundException {
+                                String extractedFilePrefix) throws IOException, FileNotFoundException {
 
         InputStream in = apk.getInputStream(dexFile);
         ZipOutputStream out = null;

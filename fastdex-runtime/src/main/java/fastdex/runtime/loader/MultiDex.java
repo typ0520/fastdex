@@ -21,7 +21,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.util.Log;
-import dalvik.system.DexFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
+
+import dalvik.system.DexFile;
 
 /**
  * MultiDex patches {@link Context#getClassLoader() the application context class
@@ -70,8 +72,18 @@ public final class MultiDex {
 
     public static final Set<String> installedApk = new HashSet<String>();
 
+    /**
+     * 4.2 api17 1.6.0
+     * 5.0 api21 2.1.0
+     * 5.1 api22 2.1.0
+     * 6.0 api23 2.1.0
+     */
     private static final boolean IS_VM_MULTIDEX_CAPABLE =
-            isVMMultidexCapable(System.getProperty("java.vm.version"));
+            isVMMultidexCapable(System.getProperty("java.vm.version")) && !is21or22();
+
+    public static boolean is21or22() {
+        return Build.VERSION.SDK_INT == 21 || Build.VERSION.SDK_INT == 22;
+    }
 
     private MultiDex() {}
 
@@ -217,7 +229,7 @@ public final class MultiDex {
     }
 
     private static void installSecondaryDexes(ClassLoader loader, File dexDir,
-        List<? extends File> files)
+                                              List<? extends File> files)
             throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
             InvocationTargetException, NoSuchMethodException, IOException {
         if (!files.isEmpty()) {
@@ -296,7 +308,7 @@ public final class MultiDex {
      * @param extraElements elements to append at the end of the array.
      */
     private static void expandFieldArray(Object instance, String fieldName,
-            Object[] extraElements) throws NoSuchFieldException, IllegalArgumentException,
+                                         Object[] extraElements) throws NoSuchFieldException, IllegalArgumentException,
             IllegalAccessException {
         Field jlrField = findField(instance, fieldName);
         Object[] original = (Object[]) jlrField.get(instance);
@@ -378,7 +390,7 @@ public final class MultiDex {
                 List<? extends File> additionalClassPathEntries,
                 File optimizedDirectory)
                         throws IllegalArgumentException, IllegalAccessException,
-                        NoSuchFieldException, InvocationTargetException, NoSuchMethodException {
+                NoSuchFieldException, InvocationTargetException, NoSuchMethodException {
             /* The patched class loader is expected to be a descendant of
              * dalvik.system.BaseDexClassLoader. We modify its
              * dalvik.system.DexPathList pathList field to append additional DEX
@@ -425,7 +437,7 @@ public final class MultiDex {
                 Object dexPathList, ArrayList<File> files, File optimizedDirectory,
                 ArrayList<IOException> suppressedExceptions)
                         throws IllegalAccessException, InvocationTargetException,
-                        NoSuchMethodException {
+                NoSuchMethodException {
             Method makeDexElements =
                     findMethod(dexPathList, "makeDexElements", ArrayList.class, File.class,
                             ArrayList.class);
@@ -444,7 +456,7 @@ public final class MultiDex {
                 List<? extends File> additionalClassPathEntries,
                 File optimizedDirectory)
                         throws IllegalArgumentException, IllegalAccessException,
-                        NoSuchFieldException, InvocationTargetException, NoSuchMethodException {
+                NoSuchFieldException, InvocationTargetException, NoSuchMethodException {
             /* The patched class loader is expected to be a descendant of
              * dalvik.system.BaseDexClassLoader. We modify its
              * dalvik.system.DexPathList pathList field to append additional DEX
@@ -463,7 +475,7 @@ public final class MultiDex {
         private static Object[] makeDexElements(
                 Object dexPathList, ArrayList<File> files, File optimizedDirectory)
                         throws IllegalAccessException, InvocationTargetException,
-                        NoSuchMethodException {
+                NoSuchMethodException {
             Method makeDexElements =
                     findMethod(dexPathList, "makeDexElements", ArrayList.class, File.class);
 
@@ -478,7 +490,7 @@ public final class MultiDex {
         private static void install(ClassLoader loader,
                 List<? extends File> additionalClassPathEntries)
                         throws IllegalArgumentException, IllegalAccessException,
-                        NoSuchFieldException, IOException {
+                NoSuchFieldException, IOException {
             /* The patched class loader is expected to be a descendant of
              * dalvik.system.DexClassLoader. We modify its
              * fields mPaths, mFiles, mZips and mDexs to append additional DEX
@@ -494,7 +506,7 @@ public final class MultiDex {
             ZipFile[] extraZips = new ZipFile[extraSize];
             DexFile[] extraDexs = new DexFile[extraSize];
             for (ListIterator<? extends File> iterator = additionalClassPathEntries.listIterator();
-                    iterator.hasNext();) {
+                 iterator.hasNext();) {
                 File additionalEntry = iterator.next();
                 String entryPath = additionalEntry.getAbsolutePath();
                 path.append(':').append(entryPath);

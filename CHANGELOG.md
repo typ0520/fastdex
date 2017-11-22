@@ -1,3 +1,9 @@
+## 0.8.2  (2017-11-22)
+
+Features:
+
+   - 支持android5.0(api 21)、5.1(api 22)加载超过99个classesN.dex的场景
+
 ## 0.8.1  (2017-11-16)
 
 Bugfixes:
