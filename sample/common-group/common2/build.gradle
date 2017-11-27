@@ -2,7 +2,9 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
-    //buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
+    if (com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("3.0.0") < 0) {
+        buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
+    }
 
     defaultConfig {
         minSdkVersion Integer.parseInt(project.ANDROID_BUILD_MIN_SDK_VERSION)

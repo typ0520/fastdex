@@ -1,8 +1,14 @@
 apply plugin: 'com.android.application'
-//3.0.0支持了lambda不需要这个插件了
-//apply plugin: 'me.tatarka.retrolambda'
-//apply plugin: 'com.jakewharton.butterknife'
-//apply plugin: 'com.neenbedankt.android-apt'
+
+if (com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("3.0") < 0) {
+    //3.0.0支持了lambda不需要这个插件了
+    apply plugin: 'me.tatarka.retrolambda'
+
+    retrolambda {
+        javaVersion JavaVersion.VERSION_1_7
+    }
+}
+
 apply plugin: 'fastdex.app'
 
 fastdex {
@@ -25,7 +31,10 @@ fastdex {
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
-    //buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
+
+    if (com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("3.0") < 0) {
+        buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION   
+    }
 
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
@@ -44,7 +53,7 @@ android {
         applicationId "com.github.typ0520.fastdex.sample"
         versionCode 1
         versionName "1.0.0"
-        multiDexEnabled false
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -70,23 +79,25 @@ android {
         }
     }
 
-//    productFlavors {
-//        flavor1 {
-//        }
-//
-//        flavor2 {
-//        }
-//    }
+    productFlavors {
+        flavor1 {
+            if (com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("3.0") >= 0) {
+                flavorDimensions "versionCode"
+            }
+        }
+
+        flavor2 {
+            if (com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION.compareTo("3.0") >= 0) {
+                flavorDimensions "versionCode"
+            }
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-
-//retrolambda {
-//    javaVersion JavaVersion.VERSION_1_7
-//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -107,8 +118,7 @@ dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
     compile 'org.xutils:xutils:3.3.36'
     compile 'de.hdodenhof:circleimageview:2.0.0'
-    compile 'de.hdodenhof:circleimageview:2.0.0'
-//
+    compile 'de.hdodenhof:circleimageview:2.0.0'//
 //    compile 'com.squareup.retrofit:retrofit:1.9.0'
 //    compile 'info.hoang8f:android-segmented:1.0.6'
 //    compile 'com.squareup.okio:okio:1.0.1'
@@ -117,6 +127,7 @@ dependencies {
 //    compile 'com.squareup.retrofit:retrofit:1.8.0'
 //    compile 'com.squareup.okhttp:okhttp:2.2.0'
 //    compile 'com.squareup.okhttp:okhttp-urlconnection:2.2.0'
+
 //
 //    compile "org.greenrobot:eventbus:3.0.0"
 //    compile "org.glassfish:javax.annotation:10.0-b28"

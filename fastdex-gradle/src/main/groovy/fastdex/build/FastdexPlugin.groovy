@@ -35,14 +35,17 @@ class FastdexPlugin implements Plugin<Project> {
         FastdexBuildListener.addByProject(project)
 
         def android = project.extensions.android
+
+        //close preDexLibraries
+        android.dexOptions.preDexLibraries = false
         //open jumboMode
         android.dexOptions.jumboMode = true
 
-        try {
+        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0.0") >= 0) {
             //禁止掉aapt2
-            GradleUtils.addDynamicProperty(project,"android.enableAapt2","false")
-            reflectAapt2Flag()
-        } catch (Throwable e) {
+            reflectAapt2Flag(project)
+            //禁止掉dex archive任务
+            reflectDexArchive(project)
         }
 
         project.afterEvaluate {
@@ -439,7 +442,7 @@ class FastdexPlugin implements Plugin<Project> {
     }
 
     //禁掉aapt2
-    def reflectAapt2Flag() {
+    def reflectAapt2Flag(Project project) {
         try {
             def booleanOptClazz = Class.forName('com.android.build.gradle.options.BooleanOption')
             def enableAAPT2Field = booleanOptClazz.getDeclaredField('ENABLE_AAPT2')
@@ -450,6 +453,22 @@ class FastdexPlugin implements Plugin<Project> {
             defValField.set(enableAAPT2EnumObj, false)
         } catch (Throwable thr) {
             project.logger.error("relectAapt2Flag error: ${thr.getMessage()}.")
+        }
+    }
+
+    //禁止掉dex archive任务
+    def reflectDexArchive(Project project) {
+        try {
+            def booleanOptClazz = Class.forName('com.android.build.gradle.options.BooleanOption')
+
+            def enableDexArchiveField = booleanOptClazz.getDeclaredField('ENABLE_DEX_ARCHIVE')
+            enableDexArchiveField.setAccessible(true)
+            def enableDexArchiveObj = enableDexArchiveField.get(null)
+            def defValField = enableDexArchiveObj.getClass().getDeclaredField('defaultValue')
+            defValField.setAccessible(true)
+            defValField.set(enableDexArchiveObj, false)
+        } catch (Throwable thr) {
+            project.logger.error("reflectDexArchive error: ${thr.getMessage()}.")
         }
     }
 

@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor
 /**
  * Created by tong on 17/10/31.
  */
+@Deprecated
 class FastdexDexMergerTransform extends TransformProxy {
 
     FastdexDexMergerTransform(Transform base,File streamOutputFolder, FastdexVariant fastdexVariant) {

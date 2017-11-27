@@ -56,6 +56,15 @@ class FastdexDexTransform extends TransformProxy {
 
     @Override
     void transform(TransformInvocation transformInvocation) throws TransformException, IOException, InterruptedException {
+        File mainDexListFile = fastdexVariant.androidVariant.getVariantData().getScope().getMainDexListFile()
+
+        if (!mainDexListFile.parentFile.exists()) {
+            mainDexListFile.parentFile.mkdirs()
+        }
+        if (!mainDexListFile.exists()) {
+            mainDexListFile.createNewFile()
+        }
+
         if (fastdexVariant.hasDexCache) {
             project.logger.error("\n==fastdex patch transform start,we will generate dex file")
             if (fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
@@ -137,37 +146,22 @@ class FastdexDexTransform extends TransformProxy {
     }
 
     static Transform replaceBaseTransform(Transform base, FastdexVariant fastdexVariant) {
-//        if (GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") >= 0) {
-//            Class dexingTypeClass = Class.forName("com.android.builder.dexing.DexingType")
-//            Object[] values = dexingTypeClass.getMethod("values").invoke(null,null)
-//
-//            //com.android.build.gradle.internal.transforms.DexTransform
-//            Constructor<?>[] constructors = base.getClass().getConstructors()
-//            Constructor targetConstructor = constructors[0]
-//
-//            Transform result =
-//                    targetConstructor.newInstance( base.dexOptions
-//                            ,values.find { it.isMultiDex() && it.isPreDex() }
-//                            ,base.preDexEnabled
-//                            ,(FileCollection)null
-//                            ,base.targetInfo
-//                            ,base.dexByteCodeConverter
-//                            , base.errorReporter
-//                            ,21)
-//
-//            return result
-//        }
-//        else
         if (GradleUtils.getAndroidGradlePluginVersion().compareTo(Constants.MIN_BUILD_CACHE_ENABLED_VERSION) >= 0 && GradleUtils.getAndroidGradlePluginVersion().compareTo("3.0") < 0) {
-            //在所有的build-type上触发2.2以后的build-cache
-            //boolean needMerge = !multiDex || mainDexListFile != null;// || !debugMode;
+            //为了触发dex merge，使mainDexListFile不等于null
+
+            //boolean needMerge = !multiDex || mainDexListFile != null;
+
+            File mainDexListFile = base.mainDexListFile
+            if (mainDexListFile == null) {
+                mainDexListFile = fastdexVariant.androidVariant.getVariantData().getScope().getMainDexListFile()
+            }
 
             fastdexVariant.project.logger.error("==fastdex android gradle >= ${Constants.MIN_BUILD_CACHE_ENABLED_VERSION} ,replace dex transform")
             return new DexTransform(
                     base.dexOptions,
                     base.debugMode,
                     base.multiDex,
-                    null,
+                    mainDexListFile,
                     base.intermediateFolder,
                     base.androidBuilder,
                     base.logger.logger,
