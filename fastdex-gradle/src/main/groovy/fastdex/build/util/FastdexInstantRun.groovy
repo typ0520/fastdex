@@ -4,7 +4,13 @@ import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
 import fastdex.build.variant.FastdexVariant
 import fastdex.common.utils.FileUtils
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 /**
  * Created by tong on 17/3/12.
@@ -250,11 +256,22 @@ class FastdexInstantRun {
         if (dir.listFiles().length == 0) {
             return result
         }
-        for (File file : dir.listFiles()) {
-            if (file.isFile() && !file.getName().startsWith(".")) {
-                result.add(file.getName())
+
+        boolean isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+        Path path = dir.toPath()
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (!file.toFile().isHidden()) {
+                    String relativePath = path.relativize(file).toString()
+                    if (isWindows) {
+                        relativePath = relativePath.replaceAll("\\\\","/")
+                    }
+                    result.add(relativePath)
+                }
+                return FileVisitResult.CONTINUE
             }
-        }
+        })
         return result
     }
 
