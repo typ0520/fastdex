@@ -18,7 +18,6 @@
 package fastdex.runtime.loader;
 
 import android.annotation.SuppressLint;
-import android.app.Application;
 import android.os.Build;
 import android.util.Log;
 import java.io.File;
@@ -39,21 +38,16 @@ import fastdex.runtime.utils.ShareReflectUtil;
  * Created by zhangshaowen on 16/3/18.
  */
 public class SystemClassLoaderAdder {
-    public static final String CHECK_DEX_CLASS = "com.tencent.tinker.loader.TinkerTestDexLoad";
-    public static final String CHECK_DEX_FIELD = "isPatch";
-    private static final String TAG = "Tinker.ClassLoaderAdder";
+    private static final String TAG = "SystemClassLoaderAdder";
     private static int sPatchDexCount = 0;
 
     @SuppressLint("NewApi")
-    public static void installDexes(Application application, PathClassLoader loader, File dexOptDir, List<File> files)
+    public static void installDexes(PathClassLoader loader, File dexOptDir, List<File> files)
         throws Throwable {
         Log.i(TAG, "installDexes dexOptDir: " + dexOptDir.getAbsolutePath() + ", dex size:" + files.size());
 
         if (!files.isEmpty()) {
             ClassLoader classLoader = loader;
-            if (Build.VERSION.SDK_INT >= 24) {
-                classLoader = AndroidNClassLoader.inject(loader, application);
-            }
             //because in dalvik, if inner class is not the same classloader with it wrapper class.
             //it won't fail at dex2opt
             if (Build.VERSION.SDK_INT >= 23) {
@@ -68,40 +62,7 @@ public class SystemClassLoaderAdder {
             //install done
             sPatchDexCount = files.size();
             Log.i(TAG, "after loaded classloader: " + classLoader + ", dex size:" + sPatchDexCount);
-//
-//            if (!checkDexInstall(classLoader)) {
-//                //reset patch dex
-//                SystemClassLoaderAdder.uninstallPatchDex(classLoader);
-//                throw new FastdexRuntimeException(ShareConstants.CHECK_DEX_INSTALL_FAIL);
-//            }
         }
-    }
-
-    public static void uninstallPatchDex(ClassLoader classLoader) throws Throwable {
-        if (sPatchDexCount <= 0) {
-            return;
-        }
-        if (Build.VERSION.SDK_INT >= 14) {
-            Field pathListField = ShareReflectUtil.findField(classLoader, "pathList");
-            Object dexPathList = pathListField.get(classLoader);
-            ShareReflectUtil.reduceFieldArray(dexPathList, "dexElements", sPatchDexCount);
-        } else {
-            ShareReflectUtil.reduceFieldArray(classLoader, "mPaths", sPatchDexCount);
-            ShareReflectUtil.reduceFieldArray(classLoader, "mFiles", sPatchDexCount);
-            ShareReflectUtil.reduceFieldArray(classLoader, "mZips", sPatchDexCount);
-            try {
-                ShareReflectUtil.reduceFieldArray(classLoader, "mDexs", sPatchDexCount);
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    private static boolean checkDexInstall(ClassLoader classLoader) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
-        Class<?> clazz = Class.forName(CHECK_DEX_CLASS, true, classLoader);
-        Field filed = ShareReflectUtil.findField(clazz, CHECK_DEX_FIELD);
-        boolean isPatch = (boolean) filed.get(null);
-        Log.w(TAG, "checkDexInstall result:" + isPatch);
-        return isPatch;
     }
 
     /**

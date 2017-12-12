@@ -37,4 +37,9 @@ class FastdexExtension {
      * 当发送的补丁中包含dex时会调用 'adb shell am force-stop' 强制重启app
      */
     boolean restartAppByCmd = true
+
+    /**
+     * 进hook debug这个build type
+     */
+    boolean onlyHookDebug = false
 }

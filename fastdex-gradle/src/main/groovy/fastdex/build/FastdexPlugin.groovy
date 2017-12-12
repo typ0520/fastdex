@@ -102,13 +102,14 @@ class FastdexPlugin implements Plugin<Project> {
                     // Not in instant run mode, continue.
                 }
 
-                boolean proguardEnable = variant.getVariantData().getVariantConfiguration().getBuildType().isMinifyEnabled()
                 //TODO 暂时忽略开启混淆的buildType(目前的快照对比方案 无法映射java文件的类名和混淆后的class的类名)
-                if (proguardEnable) {
-                    String buildTypeName = variant.getBuildType().buildType.getName()
-                    project.logger.error("--------------------fastdex--------------------")
-                    project.logger.error("fastdex android.buildTypes.${buildTypeName}.minifyEnabled=true, just ignore")
-                    project.logger.error("--------------------fastdex--------------------")
+                boolean proguardEnable = variant.getVariantData().getVariantConfiguration().getBuildType().isMinifyEnabled()
+                boolean ignoreBuildType = configuration.onlyHookDebug && !"debug".equalsIgnoreCase(variant.buildType.name as String)
+                if (proguardEnable || ignoreBuildType) {
+                    FastdexIgnoreTask ignoreTask = project.tasks.create("fastdex${variantName}",FastdexIgnoreTask)
+                    ignoreTask.androidVariant = variant
+                    ignoreTask.proguardEnable = proguardEnable
+                    ignoreTask.ignoreBuildType = ignoreBuildType
                 }
                 else {
                     def javaCompile = variant.hasProperty('javaCompiler') ? variant.javaCompiler : variant.javaCompile

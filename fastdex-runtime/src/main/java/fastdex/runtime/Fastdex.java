@@ -161,7 +161,7 @@ public enum  Fastdex {
                 PathClassLoader classLoader = (PathClassLoader) Fastdex.class.getClassLoader();
                 try {
                     Log.d(LOG_TAG,"apply dex patch: " + dexList);
-                    SystemClassLoaderAdder.installDexes(fastdexApplication,classLoader,optDirectory,dexList);
+                    SystemClassLoaderAdder.installDexes(classLoader,optDirectory,dexList);
                 } catch (Throwable throwable) {
                     throw new RuntimeException(throwable);
                 }
