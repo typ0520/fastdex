@@ -29,7 +29,7 @@ fastdex {
     dexMergeThreshold = 3
 
     //是否仅hook debug
-    onlyHookDebug = true
+    onlyHookDebug = false
 }
 
 android {

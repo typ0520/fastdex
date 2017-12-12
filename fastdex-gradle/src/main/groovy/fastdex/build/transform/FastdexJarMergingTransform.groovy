@@ -7,7 +7,6 @@ import fastdex.build.util.Constants
 import fastdex.build.util.GradleUtils
 import fastdex.build.util.JarOperation
 import fastdex.build.variant.FastdexVariant
-import com.android.build.api.transform.Format
 import fastdex.common.utils.FileUtils
 
 /**
@@ -24,8 +23,10 @@ class FastdexJarMergingTransform extends TransformProxy {
     void transform(TransformInvocation transformInvocation) throws TransformException, IOException, InterruptedException {
         if (fastdexVariant.hasDexCache) {
             if (fastdexVariant.projectSnapshoot.diffResultSet.isJavaFileChanged()) {
+                FileUtils.cleanDir(streamOutputFolder)
+
                 //补丁jar
-                File patchJar = getCombinedJarFile(transformInvocation)
+                File patchJar = new File(streamOutputFolder,Constants.PATCH_JAR)
                 //生成补丁jar
                 JarOperation.generatePatchJar(fastdexVariant,transformInvocation,patchJar)
             }
@@ -44,20 +45,5 @@ class FastdexJarMergingTransform extends TransformProxy {
                 base.transform(transformInvocation)
             }
         }
-    }
-
-    /**
-     * 获取输出jar路径
-     * @param invocation
-     * @return
-     */
-    def getCombinedJarFile(TransformInvocation invocation) {
-        def outputProvider = invocation.getOutputProvider()
-
-        // all the output will be the same since the transform type is COMBINED.
-        // and format is SINGLE_JAR so output is a jar
-        File jarFile = outputProvider.getContentLocation("combined", base.getOutputTypes(), base.getScopes(), Format.JAR)
-        FileUtils.ensumeDir(jarFile.getParentFile())
-        return jarFile
     }
 }

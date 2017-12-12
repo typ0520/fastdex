@@ -9,9 +9,6 @@ import fastdex.build.util.Constants
 import fastdex.build.util.FastdexUtils
 import fastdex.build.util.GradleUtils
 import fastdex.build.variant.FastdexVariant
-import com.google.common.collect.Lists
-import com.android.build.api.transform.JarInput
-import com.android.build.api.transform.TransformInput
 import fastdex.build.util.JarOperation
 
 /**
@@ -101,25 +98,6 @@ class FastdexDexTransform extends TransformProxy {
         }
     }
 
-
-
-    /**
-     * 获取输出jar路径
-     * @param invocation
-     * @return
-     */
-    def getCombinedJarFile(TransformInvocation invocation) {
-        List<JarInput> jarInputs = Lists.newArrayList()
-        for (TransformInput input : invocation.getInputs()) {
-            jarInputs.addAll(input.getJarInputs())
-        }
-        if (jarInputs.size() != 1) {
-            throw new RuntimeException("==fastdex jar input size is ${jarInputs.size()}, expected is 1")
-        }
-        File combinedJar = jarInputs.get(0).getFile()
-        return combinedJar
-    }
-
     /**
      * 生成补丁jar包
      * @param transformInvocation
@@ -128,7 +106,7 @@ class FastdexDexTransform extends TransformProxy {
     def generatePatchJar(TransformInvocation transformInvocation) {
         if (fastdexVariant.hasJarMergingTask) {
             //如果开启了multidex,FastdexJarMergingTransform完成了jar merge的操作
-            File patchJar = getCombinedJarFile(transformInvocation)
+            File patchJar = new File(fastdexVariant.jarMergerOutputFolder,Constants.PATCH_JAR)
             project.logger.error("==fastdex multiDex enabled use patch.jar: ${patchJar}")
             return patchJar
         }

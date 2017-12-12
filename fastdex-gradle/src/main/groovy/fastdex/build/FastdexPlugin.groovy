@@ -331,6 +331,8 @@ class FastdexPlugin implements Plugin<Project> {
                                         fastdexVariant.hasJarMergingTask = true
 
                                         FastdexJarMergingTransform jarMergingTransform = new FastdexJarMergingTransform(transform,task.getStreamOutputFolder(),fastdexVariant)
+                                        fastdexVariant.jarMergerOutputFolder = task.getStreamOutputFolder()
+
                                         Field field = ReflectUtils.getFieldByName(task.getClass(),'transform')
                                         field.setAccessible(true)
                                         field.set(task,jarMergingTransform)

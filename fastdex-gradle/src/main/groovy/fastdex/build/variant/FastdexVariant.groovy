@@ -35,6 +35,7 @@ class FastdexVariant {
     Set<LibDependency> libraryDependencies
 
     File textSymbolOutputFile
+    File jarMergerOutputFolder
     File dexBuilderOutputFolder
     File dexMergerOutputFolder
     File preDexOutputFolder
