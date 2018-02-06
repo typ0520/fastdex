@@ -51,7 +51,7 @@ public final class SourceSetSnapshoot extends BaseStringSnapshoot<StringDiffInfo
     }
 
     private void init(File projectDir,Set<File> sourceSetFiles) throws IOException {
-        if (projectDir == null || projectDir.length() == 0) {
+        if (projectDir == null) {
             throw new RuntimeException("Invalid projectPath");
         }
         this.path = projectDir.getAbsolutePath();

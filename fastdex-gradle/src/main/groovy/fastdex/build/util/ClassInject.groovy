@@ -229,7 +229,7 @@ class ClassInject implements Opcodes {
                 Label l0 = new Label()
                 super.visitJumpInsn(IFEQ, l0)
                 mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-                mv.visitFieldInsn(GETSTATIC, "fastdex/runtime/antilazyload/AntilazyLoad", "str", "Ljava/lang/String;")
+                mv.visitFieldInsn(GETSTATIC, "fastdex/runtime/AntilazyLoad", "str", "Ljava/lang/String;")
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false)
                 super.visitLabel(l0)
             }
